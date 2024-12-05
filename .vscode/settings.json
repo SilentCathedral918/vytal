@@ -1,0 +1,40 @@
+{
+  // C/C++
+  "C_Cpp.vcFormat.space.pointerReferenceAlignment": "right",
+  "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: LLVM, AlignConsecutiveDeclarations: true, AlignConsecutiveAssignments: true, IndentWidth: 4, IndentPPDirectives: AfterHash, BreakBeforeBraces: Attach, ColumnLimit: 128 }",
+  "C_Cpp.default.compilerPath": "C:\\mingw64\\bin\\gcc.exe",
+
+  // file associations
+  "files.associations": {
+    "*.h": "c",
+    "charconv": "c",
+    "optional": "c",
+    "format": "c",
+    "array": "c",
+    "tuple": "c",
+    "type_traits": "c",
+    "random": "c",
+    "string": "c",
+    "string_view": "c",
+    "span": "c",
+    "ratio": "c",
+    "system_error": "c",
+    "functional": "c",
+    "utility": "c",
+    "sstream": "c"
+  },
+
+  // editor styling
+  "editor.cursorStyle": "block",
+  "editor.cursorBlinking": "phase",
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "editor.tabSize": 4,
+  "editor.indentSize": "tabSize",
+  "editor.smoothScrolling": true,
+  "workbench.colorCustomizations": {
+    "editorCursor.foreground": "#ffff00",
+    "terminalCursor.foreground": "#ffff00"
+}
+}
