@@ -1,7 +1,8 @@
 #include <vytal.h>
 
 int main(int argc, char **argv) {
-    test_time();
+    test_wall();
+    test_hires();
 
     return 0;
 }

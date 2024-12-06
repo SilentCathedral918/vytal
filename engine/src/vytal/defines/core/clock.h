@@ -2,7 +2,6 @@
 
 #include "types.h"
 
-#include <stdint.h>
 #include <time.h>
 
 // ---------------------------- wall clock ---------------------------- //
@@ -41,9 +40,9 @@ typedef struct WallClock_Struct {
 } WallClock;
 
 typedef struct WallClock_Date {
-    UInt32 year;
-    UInt32 month;
-    UInt32 day;
+    UInt32 _year;
+    UInt32 _month;
+    UInt32 _day;
 } WallClockDate;
 
 // ---------------------- high-resolution clock ---------------------- //
@@ -51,11 +50,17 @@ typedef struct WallClock_Date {
 #if defined(_MSC_VER)
 #    include <Windows.h>
 
+#    define VT_HIRES_SUSPEND(sec) (Sleep((sec) * 1000))
+
 typedef LARGE_INTEGER HiResTick, HiResInterval, HiResTimestamp;
 
 #elif defined(__clang__) || defined(__GNUC__)
+#    include <unistd.h>
 
-typedef UInt64 HiResTick, HiResInterval, HiResTimestamp;
+#    define VT_HIRES_SUSPEND(sec) (sleep(sec))
+
+typedef UInt64          HiResTick, HiResInterval, HiResTimestamp;
+typedef struct timespec HiResTimeSpec;
 
 #else
 #    error "Unsupported compiler or platform."
@@ -63,6 +68,6 @@ typedef UInt64 HiResTick, HiResInterval, HiResTimestamp;
 #endif
 
 typedef struct HiResClock_Struct {
-    HiResTick      _counter;
-    HiResTimestamp _timestamp;
+    HiResTick     _counter;
+    HiResTimeSpec _timestamp;
 } HiResClock;

@@ -45,3 +45,18 @@
 // ------------------------- static array size ------------------------- //
 
 #define VT_STATIC_ARRAY_SIZE(array) (sizeof(array) / sizeof(*(array)))
+
+// ------------------------- platform detection  ------------------------- //
+
+// --- Windows
+#if defined(_WIN32) || defined(__MINGW32__)
+#    if !defined(_WIN64) || !defined(__MINGW64__)
+#        error "64-bit is required."
+#    else
+#        define VT_PLATFORM_WINDOWS 1
+#    endif
+
+// --- Linux
+#elif defined(__linux__)
+#    define VT_PLATFORM_LINUX 1
+#endif
