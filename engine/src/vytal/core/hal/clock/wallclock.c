@@ -5,14 +5,14 @@
 #include <stdio.h>
 
 #if defined(VT_PLATFORM_WINDOWS)
-#    define THREADSAFE_LOCALTIME(time_info, timestamp) localtime_s(time_info, timestamp)
-#    define THREADSAFE_GMTIME(time_info, timestamp) gmtime_s(time_info, timestamp)
-#    define THREADSAFE_ASCTIME(buf, sz, time_info) asctime_s(buf, sz, time_info)
+#    define threadsafe_localtime(time_info, timestamp) localtime_s(time_info, timestamp)
+#    define threadsafe_gmtime(time_info, timestamp) gmtime_s(time_info, timestamp)
+#    define threadsafe_asctime(buf, sz, time_info) asctime_s(buf, sz, time_info)
 
 #elif defined(VT_PLATFORM_LINUX)
-#    define THREADSAFE_LOCALTIME(time_info, timestamp) localtime_r(time_info, timestamp)
-#    define THREADSAFE_GMTIME(time_info, timestamp) gmtime_r(time_info, timestamp)
-#    define THREADSAFE_ASCTIME(buf, sz, time_info) asctime_r(buf, sz, time_info)
+#    define threadsafe_localtime(time_info, timestamp) localtime_r(time_info, timestamp)
+#    define threadsafe_gmtime(time_info, timestamp) gmtime_r(time_info, timestamp)
+#    define threadsafe_asctime(buf, sz, time_info) asctime_r(buf, sz, time_info)
 
 #endif
 
@@ -20,7 +20,7 @@ WallClock hal_wallclock_now(void) {
     WallClock clock_;
 
     clock_._timestamp = time(NULL);
-    THREADSAFE_LOCALTIME(&(clock_._time_info), &(clock_._timestamp));
+    threadsafe_localtime(&(clock_._time_info), &(clock_._timestamp));
 
     return clock_;
 }
@@ -28,7 +28,7 @@ WallClock hal_wallclock_now(void) {
 WallClock hal_wallclock_now_utc(void) {
     WallClock clock_;
     clock_._timestamp = time(NULL);
-    THREADSAFE_GMTIME(&(clock_._time_info), &(clock_._timestamp));
+    threadsafe_gmtime(&(clock_._time_info), &(clock_._timestamp));
 
     return clock_;
 }
@@ -36,7 +36,7 @@ WallClock hal_wallclock_now_utc(void) {
 WallClock hal_wallclock_today(void) {
     WallClock clock_;
     clock_._timestamp = time(NULL);
-    THREADSAFE_LOCALTIME(&(clock_._time_info), &(clock_._timestamp));
+    threadsafe_localtime(&(clock_._time_info), &(clock_._timestamp));
 
     // set time to midnight
     {
@@ -51,7 +51,7 @@ WallClock hal_wallclock_today(void) {
 WallClock hal_wallclock_today_utc(void) {
     WallClock clock_;
     clock_._timestamp = time(NULL);
-    THREADSAFE_GMTIME(&(clock_._time_info), &(clock_._timestamp));
+    threadsafe_gmtime(&(clock_._time_info), &(clock_._timestamp));
 
     // set time to midnight
     {
@@ -130,7 +130,7 @@ WallClock hal_wallclock_from_unix(const Int64 unix) {
     WallClock clock_;
 
     clock_._timestamp = unix;
-    THREADSAFE_GMTIME(&(clock_._time_info), &(clock_._timestamp));
+    threadsafe_gmtime(&(clock_._time_info), &(clock_._timestamp));
 
     return clock_;
 }
@@ -179,7 +179,7 @@ WallClock hal_wallclock_parse(ConstStr datetime) {
     WallClock clock_ = VT_STRUCT(WallClock, 0);
 
     clock_._timestamp = _hal_wallclock_parse(datetime);
-    THREADSAFE_LOCALTIME(&(clock_._time_info), &(clock_._timestamp));
+    threadsafe_localtime(&(clock_._time_info), &(clock_._timestamp));
 
     return clock_;
 }
@@ -188,7 +188,7 @@ WallClock hal_wallclock_parse_utc(ConstStr datetime) {
     WallClock clock_ = VT_STRUCT(WallClock, 0);
 
     clock_._timestamp = _hal_wallclock_parse(datetime);
-    THREADSAFE_GMTIME(&(clock_._time_info), &(clock_._timestamp));
+    threadsafe_gmtime(&(clock_._time_info), &(clock_._timestamp));
 
     return clock_;
 }
@@ -216,6 +216,6 @@ void hal_wallclock_getdate_ymd(const WallClock *clock, Int32 *year, Int32 *month
 
 void hal_wallclock_tostring(Str result, const WallClock *clock) {
     Char buf_[64] = {'\0'};
-    THREADSAFE_ASCTIME(buf_, sizeof buf_, &(clock->_time_info));
+    threadsafe_asctime(buf_, sizeof buf_, &(clock->_time_info));
     misc_str_strcpy(result, buf_);
 }

@@ -59,4 +59,5 @@
 // --- Linux
 #elif defined(__linux__)
 #    define VT_PLATFORM_LINUX 1
+
 #endif

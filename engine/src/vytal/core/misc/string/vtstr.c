@@ -140,7 +140,7 @@ Str _misc_str_strstr_blk_lowercase(Str target) {
     return target;
 
 // int128 not supported
-// > process two uint64_t chunks
+// > process two uint64 chunks
 #else
     for (; idx_ + 15 < target_length_; idx_ += 16) {
         UInt64 *chunk1_ = VT_CAST(UInt64 *, str + idx_);
