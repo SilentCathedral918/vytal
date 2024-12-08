@@ -26,12 +26,38 @@ typedef Memory_Allocator_Arena *ArenaAllocator;
 
 // ----------------------------- manager ----------------------------- //
 
-typedef enum Memory_Manager_AllocationType { ALLOCTYPE_ARENA } MemMgrAllocType;
+// --- self struct
+// NOTE: there can only be one
 
 typedef struct Memory_Manager_Struct {
-    ArenaAllocator _arena;
-    UInt64         _internal_mem_use;
+    VoidPtr _internal_state;
 } MemoryManager;
+
+// --- allocation types
+
+typedef enum Memory_Manager_AllocationType { ALLOCTYPE_ARENA } MemMgrAllocType;
+
+// --- memory allocation tags
+
+typedef enum Memory_Tag {
+    MEMORY_TAG_APPLICATION, // general application
+    MEMORY_TAG_PHYSICS,     // physics engine
+    MEMORY_TAG_AI,          // artificial intelligence
+    MEMORY_TAG_AUDIO,       // audio system allocations
+    MEMORY_TAG_NETWORK,     // networking
+
+    MEMORY_TAG_GAME_LOGIC,  // core game logic
+    MEMORY_TAG_GAME_ENTITY, // game entities (players, npcs, etc.)
+    MEMORY_TAG_GAME_SCENE,  // scene management
+
+    MEMORY_TAG_CONTAINERS, // data structures (arrays, lists, maps, etc.)
+    MEMORY_TAG_DELEGATES,  // delegates, callbacks, event handlers
+
+    MEMORY_TAG_RENDERER,  // rendering engine
+    MEMORY_TAG_RESOURCES, // game resources (textures, models, sounds, etc.)
+
+    MEMORY_TAGS_TOTAL
+} MemoryTag;
 
 // --------------------------- binary swapping --------------------------- //
 

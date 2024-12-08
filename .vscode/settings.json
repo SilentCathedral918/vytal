@@ -21,7 +21,9 @@
     "system_error": "c",
     "functional": "c",
     "utility": "c",
-    "sstream": "c"
+    "sstream": "c",
+    "thread": "c",
+    "vector": "c"
   },
 
   // editor styling

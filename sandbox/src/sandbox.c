@@ -1,8 +1,7 @@
 #include <vytal.h>
 
 int main(int argc, char **argv) {
-    test_wall();
-    test_hires();
-
+    test_mem_manager();
+    
     return 0;
 }

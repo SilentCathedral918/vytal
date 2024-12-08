@@ -11,3 +11,4 @@ VT_API void           allocator_arena_clear(ArenaAllocator arena);
 VT_API VT_INLINE VoidPtr allocator_arena_allocate(ArenaAllocator arena, const ByteSize size) {
     return allocator_arena_allocate_aligned(arena, size, VT_MEM_DEFAULT_ALIGNMENT);
 }
+VT_API VT_INLINE ConstStr allocator_arena_getname(void) { return "Arena"; }

@@ -3,5 +3,6 @@
 #include "vytal/defines/core/types.h"
 #include "vytal/defines/shared.h"
 
-VT_API void test_wall(void);
-VT_API void test_hires(void);
+#include "vytal/managers/memory/memmgr.h"
+
+VT_API void test_mem_manager(void);
