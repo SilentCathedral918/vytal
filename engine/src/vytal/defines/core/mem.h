@@ -17,10 +17,7 @@
 // --- arena allocator
 
 typedef struct Memory_Allocator_Arena {
-    UInt64  _used_mem;
-    UInt64  _capacity;
-    UInt64  _num_alloc;
-    VoidPtr _mem_block;
+    VoidPtr _internal_state;
 } Memory_Allocator_Arena;
 typedef Memory_Allocator_Arena *ArenaAllocator;
 
@@ -91,3 +88,9 @@ typedef enum Memory_Tag {
 #define VT_SIZE_KB_MULT(byte) (byte * 1024ul)
 #define VT_SIZE_MB_MULT(byte) (VT_SIZE_KB_MULT(byte) * 1024ul)
 #define VT_SIZE_GB_MULT(byte) (VT_SIZE_MB_MULT(byte) * 1024ul)
+
+// ------------------------- sizes in bytes ------------------------- //
+
+#define VT_SIZE_KB_IN_BYTES (1024ul)
+#define VT_SIZE_MB_IN_BYTES (VT_SIZE_KB_IN_BYTES * 1024ul)
+#define VT_SIZE_GB_IN_BYTES (VT_SIZE_MB_IN_BYTES * 1024ul)
