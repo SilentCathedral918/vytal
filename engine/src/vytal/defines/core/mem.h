@@ -21,18 +21,18 @@ typedef struct Memory_Allocator_Arena {
 } Memory_Allocator_Arena;
 typedef Memory_Allocator_Arena *ArenaAllocator;
 
-// ----------------------------- manager ----------------------------- //
+// --- pool allocator
 
-// --- self struct
-// NOTE: there can only be one
-
-typedef struct Memory_Manager_Struct {
+typedef struct Memory_Allocator_Pool {
     VoidPtr _internal_state;
-} MemoryManager;
+} Memory_Allocator_Pool;
+typedef Memory_Allocator_Pool *PoolAllocator;
+
+// ----------------------------- manager ----------------------------- //
 
 // --- allocation types
 
-typedef enum Memory_Manager_AllocationType { ALLOCTYPE_ARENA } MemMgrAllocType;
+typedef enum Memory_Manager_AllocationType { ALLOCTYPE_ARENA, ALLOCTYPE_POOL } MemMgrAllocType;
 
 // --- memory allocation tags
 

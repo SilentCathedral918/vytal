@@ -2,7 +2,7 @@
 
 #include "vytal/core/misc/string/vtstr.h"
 
-#define CONSOLE_OUTPUT_BUFFER_MAX_SIZE 8192
+#define CONSOLE_OUTPUT_BUFFER_MAX_SIZE 16384 // 16 KB
 
 #if defined(VT_PLATFORM_WINDOWS)
 #    include <Windows.h>

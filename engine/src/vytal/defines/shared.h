@@ -61,3 +61,11 @@
 #    define VT_PLATFORM_LINUX 1
 
 #endif
+
+// ------------------------- disable warnings  ------------------------- //
+
+#if defined(__GNUC__)
+#    define VT_VAR_NOT_USED __attribute__((unused))
+#else
+#    define VT_VAR_NOT_USED
+#endif
