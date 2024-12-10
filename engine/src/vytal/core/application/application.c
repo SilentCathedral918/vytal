@@ -1,5 +1,6 @@
 #include "application.h"
 
+#include "vytal/core/containers/string/string.h"
 #include "vytal/core/memory/allocators/arena.h"
 #include "vytal/core/misc/console/console.h"
 
@@ -16,10 +17,16 @@ void test_mem_manager(void) {
         misc_console_writeln("no such entry as %s", "Test");
     }
 
-    Str test_alloc = memory_manager_allocate(0, MEMORY_TAG_CONTAINERS);
+    String test_str = container_string_construct("Hello, world! This is a test sentence.");
     memory_manager_report_all();
 
-    memory_manager_deallocate(test_alloc, MEMORY_TAG_CONTAINERS);
+    misc_console_writeln("string: %s", container_string_get(test_str));
+    misc_console_writeln("length: %llu", container_string_length(test_str));
+    misc_console_writeln("capacity: %llu", container_string_capacity(test_str));
+
+    if (!container_string_destruct(test_str)) {
+        misc_console_writeln("failed to destruct test_str");
+    }
     memory_manager_report_all();
 
     memory_manager_shutdown();
