@@ -10,7 +10,7 @@ for /r %%f in (*.c) do (
 set "codebase=engine"
 
 rem --- compiler flags
-set "compiler_flags=-g -shared -Wall -Werror -Wvarargs"
+set "compiler_flags=-g -shared -Wall -Werror -Wvarargs -Wno-unused-function"
 
 rem --- include flags
 set "include_flags=-Isrc -I%VULKAN_SDK%/Include"

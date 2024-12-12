@@ -20,20 +20,20 @@ Str _misc_str_strstr_sse2_lowercase(Str target) {
     UIntPtr  ptarget_head_  = VT_CAST(UIntPtr, target);
 
     while (target_length_ >= REGISTER_SIZE) {
-        __m128i vec_chunk_ = loadu_m128i(target);
-        __m128i vec_res_   = _mm_or_si128(vec_chunk_, lower_mask_);
-        storeu_m128i(target, vec_res_);
+        __m128i chunk_ = loadu_m128i(target);
+        __m128i res_   = _mm_or_si128(chunk_, lower_mask_);
+        storeu_m128i(target, res_);
 
         target += REGISTER_SIZE;
         target_length_ -= REGISTER_SIZE;
     }
 
     if (target_length_ > 0) {
-        __m128i vec_chunk_ = _mm_setzero_si128();
-        memcpy(&vec_chunk_, target, target_length_);
+        __m128i chunk_ = _mm_setzero_si128();
+        memcpy(&chunk_, target, target_length_);
 
-        __m128i vec_res_ = _mm_or_si128(vec_chunk_, lower_mask_);
-        memcpy(target, &vec_res_, target_length_);
+        __m128i res_ = _mm_or_si128(chunk_, lower_mask_);
+        memcpy(target, &res_, target_length_);
     }
 
     return VT_CAST(Str, ptarget_head_);
@@ -47,11 +47,10 @@ ConstStr _misc_str_strstr_sse2_scanstr(Str str, const Char pattern[2]) {
     UInt16  pattern_pair_ = load16(pattern);
 
     if (align_offset_ > 0) {
-        __m128i  vec_data_ = load_m128i(str - align_offset_);
-        unsigned zero_     = compare_m128i(vec_zero_, vec_data_) >> align_offset_;
-        unsigned match_ =
-            ((compare_m128i(vec_pat0_, vec_data_) & (compare_m128i(vec_pat1_, vec_data_) >> 1)) >> align_offset_) & ~zero_ &
-            (zero_ - 1);
+        __m128i  data_  = load_m128i(str - align_offset_);
+        unsigned zero_  = compare_m128i(vec_zero_, data_) >> align_offset_;
+        unsigned match_ = ((compare_m128i(vec_pat0_, data_) & (compare_m128i(vec_pat1_, data_) >> 1)) >> align_offset_) &
+                          ~zero_ & (zero_ - 1);
 
         if (zero_)
             return NULL;
@@ -64,10 +63,9 @@ ConstStr _misc_str_strstr_sse2_scanstr(Str str, const Char pattern[2]) {
     }
 
     while (str > 0) {
-        __m128i  vec_data_ = load_m128i(str - align_offset_);
-        unsigned zero_     = compare_m128i(vec_zero_, vec_data_);
-        unsigned match_ =
-            compare_m128i(vec_pat0_, vec_data_) & (compare_m128i(vec_pat1_, vec_data_) >> 1) & ~zero_ & (zero_ - 1);
+        __m128i  data_  = load_m128i(str - align_offset_);
+        unsigned zero_  = compare_m128i(vec_zero_, data_);
+        unsigned match_ = compare_m128i(vec_pat0_, data_) & (compare_m128i(vec_pat1_, data_) >> 1) & ~zero_ & (zero_ - 1);
 
         if (zero_)
             return NULL;
@@ -119,13 +117,12 @@ ConstStr _misc_str_strstr_sse2(Str str, ConstStr substr, Bool sensitive) {
 
 Str _misc_str_strstr_blk_lowercase(Str target) {
     ByteSize target_length_ = strlen(target);
-
-// int128 is supported
-#if defined(__SIZEOF_INT128__)
     ByteSize idx_           = 0;
     UInt8    lower_mask_8_  = 0x20;
     UInt64   lower_mask_64_ = 0x2020202020202020ull;
 
+// int128 is supported
+#if defined(__SIZEOF_INT128__)
     for (; idx_ + 15 < target_length_; idx_ += 16) {
         Int128 *chunk_ = VT_CAST(Int128 *, target + idx_);
 
@@ -143,8 +140,8 @@ Str _misc_str_strstr_blk_lowercase(Str target) {
 // > process two uint64 chunks
 #else
     for (; idx_ + 15 < target_length_; idx_ += 16) {
-        UInt64 *chunk1_ = VT_CAST(UInt64 *, str + idx_);
-        UInt64 *chunk2  = VT_CAST(UInt64 *, str + idx_ + 8);
+        UInt64 *chunk1_ = VT_CAST(UInt64 *, target + idx_);
+        UInt64 *chunk2_ = VT_CAST(UInt64 *, target + idx_ + 8);
 
         // apply lowercase-mask for conversion
         *chunk1_ |= lower_mask_64_;
@@ -182,17 +179,13 @@ ConstStr _misc_str_strstr_fallback(Str str, ConstStr substr, Bool sensitive) {
     }
 }
 
-ConstStr _misc_str_strstr(Str str, ConstStr substr, Bool sensitive) {
-#if defined(__SSE2__) && (defined(_M_IX86_FP) && (_M_IX86_FP >= 2))
-    return _misc_str_strstr_sse2(str, substr, sensitive);
-#else
-    return _misc_str_strstr_fallback(str, substr, sensitive);
-#endif
-}
-
 ConstStr misc_str_strstr(Str str, ConstStr substr, Bool sensitive) {
     if (!str || !substr)
         return NULL;
 
-    return _misc_str_strstr(str, substr, sensitive);
+#if defined(__SSE2__) || (defined(_M_IX86_FP) && (_M_IX86_FP >= 2))
+    return _misc_str_strstr_sse2(str, substr, sensitive);
+#else
+    return _misc_str_strstr_fallback(str, substr, sensitive);
+#endif
 }

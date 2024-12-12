@@ -1,7 +1,34 @@
 #include "vtmem.h"
 
+#include <emmintrin.h>
+
 void hal_mem_memswap(VoidPtr left, VoidPtr right, ByteSize size) {
-    const ByteSize threshold = 65536; // 65536 bytes
+#if defined(__SSE2__) || (defined(_M_IX86_FP) && (_M_IX86_FP >= 2))
+    BytePtr pleft_  = VT_CAST(BytePtr, left);
+    BytePtr pright_ = VT_CAST(BytePtr, right);
+
+    // handle chunks of 16 bytes
+    while (size >= 16) {
+        __m128i vec_left_  = _mm_load_si128(VT_CAST(__m128i *, pleft_));
+        __m128i vec_right_ = _mm_load_si128(VT_CAST(__m128i *, pright_));
+
+        _mm_store_si128(VT_CAST(__m128i *, pleft_), vec_right_);
+        _mm_store_si128(VT_CAST(__m128i *, pright_), vec_left_);
+
+        pleft_ += 16;
+        pright_ += 16;
+        size -= 16;
+    }
+
+    // handle remaining bytes
+    for (ByteSize i = 0; i < size; i++) {
+        Char temp_ = pleft_[i];
+        pleft_[i]  = pright_[i];
+        pright_[i] = temp_;
+    }
+
+#else
+    const ByteSize threshold = 65536; // 64 KB
 
     if (size <= threshold) {
         SizePtr pleft_    = left;
@@ -37,4 +64,6 @@ void hal_mem_memswap(VoidPtr left, VoidPtr right, ByteSize size) {
 
         hal_mem_free(temp_);
     }
+
+#endif
 }

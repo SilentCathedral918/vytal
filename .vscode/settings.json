@@ -23,7 +23,14 @@
     "utility": "c",
     "sstream": "c",
     "thread": "c",
-    "vector": "c"
+    "vector": "c",
+    "deque": "c",
+    "list": "c",
+    "unordered_map": "c",
+    "unordered_set": "c",
+    "initializer_list": "c",
+    "text_encoding": "c",
+    "cstdint": "c"
   },
 
   // editor styling
