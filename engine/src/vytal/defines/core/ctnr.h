@@ -14,7 +14,7 @@ typedef Container_String *String;
 
 // ------------------------------ map ------------------------------ //
 
-typedef struct Continer_Map {
-    VoidPtr _interal_data;
+typedef struct Container_Map {
+    VoidPtr _internal_data;
 } Container_Map;
 typedef Container_Map *Map;
