@@ -5,4 +5,4 @@
 
 #include "vytal/managers/memory/memmgr.h"
 
-VT_API void test_mem_manager(void);
+VT_API void test_hash(void);

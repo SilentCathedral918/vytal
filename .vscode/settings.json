@@ -30,7 +30,10 @@
     "unordered_set": "c",
     "initializer_list": "c",
     "text_encoding": "c",
-    "cstdint": "c"
+    "cstdint": "c",
+    "memory": "c",
+    "typeindex": "c",
+    "variant": "c"
   },
 
   // editor styling
