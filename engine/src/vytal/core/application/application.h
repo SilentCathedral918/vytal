@@ -5,4 +5,4 @@
 
 #include "vytal/managers/memory/memmgr.h"
 
-VT_API void test_map(void);
+VT_API void test_container_map(void);

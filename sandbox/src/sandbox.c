@@ -1,7 +1,7 @@
 #include <vytal.h>
 
 int main(int argc, char **argv) {
-    test_map();
+    test_container_map();
 
     return 0;
 }

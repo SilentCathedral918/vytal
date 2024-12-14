@@ -6,108 +6,86 @@
 
 #include <string.h>
 
-void test_map() {
+typedef struct TestData {
+    int  id;
+    char name[32];
+} TestData;
+
+Bool print_map_item(const VoidPtr key, const VoidPtr data, VoidPtr user_data) {
+    if (!key || !data)
+        return false;
+
+    TestData *item = (TestData *)data;
+    misc_console_writeln("Key: %lu, Data: { id: %d, name: %s }", (UIntPtr)key, item->id, item->name);
+    return true;
+}
+
+void test_container_map(void) {
     memory_manager_startup();
 
-    // Initialize a map
-    Map map = container_map_construct();
+    misc_console_writeln("Testing Container Map...");
+
+    // Define test data
+    TestData items[] = {{1, "Alice"}, {2, "Bob"}, {3, "Charlie"}, {4, "Daisy"}};
+
+    // Construct the map with data size of TestData
+    ByteSize data_size = sizeof(TestData);
+    Map      map       = container_map_construct(data_size);
     if (!map) {
-        misc_console_writeln("Failed to construct the map");
+        misc_console_writeln("Failed to construct map.");
         return;
     }
 
-    // Test insertion
-    const char *key1  = "key1";
-    const char *data1 = "data1";
-    if (!container_map_insert(map, (VoidPtr)key1, (VoidPtr)data1, strlen(data1) + 1)) {
-        misc_console_writeln("Failed to insert key1");
-        container_map_destruct(map);
-        return;
+    misc_console_writeln("Map constructed successfully.");
+
+    // Insert items
+    for (size_t i = 0; i < sizeof(items) / sizeof(items[0]); i++) {
+        if (container_map_insert(map, (VoidPtr)&items[i].id, &items[i]))
+            misc_console_writeln("Inserted key %lu.", (UIntPtr)(i + 1));
+        else
+            misc_console_writeln("Failed to insert key %lu.", (UIntPtr)(i + 1));
     }
 
-    // Test searching for an existing key
-    VoidPtr result = container_map_search(map, (VoidPtr)key1);
-    if (result) {
-        misc_console_writeln("Found key1: %s", (char *)result);
-    } else {
-        misc_console_writeln("key1 not found");
-    }
+    misc_console_writeln("done inserting all keys...");
 
-    // Test update
-    const char *new_data = "new_data1";
-    if (!container_map_update(map, (VoidPtr)key1, (VoidPtr)new_data, strlen(new_data) + 1)) {
-        misc_console_writeln("Failed to update key1");
-        container_map_destruct(map);
-        return;
-    }
+    // Search for a key
+    UIntPtr   search_key = (UIntPtr)(&items[2].id);
+    TestData *found_item = (TestData *)container_map_search(map, (VoidPtr)search_key);
+    if (found_item)
+        misc_console_writeln("Found key %lu: { id: %d, name: %s }", (*(int *)search_key), found_item->id, found_item->name);
+    else
+        misc_console_writeln("Key %lu not found.", (*(int *)search_key));
 
-    result = container_map_search(map, (VoidPtr)key1);
-    if (result) {
-        misc_console_writeln("Updated key1: %s", (char *)result);
-    } else {
-        misc_console_writeln("key1 not found after update");
-    }
+    // Update a key's value
+    TestData new_data = {99, "Updated Bob"};
+    if (container_map_update(map, (VoidPtr)search_key, &new_data))
+        misc_console_writeln("Updated key %lu successfully.", search_key);
+    else
+        misc_console_writeln("Failed to update key %lu.", (*(int *)search_key));
 
-    // Test contains function
-    if (container_map_contains(map, (VoidPtr)key1)) {
-        misc_console_writeln("key1 is in the map");
-    } else {
-        misc_console_writeln("key1 is NOT in the map");
-    }
+    // Confirm the update
+    found_item = (TestData *)container_map_search(map, (VoidPtr)search_key);
+    if (found_item)
+        misc_console_writeln("After update, key %lu: { id: %d, name: %s }", (*(int *)search_key), found_item->id,
+                             found_item->name);
 
-    // Test removing an entry
-    if (!container_map_remove(map, (VoidPtr)key1)) {
-        misc_console_writeln("Failed to remove key1");
-        container_map_destruct(map);
-        return;
-    }
+    // Remove a key
+    if (container_map_remove(map, (VoidPtr)search_key))
+        misc_console_writeln("Removed key %lu successfully.", (*(int *)search_key));
+    else
+        misc_console_writeln("Failed to remove key %lu.", (*(int *)search_key));
 
-    // Check if key is removed
-    result = container_map_search(map, (VoidPtr)key1);
-    if (result) {
-        misc_console_writeln("key1 found after removal");
-    } else {
-        misc_console_writeln("key1 successfully removed");
-    }
+    // Verify removal
+    found_item = (TestData *)container_map_search(map, (VoidPtr)search_key);
+    misc_console_writeln("After removal, search key %lu: %s", (*(int *)search_key), (found_item ? "Found" : "Not Found"));
 
-    // Test map size functions
-    if (container_map_isempty(map)) {
-        misc_console_writeln("Map is empty");
-    } else {
-        misc_console_writeln("Map is NOT empty");
-    }
+    // Destroy the map
+    if (container_map_destruct(map))
+        misc_console_writeln("Map destructed successfully.");
+    else
+        misc_console_writeln("Failed to destruct map.");
 
-    // Add some more data
-    const char *key2  = "key2";
-    const char *data2 = "data2";
-    container_map_insert(map, (VoidPtr)key2, (VoidPtr)data2, strlen(data2) + 1);
-
-    const char *key3  = "key3";
-    const char *data3 = "data3";
-    container_map_insert(map, (VoidPtr)key3, (VoidPtr)data3, strlen(data3) + 1);
-
-    misc_console_writeln("Map length: %zu", container_map_length(map));
-    misc_console_writeln("Map capacity: %zu", container_map_capacity(map));
-
-    // Test clearing the map
-    if (container_map_clear(map)) {
-        misc_console_writeln("Map cleared");
-    } else {
-        misc_console_writeln("Failed to clear the map");
-    }
-
-    // Test map after clearing
-    if (container_map_isempty(map)) {
-        misc_console_writeln("Map is empty after clear");
-    } else {
-        misc_console_writeln("Map is NOT empty after clear");
-    }
-
-    // Cleanup the map
-    if (!container_map_destruct(map)) {
-        misc_console_writeln("Failed to destruct the map");
-        return;
-    }
+    misc_console_writeln("Container Map Test Completed.");
 
     memory_manager_shutdown();
 }
