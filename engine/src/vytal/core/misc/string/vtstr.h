@@ -43,3 +43,5 @@ VT_API VT_INLINE Int64    misc_str_strtol(ConstStr str, Str *end, Int32 base) { 
 VT_API VT_INLINE UInt64   misc_str_strtoul(ConstStr str, Str *end, Int32 base) { return strtoul(str, end, base); }
 VT_API VT_INLINE Flt32    misc_str_strtof(ConstStr str, Str *end) { return strtof(str, end); }
 VT_API ConstStr           misc_str_strstr(Str str, ConstStr substr, Bool sensitive);
+VT_API Int32              misc_str_varg(Str target, const ByteSize target_size, ConstStr format, VaList args);
+VT_API Int32              misc_str_fmt(Str target, const ByteSize target_size, ConstStr format, ...);

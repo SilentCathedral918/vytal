@@ -9,7 +9,7 @@
 #include <emmintrin.h>
 #include <stdarg.h>
 
-#define CHAR_ARRAY_MAX_LENGTH 16384 // 16 KB
+#define CHAR_ARRAY_MAX_LENGTH VT_SIZE_KB_MULT(16) // 16 KB
 
 typedef struct Container_String_Data {
     ByteSize _length;

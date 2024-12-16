@@ -16,3 +16,7 @@ VT_API Bool     container_map_isfull(Map map);
 VT_API ByteSize container_map_length(Map map);
 VT_API ByteSize container_map_capacity(Map map);
 VT_API ByteSize container_map_data_size(Map map);
+
+#define container_map_get(map, type, key) (VT_CAST(type *, container_map_search(map, VT_CAST(VoidPtr, key))))
+#define container_map_get_value(map, type, key)                                                                                \
+    (container_map_get(map, type, key) ? *(container_map_get(map, type, key)) : VT_STRUCT(type, {0}))

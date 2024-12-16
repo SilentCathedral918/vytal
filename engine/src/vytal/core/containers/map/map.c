@@ -6,7 +6,7 @@
 
 #include "vytal/core/misc/console/console.h"
 
-#define CONTAINER_MAX_SIZE 16384 // 16 KB
+#define CONTAINER_MAX_SIZE VT_SIZE_KB_MULT(16) // 16 KB
 #define MAX_PROBE_LENGTH(capacity) ((capacity) / 2)
 
 typedef struct Container_Map_Data_Item {

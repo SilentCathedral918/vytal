@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vytal/defines/core/mem.h"
 #include "vytal/defines/core/types.h"
 #include "vytal/defines/shared.h"
 

@@ -7,8 +7,8 @@ static VT_VAR_NOT_USED struct Memory_Manager_Struct {
     VoidPtr _internal_state;
 } memory_manager;
 
-VT_API void    memory_manager_startup(void);
-VT_API void    memory_manager_shutdown(void);
+void           memory_manager_startup(void);
+void           memory_manager_shutdown(void);
 VT_API VoidPtr memory_manager_allocate(const ByteSize size, const MemoryTag tag);
 VT_API Bool    memory_manager_deallocate(VoidPtr ptr, const MemoryTag tag);
 VT_API Bool    memory_manager_report(ConstStr id);

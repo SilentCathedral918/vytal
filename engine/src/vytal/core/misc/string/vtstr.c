@@ -1,6 +1,7 @@
 #include "vtstr.h"
 
 #include <emmintrin.h>
+#include <stdarg.h>
 #include <stdio.h>
 
 // integrate vectorization
@@ -188,4 +189,30 @@ ConstStr misc_str_strstr(Str str, ConstStr substr, Bool sensitive) {
 #else
     return _misc_str_strstr_fallback(str, substr, sensitive);
 #endif
+}
+
+Int32 misc_str_varg(Str target, const ByteSize target_size, ConstStr format, VaList args) {
+    if (!target || (target_size == 0) || !format)
+        return 0;
+
+    Int32 res_ = vsnprintf(target, target_size, format, args);
+    if (res_ <= 0) {
+        target = '\0';
+        return -1;
+    }
+
+    return res_;
+}
+
+Int32 misc_str_fmt(Str target, const ByteSize target_size, ConstStr format, ...) {
+    if (!target || (target_size == 0) || !format)
+        return 0;
+
+    VaList va_list_;
+    va_start(va_list_, format);
+
+    Int32 res_ = misc_str_varg(target, target_size, format, va_list_);
+
+    va_end(va_list_);
+    return res_;
 }

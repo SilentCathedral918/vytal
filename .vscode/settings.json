@@ -33,7 +33,8 @@
     "cstdint": "c",
     "memory": "c",
     "typeindex": "c",
-    "variant": "c"
+    "variant": "c",
+    "compare": "c"
   },
 
   // editor styling
