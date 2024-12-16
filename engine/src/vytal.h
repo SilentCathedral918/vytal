@@ -1,3 +1,3 @@
 #pragma once
 
-#include "vytal/core/application/application.h"
+#include "vytal/core/entry/entry.h"

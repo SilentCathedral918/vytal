@@ -41,25 +41,17 @@ Map container_map_construct(const ByteSize data_size) {
     ByteSize bucket_size_ = CONTAINER_MAX_SIZE - (sizeof(Container_Map) + sizeof(MapData));
     ByteSize remainder_   = bucket_size_ % item_size_;
 
-    misc_console_writeln("%llu", remainder_);
-
     while (remainder_ != 0) {
         data_size_++;
         item_size_ = sizeof(MapDataItem) + data_size_;
         remainder_ = bucket_size_ % item_size_;
     }
 
-    misc_console_writeln("%llu %% %llu = %llu", bucket_size_, item_size_, bucket_size_ % item_size_);
-
     if (bucket_size_ % item_size_ != 0)
         return NULL;
 
-    misc_console_writeln("passed mod test");
-
     // size set to 0 since 'containers' use pool allocator, where size is already determined
     VoidPtr chunk_ = memory_manager_allocate(0, MEMORY_TAG_CONTAINERS);
-
-    misc_console_writeln("%p", chunk_);
 
     if (!chunk_)
         return NULL;

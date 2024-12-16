@@ -9,7 +9,7 @@
 
 #define OUTPUT_BUFFER_MAX_SIZE VT_SIZE_KB_MULT(16) // 16 KB
 #define ENGINE_LOGGER_ID "Engine"
-#define ENGINE_LOG_FILE "log/engine.txt"
+#define ENGINE_LOG_FILEPATH "log/engine.txt"
 
 typedef struct Logger_State {
     Map     _log_map;
@@ -27,8 +27,38 @@ Bool _logger_append_to_file(FileHandle *handle, ConstStr message) {
     return platform_fs_file_write_data(handle, VT_CAST(const VoidPtr, message), message_length_);
 }
 
+Bool _logger_add_default(void) {
+    Logger new_logger_;
+    hal_mem_memzero(VT_CAST(const VoidPtr, new_logger_._id), sizeof(new_logger_._id));
+    misc_str_strncpy(new_logger_._id, ENGINE_LOGGER_ID, sizeof(new_logger_._id));
+
+    if (!platform_fs_open_file(&(new_logger_._file_handle), ENGINE_LOG_FILEPATH, FILE_IO_MODE_WRITE, FILE_MODE_TEXT)) {
+        // in case the directory doesn't exist
+        {
+            // create one...
+
+            ConstStr dir_sep_ = platform_fs_get_filename_from_path(ENGINE_LOG_FILEPATH);
+            if (!dir_sep_)
+                return false;
+
+            ByteSize idx_                              = VT_CAST(PtrDiff, dir_sep_ - ENGINE_LOG_FILEPATH);
+            Char     dir_name_[OUTPUT_BUFFER_MAX_SIZE] = {'\0'};
+            misc_str_strncpy(dir_name_, ENGINE_LOG_FILEPATH, idx_);
+
+            if (!platform_fs_create_directory(dir_name_))
+                return false;
+        }
+
+        // create new file in the directory
+        if (!platform_fs_open_file(&(new_logger_._file_handle), ENGINE_LOG_FILEPATH, FILE_IO_MODE_WRITE, FILE_MODE_TEXT))
+            return false;
+    }
+
+    return container_map_insert(state->_log_map, VT_CAST(VoidPtr, ENGINE_LOGGER_ID), &new_logger_);
+}
+
 Bool logger_startup(void) {
-    if (state || state->_initialized)
+    if (state)
         return false;
 
     // allocate the state
@@ -36,15 +66,15 @@ Bool logger_startup(void) {
 
     // configure the state members
     {
-        state->_log_map     = container_map_construct(sizeof(Logger));
+        state->_log_map = container_map_construct(sizeof(Logger));
+
         state->_log_flags   = LOG_FLAG_NONE;
         state->_initialized = true;
     }
 
     // add engine logger
-    {
-        if (!logger_add(ENGINE_LOGGER_ID, ENGINE_LOG_FILE))
-            return false;
+    if (!_logger_add_default()) {
+        return false;
     }
 
     return true;
@@ -87,12 +117,11 @@ Bool logger_add(ConstStr logger_id, ConstStr filepath) {
             if (!dir_sep_)
                 return false;
 
-            ByteSize idx_ = VT_CAST(PtrDiff, dir_sep_ - filepath);
-
-            Char dir_name_[OUTPUT_BUFFER_MAX_SIZE] = {'\0'};
+            ByteSize idx_                              = VT_CAST(PtrDiff, dir_sep_ - filepath);
+            Char     dir_name_[OUTPUT_BUFFER_MAX_SIZE] = {'\0'};
             misc_str_strncpy(dir_name_, filepath, idx_);
 
-            if (platform_fs_create_directory(dir_name_))
+            if (!platform_fs_create_directory(dir_name_))
                 return false;
         }
 

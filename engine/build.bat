@@ -19,7 +19,7 @@ rem --- linker flags
 set "linker_flags=-luser32 -lvulkan-1 -L%VULKAN_SDK%/Lib"
 
 rem --- defines
-set "defines=-D_DEBUG -DVT_EXPORT_DLL -D_CRT_SECURE_NO_WARNINGS"
+set "defines=-D_DEBUG -DVT_DEBUG_BREAK -DVT_ENABLE_ASSERTIONS -DVT_EXPORT_DLL -D_CRT_SECURE_NO_WARNINGS"
 
 rem --- build command
 echo "Building %codebase%..."
