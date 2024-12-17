@@ -5,13 +5,13 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/engine/src/**",
-                "${VULKAN_SDK}/Include"
+                "${VULKAN_SDK}/Include",
+                "${GLFW_PATH}/include"
             ],
             "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE",
-                "VT_EXPORT_DLL"
+                "VT_DEBUG",
+                "VT_EXPORT_DLL",
+                "VT_ENABLE_ASSERTIONS"
             ],
             "windowsSdkVersion": "10.0.26100.0",
             "compilerPath": "C:\\mingw64\\bin\\gcc.exe",
@@ -23,13 +23,13 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/engine/src/**",
-                "${VULKAN_SDK}/include"
+                "${VULKAN_SDK}/include",
+                "${GLFW_PATH}/include"
             ],
             "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE",
-                "VT_EXPORT_DLL"
+                "VT_DEBUG",
+                "VT_EXPORT_DLL",
+                "VT_ENABLE_ASSERTIONS"
             ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c17",

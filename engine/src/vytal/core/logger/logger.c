@@ -5,7 +5,6 @@
 #include "vytal/core/hal/memory/vtmem.h"
 #include "vytal/core/misc/console/console.h"
 #include "vytal/core/misc/string/vtstr.h"
-#include "vytal/core/platform/filesystem/filesystem.h"
 
 #define OUTPUT_BUFFER_MAX_SIZE VT_SIZE_KB_MULT(16) // 16 KB
 #define ENGINE_LOGGER_ID "Engine"

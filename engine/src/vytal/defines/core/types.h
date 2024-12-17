@@ -32,8 +32,8 @@ typedef bool Bool;
 
 #else
 typedef unsigned char Bool;
-#    define false AX_CAST(Bool, 0)
-#    define true AX_CAST(Bool, 1)
+#    define false VT_CAST(Bool, 0)
+#    define true VT_CAST(Bool, 1)
 
 #endif
 

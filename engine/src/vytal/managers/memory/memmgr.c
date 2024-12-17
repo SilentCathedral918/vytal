@@ -35,9 +35,10 @@ typedef struct Memory_Manager_Tag_Info {
     ByteSize        _capacity;
 } MemMgrTagInfo;
 static const MemMgrTagInfo memory_tag_infos[] = {
-    {"Application", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(16)}, {"Physics", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(16)},
-    {"AI", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(8)},           {"Audio", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(8)},
-    {"Network", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(4)},      {"Core Game Logic", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(16)},
+    {"Application", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(16)}, {"Module", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(4)},
+    {"Physics", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(16)},     {"AI", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(8)},
+    {"Audio", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(8)},        {"Network", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(4)},
+    {"Platform", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(4)},     {"Core Game Logic", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(16)},
     {"Game Entity", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(32)}, {"Game Scene", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(64)},
     {"Containers", ALLOCTYPE_POOL, VT_SIZE_MB_MULT(4)},    {"Delegates", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(2)},
     {"Renderer", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(32)},    {"Resources", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(128)}};

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vytal/defines/core/types.h"
+#include "types.h"
 
 // ----------------------------- hashed integer ----------------------------- //
 

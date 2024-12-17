@@ -38,10 +38,12 @@ typedef enum Memory_Manager_AllocationType { ALLOCTYPE_ARENA, ALLOCTYPE_POOL } M
 
 typedef enum Memory_Tag {
     MEMORY_TAG_APPLICATION, // general application
+    MEMORY_TAG_MODULE,      // engine modules
     MEMORY_TAG_PHYSICS,     // physics engine
     MEMORY_TAG_AI,          // artificial intelligence
     MEMORY_TAG_AUDIO,       // audio system allocations
     MEMORY_TAG_NETWORK,     // networking
+    MEMORY_TAG_PLATFORM,    // window creation, input handling, OS interaction
 
     MEMORY_TAG_GAME_LOGIC,  // core game logic
     MEMORY_TAG_GAME_ENTITY, // game entities (players, npcs, etc.)

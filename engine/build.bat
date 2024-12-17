@@ -13,13 +13,13 @@ rem --- compiler flags
 set "compiler_flags=-g -shared -Wall -Werror -Wvarargs -Wno-unused-function"
 
 rem --- include flags
-set "include_flags=-Isrc -I%VULKAN_SDK%/Include"
+set "include_flags=-Isrc -I%VULKAN_SDK%/Include -I%GLFW_PATH%/include"
 
 rem --- linker flags
-set "linker_flags=-luser32 -lvulkan-1 -L%VULKAN_SDK%/Lib"
+set "linker_flags=-luser32 -L%VULKAN_SDK%/Lib -lvulkan-1 -L%GLFW_PATH%/lib -lglfw3 -lgdi32 -lopengl32"
 
 rem --- defines
-set "defines=-D_DEBUG -DVT_DEBUG_BREAK -DVT_ENABLE_ASSERTIONS -DVT_EXPORT_DLL -D_CRT_SECURE_NO_WARNINGS"
+set "defines=-DVT_DEBUG -DVT_ENABLE_ASSERTIONS -DVT_EXPORT_DLL -D_CRT_SECURE_NO_WARNINGS"
 
 rem --- build command
 echo "Building %codebase%..."

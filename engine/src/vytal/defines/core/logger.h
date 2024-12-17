@@ -26,6 +26,6 @@ typedef enum Logger_LogFlag {
 // -------------------------------- type -------------------------------- //
 
 typedef struct Logger_Struct {
-    Char       _id[24];
+    Char       _id[64];
     FileHandle _file_handle;
 } Logger;

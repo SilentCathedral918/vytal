@@ -224,6 +224,17 @@ VoidPtr container_map_search(Map map, const VoidPtr key) {
     return NULL;
 }
 
+VoidPtr container_map_search_by_index(Map map, const ByteSize index) {
+    if (!map || _container_map_empty(map))
+        return NULL;
+
+    MapData     *data_         = _container_map_get_internal_data(map);
+    ByteSize     check_offset_ = (sizeof(MapDataItem) + data_->_data_size) * index;
+    MapDataItem *check_slot_   = VT_CAST(MapDataItem *, VT_CAST(BytePtr, data_->_bucket) + check_offset_);
+
+    return (check_slot_->_pkey == 0x00) ? NULL : VT_CAST(VoidPtr, check_slot_->_pdata);
+}
+
 Bool container_map_contains(Map map, const VoidPtr key) { return (!map ? false : (container_map_search(map, key) != NULL)); }
 Bool container_map_isempty(Map map) { return (!map ? true : _container_map_empty(map)); }
 Bool container_map_isfull(Map map) { return (!map ? false : _container_map_full(map)); }

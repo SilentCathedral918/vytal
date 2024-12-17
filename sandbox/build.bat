@@ -19,7 +19,7 @@ rem --- linker flags
 set "linker_flags=-L../bin/ -lengine"
 
 rem --- defines
-set "defines=-D_DEBUG -DVT_IMPORT_DLL"
+set "defines=-DVT_DEBUG -DVT_IMPORT_DLL"
 
 rem --- build command
 echo "Building %codebase%..."
