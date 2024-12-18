@@ -6,7 +6,7 @@
 #include "vytal/core/misc/console/console.h"
 #include "vytal/core/misc/string/vtstr.h"
 
-#define OUTPUT_BUFFER_MAX_SIZE VT_SIZE_KB_MULT(16) // 16 KB
+#define OUTPUT_BUFFER_MAX_SIZE VT_SIZE_KB_MULT(32) // 32 KB
 #define ENGINE_LOGGER_ID "Engine"
 #define ENGINE_LOG_FILEPATH "log/engine.txt"
 

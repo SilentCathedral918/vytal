@@ -6,7 +6,7 @@
 
 #include "vytal/core/misc/console/console.h"
 
-#define CONTAINER_MAX_SIZE VT_SIZE_KB_MULT(16) // 16 KB
+#define CONTAINER_MAX_SIZE VT_SIZE_KB_MULT(32) // 32 KB
 #define MAX_PROBE_LENGTH(capacity) ((capacity) / 2)
 
 typedef struct Container_Map_Data_Item {
@@ -39,16 +39,6 @@ Map container_map_construct(const ByteSize data_size) {
     ByteSize data_size_   = data_size;
     ByteSize item_size_   = sizeof(MapDataItem) + data_size_;
     ByteSize bucket_size_ = CONTAINER_MAX_SIZE - (sizeof(Container_Map) + sizeof(MapData));
-    ByteSize remainder_   = bucket_size_ % item_size_;
-
-    while (remainder_ != 0) {
-        data_size_++;
-        item_size_ = sizeof(MapDataItem) + data_size_;
-        remainder_ = bucket_size_ % item_size_;
-    }
-
-    if (bucket_size_ % item_size_ != 0)
-        return NULL;
 
     // size set to 0 since 'containers' use pool allocator, where size is already determined
     VoidPtr chunk_ = memory_manager_allocate(0, MEMORY_TAG_CONTAINERS);
@@ -121,6 +111,7 @@ Bool container_map_insert(Map map, const VoidPtr key, const VoidPtr data) {
         check_slot_->_pkey       = VT_CAST(UIntPtr, key);
         check_slot_->_hashed_key = hashed_;
         check_slot_->_pdata      = VT_CAST(UIntPtr, VT_CAST(BytePtr, check_slot_) + sizeof(MapDataItem));
+
         hal_mem_memcpy(VT_CAST(VoidPtr, check_slot_->_pdata), data, data_->_data_size);
     }
 

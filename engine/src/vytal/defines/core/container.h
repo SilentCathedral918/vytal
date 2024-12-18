@@ -18,3 +18,10 @@ typedef struct Container_Map {
     VoidPtr _internal_data;
 } Container_Map;
 typedef Container_Map *Map;
+
+// ------------------------------ array ------------------------------ //
+
+typedef struct Container_Array {
+    VoidPtr _internal_data;
+} Container_Array;
+typedef Container_Array *Array;
