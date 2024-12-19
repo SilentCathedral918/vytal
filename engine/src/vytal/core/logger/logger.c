@@ -240,7 +240,7 @@ Bool logger_print(ConstStr logger_id, LogVerbosity verbosity, ConstStr at_file, 
     } break;
 
     case LOG_VERBOSITY_INFO: {
-        misc_console_setforeground_rgb(0, 255, 255);
+        misc_console_setforeground_rgb(101, 191, 104);
         misc_console_setbackground_rgb(0, 153, 255);
         misc_console_write(" %s ", verbosity_);
         misc_console_reset();

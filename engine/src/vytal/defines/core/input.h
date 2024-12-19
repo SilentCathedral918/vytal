@@ -145,7 +145,7 @@ typedef enum Input_Mouse_Code {
 
 typedef enum Input_Event_Code {
     // application events
-    VT_EVENTCODE_APP_QUIT = 0x01,
+    VT_EVENTCODE_WINDOW_CLOSE = 0x01,
 
     // key events
     VT_EVENTCODE_KEY_PRESSED  = 0x02,

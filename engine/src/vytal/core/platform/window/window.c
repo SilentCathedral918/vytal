@@ -4,132 +4,258 @@
 #include "vytal/core/misc/string/vtstr.h"
 #include "vytal/managers/memory/memmgr.h"
 
-#include <GLFW/glfw3.h>
+#include "vytal/core/platform/window/backend/glfw/glfw_window.h"
 
-typedef struct Window_Platform_Struct {
-    GLFWwindow *_handle;
-} Window_Platform_Struct;
+static WindowBackend window_backend = -1;
+static Bool          is_valid_backend() { return window_backend != -1; }
 
-Bool platform_window_startup(void) { return (glfwInit() == GLFW_TRUE); }
+Bool platform_window_startup(const WindowBackend backend) {
+    if (is_valid_backend())
+        return false;
 
-void platform_window_shutdown(void) { glfwTerminate(); }
+    switch (backend) {
+    case WINDOW_BACKEND_GLFW:
+        window_backend = WINDOW_BACKEND_GLFW;
+        return glfw_window_startup();
 
-PlatformWindow platform_window_construct(const WindowProps properties) {
-    GLFWwindow *handle_ = glfwCreateWindow(properties._width, properties._height, properties._title,
-                                           properties._fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
-    if (!handle_)
+    default:
+        return false;
+    }
+}
+
+void platform_window_shutdown(void) {
+    if (!is_valid_backend())
+        return;
+
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        glfw_window_shutdown();
+        break;
+
+    default:
+        break;
+    }
+
+    window_backend = -1;
+}
+
+PlatformWindow platform_window_construct(const WindowProps properties, const WindowCallbacks *callbacks) {
+    if (!is_valid_backend() || !callbacks)
         return NULL;
 
-    PlatformWindow window_ = memory_manager_allocate(sizeof(Window_Platform_Struct), MEMORY_TAG_PLATFORM);
-    window_->_handle       = handle_;
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_construct(properties, callbacks);
 
-    return window_;
+    default:
+        return NULL;
+    }
 }
 
 Bool platform_window_destruct(PlatformWindow window) {
-    if (!window)
+    if (!window || !is_valid_backend())
         return false;
 
-    glfwDestroyWindow(window->_handle);
-    window->_handle = NULL;
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_destruct(window);
 
-    // no need to free the platform window
-    // let the memory manager handle the work
-    return true;
+    default:
+        return false;
+    }
 }
 
-VoidPtr platform_window_get(PlatformWindow window) { return !window ? NULL : VT_CAST(VoidPtr, window->_handle); }
+VoidPtr platform_window_get_native(PlatformWindow window) {
+    if (!window || !is_valid_backend())
+        return NULL;
 
-ConstStr platform_window_get_title(PlatformWindow window) { return !window ? "" : glfwGetWindowTitle(window->_handle); }
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_get_handle(window);
+
+    default:
+        return NULL;
+    }
+}
+
+ConstStr platform_window_get_title(PlatformWindow window) {
+    if (!window || !is_valid_backend())
+        return "";
+
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_get_title(window);
+
+    default:
+        return "";
+    }
+}
 
 Int32 platform_window_get_x(PlatformWindow window) {
-    if (!window)
+    if (!window || !is_valid_backend())
         return 0;
 
-    Int32 x_ = 0;
-    glfwGetWindowPos(window->_handle, &x_, NULL);
-    return x_;
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_get_x(window);
+
+    default:
+        return 0;
+    }
 }
 
 Int32 platform_window_get_y(PlatformWindow window) {
-    if (!window)
+    if (!window || !is_valid_backend())
         return 0;
 
-    Int32 y_ = 0;
-    glfwGetWindowPos(window->_handle, NULL, &y_);
-    return y_;
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_get_y(window);
+
+    default:
+        return 0;
+    }
 }
 
 Int32 platform_window_get_width(PlatformWindow window) {
-    if (!window)
+    if (!window || !is_valid_backend())
         return 0;
 
-    Int32 width_ = 0;
-    glfwGetWindowSize(window->_handle, &width_, NULL);
-    return width_;
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_get_width(window);
+
+    default:
+        return 0;
+    }
 }
 
 Int32 platform_window_get_height(PlatformWindow window) {
-    if (!window)
+    if (!window || !is_valid_backend())
         return 0;
 
-    Int32 height_ = 0;
-    glfwGetWindowSize(window->_handle, NULL, &height_);
-    return height_;
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_get_height(window);
+
+    default:
+        return 0;
+    }
 }
 
 Bool platform_window_set_title(PlatformWindow window, ConstStr title) {
-    if (!window)
+    if (!window || !is_valid_backend())
         return false;
 
-    glfwSetWindowTitle(window->_handle, title);
-    return true;
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_set_title(window, title);
+
+    default:
+        return false;
+    }
 }
 
 Bool platform_window_set_x(PlatformWindow window, const Int32 x) {
-    if (!window)
+    if (!window || !is_valid_backend())
         return false;
 
-    glfwSetWindowPos(window->_handle, x, platform_window_get_y(window));
-    return true;
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_set_x(window, x);
+
+    default:
+        return false;
+    }
 }
 
 Bool platform_window_set_y(PlatformWindow window, const Int32 y) {
-    if (!window)
+    if (!window || !is_valid_backend())
         return false;
 
-    glfwSetWindowPos(window->_handle, platform_window_get_x(window), y);
-    return true;
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_set_y(window, y);
+
+    default:
+        return false;
+    }
 }
 
 Bool platform_window_set_position(PlatformWindow window, const Int32 x, const Int32 y) {
-    if (!window)
+    if (!window || !is_valid_backend())
         return false;
 
-    glfwSetWindowPos(window->_handle, x, y);
-    return true;
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_set_position(window, x, y);
+
+    default:
+        return false;
+    }
 }
 
 Bool platform_window_set_width(PlatformWindow window, const Int32 width) {
-    if (!window)
+    if (!window || !is_valid_backend())
         return false;
 
-    glfwSetWindowSize(window->_handle, width, platform_window_get_height(window));
-    return true;
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_set_width(window, width);
+
+    default:
+        return false;
+    }
 }
 
 Bool platform_window_set_height(PlatformWindow window, const Int32 height) {
-    if (!window)
+    if (!window || !is_valid_backend())
         return false;
 
-    glfwSetWindowSize(window->_handle, platform_window_get_width(window), height);
-    return true;
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_set_height(window, height);
+
+    default:
+        return false;
+    }
 }
 
 Bool platform_window_set_size(PlatformWindow window, const Int32 width, const Int32 height) {
-    if (!window)
+    if (!window || !is_valid_backend())
         return false;
 
-    glfwSetWindowSize(window->_handle, width, height);
-    return true;
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_set_size(window, width, height);
+
+    default:
+        return false;
+    }
+}
+
+Bool platform_window_poll_events(PlatformWindow window) {
+    if (!window || !is_valid_backend())
+        return false;
+
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_poll_events(window);
+
+    default:
+        return false;
+    }
+}
+
+Bool platform_window_swap_buffers(PlatformWindow window) {
+    if (!window || !is_valid_backend())
+        return false;
+
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_swap_buffers(window);
+
+    default:
+        return false;
+    }
 }
