@@ -49,7 +49,7 @@ void _glfw_window_mouse_button_callback(GLFWwindow *window, Int32 button, Int32 
 
 void _glfw_window_mouse_move_callback(GLFWwindow *window, Flt64 xpos, Flt64 ypos) {
     if (vytal_glfw_window_callbacks->_on_mouse_moved) {
-        vytal_glfw_window_callbacks->_on_mouse_moved(window, VT_CAST(UInt16, xpos), VT_CAST(UInt16, ypos));
+        vytal_glfw_window_callbacks->_on_mouse_moved(window, VT_CAST(Int32, xpos), VT_CAST(Int32, ypos));
     }
 }
 

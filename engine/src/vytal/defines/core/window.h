@@ -16,7 +16,7 @@ typedef struct Window_Callbacks {
 
     // mouse events
     void (*_on_mouse_pressed)(VoidPtr context, InputMouseCode code, Bool pressed);
-    void (*_on_mouse_moved)(VoidPtr context, UInt16 x, UInt16 y);
+    void (*_on_mouse_moved)(VoidPtr context, Int32 x, Int32 y);
     void (*_on_mouse_scrolled)(VoidPtr context, Int8 scroll_value);
 } WindowCallbacks;
 

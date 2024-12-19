@@ -38,7 +38,7 @@ void _window_module_callback_on_mouse_pressed(VoidPtr context, InputMouseCode mo
     input_module_invoke_event(data._event_code, &data);
 }
 
-void _window_module_callback_on_mouse_moved(VoidPtr context, UInt16 x, UInt16 y) {
+void _window_module_callback_on_mouse_moved(VoidPtr context, Int32 x, Int32 y) {
     InputMouseMoveEventData data = {._event_code = VT_EVENTCODE_MOUSE_MOVED, ._x = x, ._y = y};
     input_module_invoke_event(VT_EVENTCODE_MOUSE_MOVED, &data);
 }

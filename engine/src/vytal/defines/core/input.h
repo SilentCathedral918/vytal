@@ -178,17 +178,17 @@ typedef struct Input_Event_Data {
 
 typedef struct Input_Key_Event_Data {
     InputEventCode _event_code;
-    UInt16         _key_code;
+    Int32          _key_code;
 } InputKeyEventData;
 
 typedef struct Input_Mouse_Event_Data {
     InputEventCode _event_code;
-    UInt16         _mouse_code;
+    Int32          _mouse_code;
 } InputMouseEventData;
 
 typedef struct Input_Mouse_Move_Event_Data {
     InputEventCode _event_code;
-    UInt16         _x, _y;
+    Int32          _x, _y;
 } InputMouseMoveEventData;
 
 typedef struct Input_Mouse_Scroll_Event_Data {
@@ -198,5 +198,5 @@ typedef struct Input_Mouse_Scroll_Event_Data {
 
 typedef struct Input_Window_Resize_Event_Data {
     InputEventCode _event_code;
-    UInt16         _width, _height;
+    Int32          _width, _height;
 } InputWindowResizeEventData;

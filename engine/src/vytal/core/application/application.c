@@ -67,6 +67,23 @@ void _application_on_event(VoidPtr sender, VoidPtr listener, VoidPtr data) {
     }
 }
 
+void _application_on_key(VoidPtr sender, VoidPtr listener, VoidPtr data) {
+    InputKeyEventData *data_ = VT_CAST(InputKeyEventData *, data);
+
+    switch (data_->_event_code) {
+    case VT_EVENTCODE_KEY_PRESSED: {
+        VT_LOG_INFO("Engine", "key '%c' pressed!", data_->_key_code);
+    } break;
+
+    case VT_EVENTCODE_KEY_RELEASED: {
+        VT_LOG_INFO("Engine", "key '%c' released!", data_->_key_code);
+    } break;
+
+    default:
+        break;
+    }
+}
+
 Bool application_preconstruct(void) {
     if (!_application_core_startup())
         return false;
@@ -91,6 +108,8 @@ Bool application_preconstruct(void) {
     // register events
     {
         input_module_register_event(VT_EVENTCODE_WINDOW_CLOSE, _application_on_event);
+        input_module_register_event(VT_EVENTCODE_KEY_PRESSED, _application_on_key);
+        input_module_register_event(VT_EVENTCODE_KEY_RELEASED, _application_on_key);
     }
 
     _application_report_status("pre_construct state completed, proceeding to construct stage...");
@@ -110,7 +129,6 @@ Bool application_update(void) {
         return false;
 
     do {
-
         if (!module_manager_update_modules())
             return false;
     } while (state->_active);
@@ -126,6 +144,8 @@ Bool application_destruct(void) {
     // unregister events
     {
         input_module_unregister_event(VT_EVENTCODE_WINDOW_CLOSE, _application_on_event);
+        input_module_register_event(VT_EVENTCODE_KEY_PRESSED, _application_on_key);
+        input_module_register_event(VT_EVENTCODE_KEY_RELEASED, _application_on_key);
     }
 
     if (!window_module_destruct_main())

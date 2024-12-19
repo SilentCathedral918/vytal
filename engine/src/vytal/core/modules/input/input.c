@@ -12,9 +12,9 @@ typedef struct Input_Keyboard_State {
 } InputKeyboardState;
 
 typedef struct Input_Mouse_State {
-    UInt16 _x, _y;
-    Int8   _scroll_value;
-    Bool   _values[MOUSE_CODES];
+    Int32 _x, _y;
+    Int8  _scroll_value;
+    Bool  _values[MOUSE_CODES];
 } InputMouseState;
 
 typedef struct Input_Module_State {
@@ -187,7 +187,7 @@ Bool input_module_process_mouse_pressed(const InputMouseCode code, const Bool pr
     return true;
 }
 
-Bool input_module_process_mouse_moved(const UInt16 x, const UInt16 y) {
+Bool input_module_process_mouse_moved(const Int32 x, const Int32 y) {
     if (!state)
         return false;
 
