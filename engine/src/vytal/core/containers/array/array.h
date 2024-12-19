@@ -31,4 +31,6 @@ VT_API VT_INLINE Bool container_array_isfull(Array array) {
             }                                                                                                                  \
         }                                                                                                                      \
     }
+
 #define container_array_get_value_at_index(array, type, index) (*VT_CAST(type *, container_array_get_at_index(array, index)))
+

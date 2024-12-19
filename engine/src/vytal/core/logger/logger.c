@@ -155,10 +155,7 @@ Bool logger_toggle_timestamp(void) { return logger_toggle_flag(LOG_FLAG_TIMESTAM
 Bool logger_toggle_file_line(void) { return logger_toggle_flag(LOG_FLAG_FILE_LINE); }
 
 Bool logger_print(ConstStr logger_id, LogVerbosity verbosity, ConstStr at_file, Int32 at_line, ConstStr message, ...) {
-    if (!state || !state->_initialized || !logger_id || !message)
-        return false;
-
-    if (container_map_isempty(state->_log_map) || !container_map_contains(state->_log_map, VT_CAST(VoidPtr, logger_id)))
+    if (!state || !logger_id)
         return false;
 
     Logger   logger_ = container_map_get_value(state->_log_map, Logger, logger_id);

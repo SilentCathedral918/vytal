@@ -83,8 +83,8 @@ MulticastDelegateHandle delegate_multicast_handle_construct(void) {
 
     // init handle members
     {
-        handle_->_delegate_map  = container_map_construct(sizeof(MulticastDelegate));
-        handle_->_num_delegates = 0;
+        handle_->_delegate_map = container_map_construct(sizeof(MulticastDelegate));
+        handle_->_binded_refs  = container_array_construct(UIntPtr);
     }
 
     return handle_;
@@ -96,6 +96,7 @@ Bool delegate_multicast_handle_destruct(MulticastDelegateHandle handle) {
 
     // free and set members to zero
     {
+        container_array_destruct(handle->_binded_refs);
         container_map_destruct(handle->_delegate_map);
         hal_mem_memzero(handle, sizeof(Delegate_Unicast_Handle));
     }
@@ -120,7 +121,7 @@ Bool delegate_multicast_handle_bind(MulticastDelegateHandle handle, MulticastDel
         if (!container_map_insert(handle->_delegate_map, delegate, &delegate))
             return false;
 
-        ++handle->_num_delegates;
+        container_array_push(handle->_binded_refs, UIntPtr, VT_CAST(UIntPtr, delegate));
     }
 
     return true;
@@ -139,23 +140,24 @@ Bool delegate_multicast_handle_unbind(MulticastDelegateHandle handle, MulticastD
         if (!container_map_remove(handle->_delegate_map, delegate))
             return false;
 
-        --handle->_num_delegates;
+        UIntPtr remove_data_ = VT_CAST(UIntPtr, delegate);
+        container_array_remove(handle->_binded_refs, &remove_data_);
     }
 
     return true;
 }
 
 Bool delegate_multicast_handle_invoke(MulticastDelegateHandle handle, VoidPtr sender, VoidPtr data) {
-    if (!handle || !sender || !data)
+    if (!handle || !data)
         return false;
 
     // go through the delegates...
-    for (ByteSize i = 0; i < handle->_num_delegates; ++i) {
-        MulticastDelegate del_ = container_map_get_value_by_index(handle->_delegate_map, MulticastDelegate, i);
+    for (ByteSize i = 0; i < container_array_length(handle->_binded_refs); ++i) {
+        UIntPtr           ref_ = container_array_get_value_at_index(handle->_binded_refs, UIntPtr, i);
+        MulticastDelegate del_ = VT_CAST(MulticastDelegate, ref_);
         if (!del_)
             continue;
 
-        // del_->_callback(sender, del_->_listener, data);
         // go through the callbacks...
         for (ByteSize j = 0; j < del_->_num_callbacks; ++j) {
             DelegateFunc callback_ = container_array_get_value_at_index(del_->_callbacks, DelegateFunc, j);

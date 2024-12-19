@@ -1,7 +1,9 @@
 #include "unicast.h"
 
+#include "vytal/core/containers/array/array.h"
 #include "vytal/core/containers/map/map.h"
 #include "vytal/core/hal/memory/vtmem.h"
+#include "vytal/core/misc/console/console.h"
 #include "vytal/managers/memory/memmgr.h"
 
 // -------------------------- delegate -------------------------- //
@@ -52,8 +54,8 @@ UnicastDelegateHandle delegate_unicast_handle_construct(void) {
 
     // init handle members
     {
-        handle_->_delegate_map  = container_map_construct(sizeof(UnicastDelegate));
-        handle_->_num_delegates = 0;
+        handle_->_delegate_map = container_map_construct(sizeof(UnicastDelegate));
+        handle_->_binded_refs  = container_array_construct(UIntPtr);
     }
 
     return handle_;
@@ -65,6 +67,7 @@ Bool delegate_unicast_handle_destruct(UnicastDelegateHandle handle) {
 
     // free and set members to zero
     {
+        container_array_destruct(handle->_binded_refs);
         container_map_destruct(handle->_delegate_map);
         hal_mem_memzero(handle, sizeof(Delegate_Unicast_Handle));
     }
@@ -89,7 +92,7 @@ Bool delegate_unicast_handle_bind(UnicastDelegateHandle handle, UnicastDelegate 
         if (!container_map_insert(handle->_delegate_map, delegate, &delegate))
             return false;
 
-        ++handle->_num_delegates;
+        container_array_push(handle->_binded_refs, UIntPtr, VT_CAST(UIntPtr, delegate));
     }
 
     return true;
@@ -108,24 +111,28 @@ Bool delegate_unicast_handle_unbind(UnicastDelegateHandle handle, UnicastDelegat
         if (!container_map_remove(handle->_delegate_map, delegate))
             return false;
 
-        --handle->_num_delegates;
+        UIntPtr remove_data_ = VT_CAST(UIntPtr, delegate);
+        container_array_remove(handle->_binded_refs, &remove_data_);
     }
 
     return true;
 }
 
 Bool delegate_unicast_handle_invoke(UnicastDelegateHandle handle, VoidPtr sender, VoidPtr data) {
-    if (!handle || !sender || !data)
+    if (!handle || !data)
         return false;
 
     // go through the delegates...
-    for (ByteSize i = 0; i < handle->_num_delegates; ++i) {
-        UnicastDelegate del_ = container_map_get_value_by_index(handle->_delegate_map, UnicastDelegate, i);
+    for (ByteSize i = 0; i < container_array_length(handle->_binded_refs); ++i) {
+        UIntPtr         ref_ = container_array_get_value_at_index(handle->_binded_refs, UIntPtr, i);
+        UnicastDelegate del_ = VT_CAST(UnicastDelegate, ref_);
+
         if (!del_)
             continue;
 
         del_->_callback(sender, del_->_listener, data);
+        return true;
     }
 
-    return true;
+    return false;
 }

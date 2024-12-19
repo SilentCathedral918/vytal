@@ -4,6 +4,7 @@
 #include "vytal/core/hal/memory/vtmem.h"
 #include "vytal/core/logger/logger.h"
 #include "vytal/core/misc/console/console.h"
+#include "vytal/core/modules/input/input.h"
 #include "vytal/core/modules/window/window.h"
 #include "vytal/core/platform/window/window.h"
 #include "vytal/managers/memory/memmgr.h"
@@ -12,6 +13,7 @@
 #include <GLFW/glfw3.h>
 
 typedef struct Application_State {
+    Bool _active;
     Bool _initialized;
 
 } Application_State;
@@ -26,20 +28,16 @@ Bool _application_core_startup(void) {
     misc_console_startup();
 
     // logger startup
-    if (!logger_startup()) {
-        misc_console_writeln("Logger startup failed.");
+    if (!logger_startup())
         return false;
-    }
 
     return true;
 }
 
 Bool _application_core_shutdown(void) {
     // logger startup
-    if (!logger_shutdown()) {
-        misc_console_writeln("Logger shutdown failed.");
+    if (!logger_shutdown())
         return false;
-    }
 
     // console startup
     misc_console_shutdown();
@@ -56,9 +54,21 @@ void _application_report_status(ConstStr status) {
     misc_console_reset();
 }
 
-VT_INLINE Int32 _application_window_active(GLFWwindow *window) { return !glfwWindowShouldClose(window); }
-VT_INLINE void  _application_window_poll() { glfwPollEvents(); }
-VT_INLINE void  _application_window_swapbuf(GLFWwindow *window) { glfwSwapBuffers(window); }
+// VT_INLINE Int32 _application_window_active(GLFWwindow *window) { return !glfwWindowShouldClose(window); }
+
+void _application_on_event(VoidPtr sender, VoidPtr listener, VoidPtr data) {
+    InputEventData data_ = *(VT_CAST(InputEventData *, data));
+
+    switch (data_._event_code) {
+    case VT_EVENTCODE_APP_QUIT:
+        VT_LOG_INFO("Engine", "%s", "EVENTCODE_APP_QUIT invoked - shutting down...");
+        state->_active = false;
+        return;
+
+    default:
+        break;
+    }
+}
 
 Bool application_preconstruct(void) {
     if (!_application_core_startup())
@@ -69,6 +79,7 @@ Bool application_preconstruct(void) {
 
     // init state members
     {
+        state->_active      = true;
         state->_initialized = true;
     }
 
@@ -76,16 +87,21 @@ Bool application_preconstruct(void) {
     if (!module_manager_startup_modules())
         return false;
 
+    // construct main window
+    if (!window_module_construct_main())
+        return false;
+
+    // register events
+    {
+        input_module_register_event(VT_EVENTCODE_APP_QUIT, _application_on_event);
+    }
+
     _application_report_status("pre_construct state completed, proceeding to construct stage...");
     return true;
 }
 
 Bool application_construct(void) {
     if (!state)
-        return false;
-
-    // construct main window
-    if (!window_module_construct_main())
         return false;
 
     _application_report_status("construct state completed, proceeding to game loop...");
@@ -96,15 +112,10 @@ Bool application_update(void) {
     if (!state)
         return false;
 
-    GLFWwindow *win_ = platform_window_get(window_module_get_main());
-
     do {
-        // swap buffer
-        _application_window_swapbuf(win_);
-
-        // poll events
-        _application_window_poll();
-    } while (_application_window_active(win_));
+        if (!module_manager_update_modules())
+            return false;
+    } while (state->_active);
 
     _application_report_status("game loop terminated, proceeding to cleanup...");
     return true;
@@ -112,6 +123,14 @@ Bool application_update(void) {
 
 Bool application_destruct(void) {
     if (!state)
+        return false;
+
+    // unregister events
+    {
+        input_module_unregister_event(VT_EVENTCODE_APP_QUIT, _application_on_event);
+    }
+
+    if (!window_module_destruct_main())
         return false;
 
     // perform modules shutdown
@@ -130,6 +149,6 @@ Bool application_destruct(void) {
     if (!_application_core_shutdown())
         return false;
 
-    _application_report_status("cleanup completed, exiting application...");
+    _application_report_status("cleanup completed, closing application...");
     return true;
 }

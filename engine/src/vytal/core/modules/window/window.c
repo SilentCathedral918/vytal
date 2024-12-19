@@ -1,6 +1,8 @@
 #include "window.h"
 
 #include "vytal/core/hal/memory/vtmem.h"
+#include "vytal/core/misc/console/console.h"
+#include "vytal/core/modules/input/input.h"
 #include "vytal/core/platform/window/window.h"
 
 #include <GLFW/glfw3.h>
@@ -17,6 +19,72 @@ typedef struct Window_Module_State {
 } WindowModuleState;
 
 static WindowModuleState *state = NULL;
+
+// ------------------------- GLFW callbacks ------------------------- //
+
+void _on_window_close(GLFWwindow *window) {
+    InputEventData data_ = {._event_code = VT_EVENTCODE_APP_QUIT};
+    input_module_invoke_event(VT_EVENTCODE_APP_QUIT, &data_);
+}
+
+void _on_key_pressed(GLFWwindow *window, Int32 key, Int32 scancode, Int32 action, Int32 mods) {
+    Bool         pressed_ = (action != GLFW_RELEASE);
+    InputKeyCode code_    = VT_CAST(InputKeyCode, key);
+    input_module_process_key_pressed(code_, pressed_);
+}
+
+void _on_mouse_pressed(GLFWwindow *window, Int32 button, Int32 action, Int32 mods) {
+    Bool           pressed_ = (action == GLFW_PRESS);
+    InputMouseCode code_;
+
+    switch (button) {
+    case GLFW_MOUSE_BUTTON_LEFT:
+        code_ = VT_MOUSECODE_LEFT;
+        break;
+
+    case GLFW_MOUSE_BUTTON_MIDDLE:
+        code_ = VT_MOUSECODE_MIDDLE;
+        break;
+
+    case GLFW_MOUSE_BUTTON_RIGHT:
+        code_ = VT_MOUSECODE_RIGHT;
+        break;
+
+    default:
+        break;
+    }
+
+    input_module_process_mouse_pressed(code_, pressed_);
+}
+
+void _on_mouse_moved(GLFWwindow *window, Flt64 xpos, Flt64 ypos) {
+    UInt16 x_ = VT_CAST(UInt16, xpos);
+    UInt16 y_ = VT_CAST(UInt16, ypos);
+
+    input_module_process_mouse_moved(x_, y_);
+}
+
+void _on_mouse_scrolled(GLFWwindow *window, Flt64 xoffset, Flt64 yoffset) {
+    Int8 value_ = VT_CAST(Int8, yoffset);
+
+    if (value_ != 0)
+        input_module_process_mouse_scrolled(value_);
+}
+
+// ------------------------- window module  ------------------------- //
+
+Bool _window_module_setup_callbacks(GLFWwindow *window) {
+    if (!window)
+        return false;
+
+    glfwSetWindowCloseCallback(window, _on_window_close);
+    glfwSetKeyCallback(window, _on_key_pressed);
+    glfwSetMouseButtonCallback(window, _on_mouse_pressed);
+    glfwSetCursorPosCallback(window, _on_mouse_moved);
+    glfwSetScrollCallback(window, _on_mouse_scrolled);
+
+    return true;
+}
 
 ByteSize window_module_get_size(void) { return sizeof(WindowModuleState); }
 
@@ -65,6 +133,19 @@ Bool window_module_shutdown(void) {
     return true;
 }
 
+Bool window_module_update(void) {
+    if (!state)
+        return false;
+
+    // poll GLFW events
+    glfwPollEvents();
+
+    // swap buffer
+    glfwSwapBuffers(VT_CAST(GLFWwindow *, platform_window_get(state->_main_window)));
+
+    return true;
+}
+
 Bool window_module_construct_main(void) {
     if (!state)
         return false;
@@ -73,6 +154,13 @@ Bool window_module_construct_main(void) {
 
     if (!state->_main_window)
         return false;
+
+    // setup GLFW callbacks
+    if (!_window_module_setup_callbacks(platform_window_get(state->_main_window)))
+        return false;
+
+    // associate GLFW window with the engine's context
+    // glfwSetWindowUserPointer(platform_window_get(state->_main_window), state);
 
     return true;
 }

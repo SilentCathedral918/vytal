@@ -15,8 +15,8 @@ typedef struct Delegate_Unicast {
 typedef Delegate_Unicast *UnicastDelegate;
 
 typedef struct Delegate_Unicast_Handle {
-    Map    _delegate_map;
-    UInt32 _num_delegates;
+    Map   _delegate_map;
+    Array _binded_refs;
 } Delegate_Unicast_Handle;
 typedef Delegate_Unicast_Handle *UnicastDelegateHandle;
 
@@ -30,7 +30,7 @@ typedef struct Delegate_Multicast {
 typedef Delegate_Multicast *MulticastDelegate;
 
 typedef struct Delegate_Multicast_Handle {
-    Map    _delegate_map;
-    UInt32 _num_delegates;
+    Map   _delegate_map;
+    Array _binded_refs;
 } Delegate_Multicast_Handle;
 typedef Delegate_Multicast_Handle *MulticastDelegateHandle;
