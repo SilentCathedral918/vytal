@@ -13,7 +13,7 @@
 
 #endif
 
-#define LINE_BUFFER_MAX_SIZE VT_SIZE_KB_MULT(16) // 16 KB
+#define LINE_BUFFER_MAX_SIZE VT_SIZE_KB_MULT(32) // 32 KB
 
 Bool platform_fs_open_file(FileHandle *handle, ConstStr filepath, const FileIOMode io_mode, const FileMode file_mode) {
     ConstStr file_mode_;

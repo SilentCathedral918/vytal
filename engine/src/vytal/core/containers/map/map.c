@@ -2,6 +2,7 @@
 
 #include "vytal/core/hal/memory/vtmem.h"
 #include "vytal/core/hash/hash.h"
+#include "vytal/core/misc/string/vtstr.h"
 #include "vytal/managers/memory/memmgr.h"
 
 #include "vytal/core/misc/console/console.h"
@@ -84,7 +85,7 @@ Bool container_map_insert(Map map, const VoidPtr key, const VoidPtr data) {
         return false;
 
     MapData     *data_         = _container_map_get_internal_data(map);
-    HashedInt    hashed_       = hash_hashbuffer(key, sizeof(UIntPtr), HASH_MODE_XX64);
+    HashedInt    hashed_       = hash_hashstr(VT_CAST(ConstStr, key), HASH_MODE_XX64);
     ByteSize     idx_          = hashed_ % data_->_capacity;
     ByteSize     check_offset_ = (sizeof(MapDataItem) + data_->_data_size) * idx_;
     MapDataItem *check_slot_   = VT_CAST(MapDataItem *, VT_CAST(BytePtr, data_->_bucket) + check_offset_);
@@ -124,7 +125,7 @@ Bool container_map_remove(Map map, const VoidPtr key) {
         return false;
 
     MapData     *data_         = _container_map_get_internal_data(map);
-    HashedInt    hashed_       = hash_hashbuffer(key, sizeof(UIntPtr), HASH_MODE_XX64);
+    HashedInt    hashed_       = hash_hashstr(VT_CAST(ConstStr, key), HASH_MODE_XX64);
     ByteSize     idx_          = hashed_ % data_->_capacity;
     ByteSize     check_offset_ = (sizeof(MapDataItem) + data_->_data_size) * idx_;
     MapDataItem *check_slot_   = VT_CAST(MapDataItem *, VT_CAST(BytePtr, data_->_bucket) + check_offset_);
@@ -157,7 +158,7 @@ Bool container_map_update(Map map, const VoidPtr key, const VoidPtr new_data) {
         return false;
 
     MapData     *data_         = _container_map_get_internal_data(map);
-    HashedInt    hashed_       = hash_hashbuffer(key, sizeof(UIntPtr), HASH_MODE_XX64);
+    HashedInt    hashed_       = hash_hashstr(VT_CAST(ConstStr, key), HASH_MODE_XX64);
     ByteSize     idx_          = hashed_ % data_->_capacity;
     ByteSize     check_offset_ = (sizeof(MapDataItem) + data_->_data_size) * idx_;
     MapDataItem *check_slot_   = VT_CAST(MapDataItem *, VT_CAST(BytePtr, data_->_bucket) + check_offset_);
@@ -189,7 +190,7 @@ VoidPtr container_map_search(Map map, const VoidPtr key) {
         return NULL;
 
     MapData     *data_         = _container_map_get_internal_data(map);
-    HashedInt    hashed_       = hash_hashbuffer(key, sizeof(UIntPtr), HASH_MODE_XX64);
+    HashedInt    hashed_       = hash_hashstr(VT_CAST(ConstStr, key), HASH_MODE_XX64);
     ByteSize     idx_          = hashed_ % data_->_capacity;
     ByteSize     check_offset_ = (sizeof(MapDataItem) + data_->_data_size) * idx_;
     MapDataItem *check_slot_   = VT_CAST(MapDataItem *, VT_CAST(BytePtr, data_->_bucket) + check_offset_);
@@ -213,17 +214,6 @@ VoidPtr container_map_search(Map map, const VoidPtr key) {
     }
 
     return NULL;
-}
-
-VoidPtr container_map_search_by_index(Map map, const ByteSize index) {
-    if (!map || _container_map_empty(map))
-        return NULL;
-
-    MapData     *data_         = _container_map_get_internal_data(map);
-    ByteSize     check_offset_ = (sizeof(MapDataItem) + data_->_data_size) * index;
-    MapDataItem *check_slot_   = VT_CAST(MapDataItem *, VT_CAST(BytePtr, data_->_bucket) + check_offset_);
-
-    return (check_slot_->_pkey == 0x00) ? NULL : VT_CAST(VoidPtr, check_slot_->_pdata);
 }
 
 Bool container_map_contains(Map map, const VoidPtr key) { return (!map ? false : (container_map_search(map, key) != NULL)); }

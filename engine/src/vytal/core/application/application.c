@@ -58,7 +58,7 @@ void _application_on_event(VoidPtr sender, VoidPtr listener, VoidPtr data) {
 
     switch (data_._event_code) {
     case VT_EVENTCODE_WINDOW_CLOSE:
-        VT_LOG_INFO("Engine", "%s", "EVENTCODE_APP_QUIT invoked - shutting down...");
+        VT_LOG_INFO("Engine", "%s", "EVENTCODE_WINDOW_CLOSE invoked _ shutting down...");
         state->_active = false;
         return;
 

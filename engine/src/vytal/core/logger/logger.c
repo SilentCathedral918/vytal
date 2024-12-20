@@ -53,7 +53,8 @@ Bool _logger_add_default(void) {
             return false;
     }
 
-    return container_map_insert(state->_log_map, VT_CAST(VoidPtr, ENGINE_LOGGER_ID), &new_logger_);
+    // insert new logger to map
+    return container_map_insert(state->_log_map, ENGINE_LOGGER_ID, &new_logger_);
 }
 
 Bool logger_startup(void) {
@@ -72,11 +73,7 @@ Bool logger_startup(void) {
     }
 
     // add engine logger
-    if (!_logger_add_default()) {
-        return false;
-    }
-
-    return true;
+    return _logger_add_default();
 }
 
 Bool logger_shutdown(void) {
