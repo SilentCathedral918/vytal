@@ -5,7 +5,8 @@
 
 VT_API Bool           glfw_window_startup(void);
 VT_API void           glfw_window_shutdown(void);
-VT_API PlatformWindow glfw_window_construct(const WindowProps props, const WindowCallbacks *callbacks);
+VT_API PlatformWindow glfw_window_construct(const WindowProps props, const WindowCallbacks *callbacks,
+                                            const UInt64 titlebar_flags);
 VT_API Bool           glfw_window_destruct(PlatformWindow window);
 VT_API VoidPtr        glfw_window_get_handle(PlatformWindow window);
 VT_API ConstStr       glfw_window_get_title(PlatformWindow window);
@@ -22,3 +23,5 @@ VT_API Bool           glfw_window_set_height(PlatformWindow window, const Int32 
 VT_API Bool           glfw_window_set_size(PlatformWindow window, const Int32 width, const Int32 height);
 VT_API Bool           glfw_window_poll_events(PlatformWindow window);
 VT_API Bool           glfw_window_swap_buffers(PlatformWindow window);
+VT_API Bool           glfw_window_toggle_framerate(PlatformWindow window);
+VT_API Bool           glfw_window_render_titlebar(PlatformWindow window);

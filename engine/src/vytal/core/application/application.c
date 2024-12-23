@@ -70,6 +70,8 @@ void _application_on_event(VoidPtr sender, VoidPtr listener, VoidPtr data) {
 void _application_on_key(VoidPtr sender, VoidPtr listener, VoidPtr data) {
     InputKeyEventData *data_ = VT_CAST(InputKeyEventData *, data);
 
+    input_module_process_key_pressed(data_->_key_code, data_->_event_code == VT_EVENTCODE_KEY_PRESSED);
+
     switch (data_->_event_code) {
     case VT_EVENTCODE_KEY_PRESSED: {
         VT_LOG_INFO("Engine", "key '%c' pressed!", data_->_key_code);
@@ -131,6 +133,11 @@ Bool application_update(void) {
     do {
         if (!module_manager_update_modules())
             return false;
+
+        if (hal_input_is_key_pressed(VT_KEYCODE_F)) {
+            window_module_main_toggle_framerate();
+        }
+
     } while (state->_active);
 
     _application_report_status("game loop terminated, proceeding to cleanup...");

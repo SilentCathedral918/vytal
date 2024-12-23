@@ -1,15 +1,23 @@
 #include "glfw_window.h"
 
 #include "vytal/core/hal/memory/vtmem.h"
+#include "vytal/core/misc/string/vtstr.h"
 #include "vytal/managers/memory/memmgr.h"
 
 #include <GLFW/glfw3.h>
+
+#define OUTPUT_BUFFER_MAX_SIZE VT_SIZE_KB_MULT(32) // 32 KB
 
 typedef struct Window_Platform_Struct {
     GLFWwindow *_handle;
 } Window_Platform_Struct;
 
-static WindowCallbacks *vytal_glfw_window_callbacks = NULL;
+static WindowCallbacks *vytal_glfw_window_callbacks                     = NULL;
+static Flt64            vytal_glfw_window_prev_time                     = 0;
+static Int32            vytal_glfw_window_frame_count                   = 0;
+static Char             vytal_glfw_window_org_title[64]                 = {'\0'};
+static Char             vytal_glfw_window_title[OUTPUT_BUFFER_MAX_SIZE] = {'\0'};
+static UInt64           vytal_glfw_window_titlebar_flags                = 0;
 
 void _glfw_window_key_callback(GLFWwindow *window, Int32 key, Int32 scancode, Int32 action, Int32 mods) {
     InputKeyCode code_    = VT_CAST(InputKeyCode, key);
@@ -59,10 +67,38 @@ void _glfw_window_mouse_scroll_callback(GLFWwindow *window, Flt64 xoffset, Flt64
     }
 }
 
+void _glfw_window_render_titlebar(GLFWwindow *window) {
+    // get current time
+    Flt64 curr_time_ = glfwGetTime();
+    ++vytal_glfw_window_frame_count;
+
+    // calculate elapsed time
+    Flt64 elapsed_time_ = curr_time_ - vytal_glfw_window_prev_time;
+
+    // for every passing second...
+    if (elapsed_time_ >= 1.0) {
+        // render titlebar {
+        Int32 length_ = misc_str_fmt(vytal_glfw_window_title, OUTPUT_BUFFER_MAX_SIZE, "%s", vytal_glfw_window_org_title);
+
+        if (VT_BITFLAG_IF_SET(vytal_glfw_window_titlebar_flags, WINDOW_TITLEBAR_FLAG_FPS))
+            length_ += misc_str_fmt(vytal_glfw_window_title + length_, OUTPUT_BUFFER_MAX_SIZE - length_, " _ FPS: %d",
+                                    vytal_glfw_window_frame_count);
+
+        glfwSetWindowTitle(window, vytal_glfw_window_title);
+        hal_mem_memzero(vytal_glfw_window_title, length_);
+
+        // reset for the next interval
+        {
+            vytal_glfw_window_prev_time   = curr_time_;
+            vytal_glfw_window_frame_count = 0;
+        }
+    }
+}
+
 Bool glfw_window_startup(void) { return glfwInit() == GLFW_TRUE; }
 void glfw_window_shutdown(void) { glfwTerminate(); }
 
-PlatformWindow glfw_window_construct(const WindowProps props, const WindowCallbacks *callbacks) {
+PlatformWindow glfw_window_construct(const WindowProps props, const WindowCallbacks *callbacks, const UInt64 titlebar_flags) {
     if (!callbacks)
         return NULL;
 
@@ -73,6 +109,10 @@ PlatformWindow glfw_window_construct(const WindowProps props, const WindowCallba
 
     PlatformWindow window = memory_manager_allocate(sizeof(Window_Platform_Struct), MEMORY_TAG_PLATFORM);
     window->_handle       = handle_;
+
+    vytal_glfw_window_titlebar_flags = titlebar_flags;
+
+    misc_str_strcpy(vytal_glfw_window_org_title, glfwGetWindowTitle(window->_handle));
 
     // callbacks setup
     {
@@ -209,5 +249,21 @@ Bool glfw_window_swap_buffers(PlatformWindow window) {
         return false;
 
     glfwSwapBuffers(window->_handle);
+    return true;
+}
+
+Bool glfw_window_toggle_framerate(PlatformWindow window) {
+    if (!window)
+        return false;
+
+    VT_BITFLAG_TOGGLE(vytal_glfw_window_titlebar_flags, WINDOW_TITLEBAR_FLAG_FPS);
+    return true;
+}
+
+Bool glfw_window_render_titlebar(PlatformWindow window) {
+    if (!window)
+        return false;
+
+    _glfw_window_render_titlebar(window->_handle);
     return true;
 }

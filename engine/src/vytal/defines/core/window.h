@@ -1,6 +1,7 @@
 #pragma once
 
 #include "input.h"
+#include "mem.h"
 #include "types.h"
 
 // ------------------------- type ------------------------- //
@@ -20,6 +21,11 @@ typedef struct Window_Callbacks {
     void (*_on_mouse_scrolled)(VoidPtr context, Int8 scroll_value);
 } WindowCallbacks;
 
+typedef enum Window_Titlebar_Flag {
+    WINDOW_TITLEBAR_FLAG_NONE = VT_BITFLAG_FIELD(0),
+    WINDOW_TITLEBAR_FLAG_FPS  = VT_BITFLAG_FIELD(1)
+} WindowTitlebarFlag;
+
 // ------------------------- backends ------------------------- //
 
 typedef enum Window_Backend { WINDOW_BACKEND_GLFW } WindowBackend;
@@ -30,6 +36,7 @@ typedef struct Window_Properties {
     Char                _title[64];
     Int32               _x, _y;
     Int32               _width, _height;
+    UInt64              _titlebar_flags;
     WindowCallbacks     _callbacks;
     const Bool          _resizable;
     const Bool          _fullscreen;

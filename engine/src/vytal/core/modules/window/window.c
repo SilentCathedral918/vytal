@@ -11,6 +11,7 @@
 #define ENGINE_WINDOW_DEFAULT_BACKEND (WINDOW_BACKEND_GLFW)
 #define ENGINE_WINDOW_DEFAULT_X (0x1fff0000u | (0))
 #define ENGINE_WINDOW_DEFAULT_Y (0x1fff0000u | (0))
+#define ENGINE_WINDOW_DEFAULT_TITLEBAR_FLAGS (WINDOW_TITLEBAR_FLAG_FPS)
 
 typedef struct Window_Module_State {
     PlatformWindow _main_window;
@@ -67,14 +68,15 @@ Bool window_module_startup(VoidPtr module) {
                                   ._on_mouse_scrolled = _window_module_callback_on_mouse_scrolled};
 
     // window default properties
-    WindowProps props_ = {._title      = ENGINE_WINDOW_TITLE,
-                          ._x          = ENGINE_WINDOW_DEFAULT_X,
-                          ._y          = ENGINE_WINDOW_DEFAULT_Y,
-                          ._width      = ENGINE_WINDOW_DEFAULT_WIDTH,
-                          ._height     = ENGINE_WINDOW_DEFAULT_HEIGHT,
-                          ._callbacks  = callbacks_,
-                          ._resizable  = true,
-                          ._fullscreen = false};
+    WindowProps props_ = {._title          = ENGINE_WINDOW_TITLE,
+                          ._x              = ENGINE_WINDOW_DEFAULT_X,
+                          ._y              = ENGINE_WINDOW_DEFAULT_Y,
+                          ._width          = ENGINE_WINDOW_DEFAULT_WIDTH,
+                          ._height         = ENGINE_WINDOW_DEFAULT_HEIGHT,
+                          ._titlebar_flags = ENGINE_WINDOW_DEFAULT_TITLEBAR_FLAGS,
+                          ._callbacks      = callbacks_,
+                          ._resizable      = true,
+                          ._fullscreen     = false};
 
     // assign module to state and init its members
     state = VT_CAST(WindowModuleState *, module);
@@ -112,6 +114,10 @@ Bool window_module_update(void) {
     if (!platform_window_poll_events(state->_main_window))
         return false;
 
+    // render titlebar
+    if (!platform_window_render_titlebar(state->_main_window))
+        return false;
+
     // swap buffers
     if (!platform_window_swap_buffers(state->_main_window))
         return false;
@@ -124,7 +130,8 @@ Bool window_module_construct_main(void) {
         return false;
 
     // callbacks setup
-    state->_main_window = platform_window_construct(state->_main_window_props, &(state->_main_window_props._callbacks));
+    state->_main_window = platform_window_construct(state->_main_window_props, &(state->_main_window_props._callbacks),
+                                                    state->_main_window_props._titlebar_flags);
 
     if (!state->_main_window)
         return false;
@@ -148,4 +155,8 @@ PlatformWindow window_module_get_main(void) {
         return NULL;
 
     return state->_main_window;
+}
+
+Bool window_module_main_toggle_framerate(void) {
+    return !state ? false : platform_window_toggle_framerate(state->_main_window);
 }

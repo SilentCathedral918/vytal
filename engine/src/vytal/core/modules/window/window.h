@@ -12,3 +12,4 @@ Bool           window_module_update(void);
 Bool           window_module_construct_main(void);
 Bool           window_module_destruct_main(void);
 PlatformWindow window_module_get_main(void);
+Bool           window_module_main_toggle_framerate(void);

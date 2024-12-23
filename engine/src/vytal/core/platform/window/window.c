@@ -39,13 +39,14 @@ void platform_window_shutdown(void) {
     window_backend = -1;
 }
 
-PlatformWindow platform_window_construct(const WindowProps properties, const WindowCallbacks *callbacks) {
+PlatformWindow platform_window_construct(const WindowProps properties, const WindowCallbacks *callbacks,
+                                         const UInt64 titlebar_flags) {
     if (!is_valid_backend() || !callbacks)
         return NULL;
 
     switch (window_backend) {
     case WINDOW_BACKEND_GLFW:
-        return glfw_window_construct(properties, callbacks);
+        return glfw_window_construct(properties, callbacks, titlebar_flags);
 
     default:
         return NULL;
@@ -254,6 +255,32 @@ Bool platform_window_swap_buffers(PlatformWindow window) {
     switch (window_backend) {
     case WINDOW_BACKEND_GLFW:
         return glfw_window_swap_buffers(window);
+
+    default:
+        return false;
+    }
+}
+
+Bool platform_window_toggle_framerate(PlatformWindow window) {
+    if (!window || !is_valid_backend())
+        return false;
+
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_toggle_framerate(window);
+
+    default:
+        return false;
+    }
+}
+
+Bool platform_window_render_titlebar(PlatformWindow window) {
+    if (!window || !is_valid_backend())
+        return false;
+
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_render_titlebar(window);
 
     default:
         return false;

@@ -5,7 +5,8 @@
 
 VT_API Bool           platform_window_startup(const WindowBackend backend);
 VT_API void           platform_window_shutdown(void);
-VT_API PlatformWindow platform_window_construct(const WindowProps properties, const WindowCallbacks *callbacks);
+VT_API PlatformWindow platform_window_construct(const WindowProps properties, const WindowCallbacks *callbacks,
+                                                const UInt64 titlebar_flags);
 VT_API Bool           platform_window_destruct(PlatformWindow window);
 VT_API VoidPtr        platform_window_get_native(PlatformWindow window);
 VT_API ConstStr       platform_window_get_title(PlatformWindow window);
@@ -22,3 +23,5 @@ VT_API Bool           platform_window_set_height(PlatformWindow window, const In
 VT_API Bool           platform_window_set_size(PlatformWindow window, const Int32 width, const Int32 height);
 VT_API Bool           platform_window_poll_events(PlatformWindow window);
 VT_API Bool           platform_window_swap_buffers(PlatformWindow window);
+VT_API Bool           platform_window_toggle_framerate(PlatformWindow window);
+VT_API Bool           platform_window_render_titlebar(PlatformWindow window);
