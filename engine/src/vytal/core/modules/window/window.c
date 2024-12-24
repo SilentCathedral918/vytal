@@ -5,7 +5,7 @@
 #include "vytal/core/modules/input/input.h"
 #include "vytal/core/platform/window/window.h"
 
-#define ENGINE_WINDOW_TITLE "Vytal Engine"
+#define ENGINE_WINDOW_TITLE "Grimm Editor"
 #define ENGINE_WINDOW_DEFAULT_WIDTH 1024
 #define ENGINE_WINDOW_DEFAULT_HEIGHT 768
 #define ENGINE_WINDOW_DEFAULT_BACKEND (WINDOW_BACKEND_GLFW)

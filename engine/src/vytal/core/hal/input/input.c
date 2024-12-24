@@ -5,7 +5,7 @@
 #include "vytal/core/misc/console/console.h"
 #include "vytal/core/modules/input/input.h"
 
-#define KEY_CODES 128
+#define KEY_CODES 512
 #define MOUSE_CODES 8
 
 typedef struct Input_Keyboard_State {
@@ -45,5 +45,15 @@ Int32 hal_input_get_mouse_x(void) { return (input_module_state->_curr_mouse_stat
 Int32 hal_input_get_mouse_y(void) { return (input_module_state->_curr_mouse_state._y); }
 Int32 hal_input_get_prev_mouse_x(void) { return (input_module_state->_prev_mouse_state._x); }
 Int32 hal_input_get_prev_mouse_y(void) { return (input_module_state->_prev_mouse_state._y); }
-Int8  hal_input_get_mouse_scroll_value(void) { return (input_module_state->_curr_mouse_state._scroll_value); }
-Int8  hal_input_get_prev_mouse_scroll_value(void) { return (input_module_state->_prev_mouse_state._scroll_value); }
+Bool  hal_input_is_mouse_moved(void) {
+    return (hal_input_get_mouse_x() != hal_input_get_prev_mouse_x()) ||
+           (hal_input_get_mouse_y() != hal_input_get_prev_mouse_y());
+}
+Int8 hal_input_get_mouse_scroll_value(void) { return (input_module_state->_curr_mouse_state._scroll_value); }
+Int8 hal_input_get_mouse_scroll_value_inverted(void) { return (input_module_state->_curr_mouse_state._scroll_value * -1); }
+Int8 hal_input_get_prev_mouse_scroll_value(void) { return (input_module_state->_prev_mouse_state._scroll_value); }
+Int8 hal_input_get_prev_mouse_scroll_value_inverted(void) { return (input_module_state->_prev_mouse_state._scroll_value * -1); }
+Bool hal_input_is_mouse_scrolled(void) {
+    return ((input_module_state->_curr_mouse_state._scroll_value != 0.0) &&
+            (hal_input_get_mouse_scroll_value() != hal_input_get_prev_mouse_scroll_value()));
+}

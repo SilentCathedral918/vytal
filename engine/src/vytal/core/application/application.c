@@ -58,7 +58,6 @@ void _application_on_event(VoidPtr sender, VoidPtr listener, VoidPtr data) {
 
     switch (data_._event_code) {
     case VT_EVENTCODE_WINDOW_CLOSE:
-        VT_LOG_INFO("Engine", "%s", "EVENTCODE_WINDOW_CLOSE invoked _ shutting down...");
         state->_active = false;
         return;
 
@@ -67,23 +66,24 @@ void _application_on_event(VoidPtr sender, VoidPtr listener, VoidPtr data) {
     }
 }
 
-void _application_on_key(VoidPtr sender, VoidPtr listener, VoidPtr data) {
+void _application_on_key_pressed(VoidPtr sender, VoidPtr listener, VoidPtr data) {
     InputKeyEventData *data_ = VT_CAST(InputKeyEventData *, data);
-
     input_module_process_key_pressed(data_->_key_code, data_->_event_code == VT_EVENTCODE_KEY_PRESSED);
+}
 
-    switch (data_->_event_code) {
-    case VT_EVENTCODE_KEY_PRESSED: {
-        VT_LOG_INFO("Engine", "key '%c' pressed!", data_->_key_code);
-    } break;
+void _application_on_mouse_pressed(VoidPtr sender, VoidPtr listener, VoidPtr data) {
+    InputMouseEventData *data_ = VT_CAST(InputMouseEventData *, data);
+    input_module_process_mouse_pressed(data_->_mouse_code, data_->_event_code == VT_EVENTCODE_MOUSE_PRESSED);
+}
 
-    case VT_EVENTCODE_KEY_RELEASED: {
-        VT_LOG_INFO("Engine", "key '%c' released!", data_->_key_code);
-    } break;
+void _application_on_mouse_moved(VoidPtr sender, VoidPtr listener, VoidPtr data) {
+    InputMouseMoveEventData *data_ = VT_CAST(InputMouseMoveEventData *, data);
+    input_module_process_mouse_moved(data_->_x, data_->_y);
+}
 
-    default:
-        break;
-    }
+void _application_on_mouse_scrolled(VoidPtr sender, VoidPtr listener, VoidPtr data) {
+    InputMouseScrollEventData *data_ = VT_CAST(InputMouseScrollEventData *, data);
+    input_module_process_mouse_scrolled(data_->_scroll_value);
 }
 
 Bool application_preconstruct(void) {
@@ -110,8 +110,12 @@ Bool application_preconstruct(void) {
     // register events
     {
         input_module_register_event(VT_EVENTCODE_WINDOW_CLOSE, _application_on_event);
-        input_module_register_event(VT_EVENTCODE_KEY_PRESSED, _application_on_key);
-        input_module_register_event(VT_EVENTCODE_KEY_RELEASED, _application_on_key);
+        input_module_register_event(VT_EVENTCODE_KEY_PRESSED, _application_on_key_pressed);
+        input_module_register_event(VT_EVENTCODE_KEY_RELEASED, _application_on_key_pressed);
+        input_module_register_event(VT_EVENTCODE_MOUSE_PRESSED, _application_on_mouse_pressed);
+        input_module_register_event(VT_EVENTCODE_MOUSE_RELEASED, _application_on_mouse_pressed);
+        input_module_register_event(VT_EVENTCODE_MOUSE_MOVED, _application_on_mouse_moved);
+        input_module_register_event(VT_EVENTCODE_MOUSE_SCROLLED, _application_on_mouse_scrolled);
     }
 
     _application_report_status("pre_construct state completed, proceeding to construct stage...");
@@ -134,8 +138,35 @@ Bool application_update(void) {
         if (!module_manager_update_modules())
             return false;
 
-        if (hal_input_is_key_pressed(VT_KEYCODE_F)) {
-            window_module_main_toggle_framerate();
+        if (hal_input_is_key_down(VT_KEYCODE_TAB)) {
+            if (hal_input_is_key_pressed(VT_KEYCODE_F)) {
+                VT_LOG_INFO("Engine", "%s", "Combo Tab + F is performed.");
+            }
+        } else {
+            if (hal_input_is_key_pressed(VT_KEYCODE_F)) {
+                window_module_main_toggle_framerate();
+            }
+        }
+
+        if (hal_input_is_mouse_pressed(VT_MOUSECODE_LEFT)) {
+            VT_LOG_INFO("Engine", "%s", "left mouse clicked");
+        }
+
+        if (hal_input_is_mouse_pressed(VT_MOUSECODE_MIDDLE)) {
+            VT_LOG_INFO("Engine", "%s", "middle mouse clicked");
+        }
+
+        if (hal_input_is_mouse_pressed(VT_MOUSECODE_RIGHT)) {
+            VT_LOG_INFO("Engine", "%s", "right mouse clicked");
+        }
+
+        if (hal_input_is_mouse_moved()) {
+            VT_LOG_INFO("Engine", "mouse coord: %d, %d", hal_input_get_mouse_x(), hal_input_get_mouse_y());
+        }
+
+        if (hal_input_is_mouse_scrolled()) {
+            VT_LOG_INFO("Engine", "scroll val: %d", hal_input_get_mouse_scroll_value());
+            VT_LOG_INFO("Engine", "scroll val inv: %d", hal_input_get_mouse_scroll_value_inverted());
         }
 
     } while (state->_active);
@@ -151,8 +182,12 @@ Bool application_destruct(void) {
     // unregister events
     {
         input_module_unregister_event(VT_EVENTCODE_WINDOW_CLOSE, _application_on_event);
-        input_module_register_event(VT_EVENTCODE_KEY_PRESSED, _application_on_key);
-        input_module_register_event(VT_EVENTCODE_KEY_RELEASED, _application_on_key);
+        input_module_unregister_event(VT_EVENTCODE_KEY_PRESSED, _application_on_key_pressed);
+        input_module_unregister_event(VT_EVENTCODE_KEY_RELEASED, _application_on_key_pressed);
+        input_module_unregister_event(VT_EVENTCODE_MOUSE_PRESSED, _application_on_mouse_pressed);
+        input_module_unregister_event(VT_EVENTCODE_MOUSE_RELEASED, _application_on_mouse_pressed);
+        input_module_unregister_event(VT_EVENTCODE_MOUSE_MOVED, _application_on_mouse_moved);
+        input_module_unregister_event(VT_EVENTCODE_MOUSE_SCROLLED, _application_on_mouse_scrolled);
     }
 
     if (!window_module_destruct_main())

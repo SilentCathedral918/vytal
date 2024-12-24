@@ -4,7 +4,7 @@
 #include "vytal/core/hal/memory/vtmem.h"
 #include "vytal/core/misc/console/console.h"
 
-#define KEY_CODES 128
+#define KEY_CODES 512
 #define MOUSE_CODES 8
 
 typedef struct Input_Keyboard_State {
@@ -83,6 +83,9 @@ Bool input_module_update(void) {
         hal_mem_memcpy(&state->_prev_keyboard_state, &state->_curr_keyboard_state, sizeof(InputKeyboardState));
         hal_mem_memcpy(&state->_prev_mouse_state, &state->_curr_mouse_state, sizeof(InputMouseState));
     }
+
+    // reset scroll
+    state->_curr_mouse_state._scroll_value = 0;
 
     return true;
 }
@@ -222,23 +225,25 @@ Bool input_module_process_mouse_scrolled(const Int8 scroll_value) {
     if (!state)
         return false;
 
-    // update mouse scroll
-    state->_curr_mouse_state._scroll_value = scroll_value;
+    if (state->_curr_mouse_state._scroll_value == 0) {
+        // update mouse scroll
+        state->_curr_mouse_state._scroll_value = scroll_value;
 
-    // immediately invoke the mouse scroll event
-    {
-        InputMouseScrollEventData data_ = {._event_code = VT_EVENTCODE_MOUSE_SCROLLED, ._scroll_value = scroll_value};
+        // immediately invoke the mouse scroll event
+        {
+            InputMouseScrollEventData data_ = {._event_code = VT_EVENTCODE_MOUSE_SCROLLED, ._scroll_value = scroll_value};
 
-        UnicastDelegate del_ = state->_event_delegates[data_._event_code];
-        if (!del_)
-            return false;
+            UnicastDelegate del_ = state->_event_delegates[data_._event_code];
+            if (!del_)
+                return false;
 
-        UnicastDelegateHandle handle_ = state->_event_handles[data_._event_code];
-        if (!handle_)
-            return false;
+            UnicastDelegateHandle handle_ = state->_event_handles[data_._event_code];
+            if (!handle_)
+                return false;
 
-        if (!delegate_unicast_handle_invoke(handle_, NULL, &data_))
-            return false;
+            if (!delegate_unicast_handle_invoke(handle_, NULL, &data_))
+                return false;
+        }
     }
 
     return true;
