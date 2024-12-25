@@ -58,6 +58,11 @@ typedef enum Memory_Tag {
     MEMORY_TAGS_TOTAL
 } MemoryTag;
 
+// ------------------------- endianness ------------------------- //
+
+#define VT_MEM_IS_LITTLE_ENDIAN() (*VT_CAST(UInt8 *, &VT_STRUCT(const Int32, 1)) == 1)
+#define VT_MEM_IS_BIG_ENDIAN() (*VT_CAST(UInt8 *, &VT_STRUCT(const Int32, 1)) != 1)
+
 // --------------------------- binary swapping --------------------------- //
 
 #if defined(__clang__) || defined(__GNUC__)

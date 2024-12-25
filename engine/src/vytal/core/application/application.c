@@ -196,7 +196,7 @@ Bool application_update(void) {
         }
 
         // for each passing second...
-        // update the title-bar frame-rate (if specified)
+        // update the FPS display (if specified)
         // reset the frame count
         if (platform_window_get_frame(state->_window) - timer_ > 1.0) {
             ++timer_;
