@@ -14,6 +14,7 @@ VT_API Int32          platform_window_get_x(PlatformWindow window);
 VT_API Int32          platform_window_get_y(PlatformWindow window);
 VT_API Int32          platform_window_get_width(PlatformWindow window);
 VT_API Int32          platform_window_get_height(PlatformWindow window);
+VT_API Flt64          platform_window_get_frame(PlatformWindow window);
 VT_API Bool           platform_window_set_title(PlatformWindow window, ConstStr title);
 VT_API Bool           platform_window_set_x(PlatformWindow window, const Int32 x);
 VT_API Bool           platform_window_set_y(PlatformWindow window, const Int32 y);
@@ -23,5 +24,3 @@ VT_API Bool           platform_window_set_height(PlatformWindow window, const In
 VT_API Bool           platform_window_set_size(PlatformWindow window, const Int32 width, const Int32 height);
 VT_API Bool           platform_window_poll_events(PlatformWindow window);
 VT_API Bool           platform_window_swap_buffers(PlatformWindow window);
-VT_API Bool           platform_window_toggle_framerate(PlatformWindow window);
-VT_API Bool           platform_window_render_titlebar(PlatformWindow window);

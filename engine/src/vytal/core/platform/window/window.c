@@ -144,6 +144,19 @@ Int32 platform_window_get_height(PlatformWindow window) {
     }
 }
 
+Flt64 platform_window_get_frame(PlatformWindow window) {
+    if (!window || !is_valid_backend())
+        return 0;
+
+    switch (window_backend) {
+    case WINDOW_BACKEND_GLFW:
+        return glfw_window_get_frame(window);
+
+    default:
+        return 0;
+    }
+}
+
 Bool platform_window_set_title(PlatformWindow window, ConstStr title) {
     if (!window || !is_valid_backend())
         return false;
@@ -255,32 +268,6 @@ Bool platform_window_swap_buffers(PlatformWindow window) {
     switch (window_backend) {
     case WINDOW_BACKEND_GLFW:
         return glfw_window_swap_buffers(window);
-
-    default:
-        return false;
-    }
-}
-
-Bool platform_window_toggle_framerate(PlatformWindow window) {
-    if (!window || !is_valid_backend())
-        return false;
-
-    switch (window_backend) {
-    case WINDOW_BACKEND_GLFW:
-        return glfw_window_toggle_framerate(window);
-
-    default:
-        return false;
-    }
-}
-
-Bool platform_window_render_titlebar(PlatformWindow window) {
-    if (!window || !is_valid_backend())
-        return false;
-
-    switch (window_backend) {
-    case WINDOW_BACKEND_GLFW:
-        return glfw_window_render_titlebar(window);
 
     default:
         return false;

@@ -110,17 +110,8 @@ Bool window_module_update(void) {
     if (!state)
         return false;
 
-    // poll events
-    if (!platform_window_poll_events(state->_main_window))
-        return false;
-
-    // render titlebar
-    if (!platform_window_render_titlebar(state->_main_window))
-        return false;
-
-    // swap buffers
-    if (!platform_window_swap_buffers(state->_main_window))
-        return false;
+    // do nothing.
+    // the application will have explicit control over when to poll events or swap buffers
 
     return true;
 }
@@ -157,6 +148,9 @@ PlatformWindow window_module_get_main(void) {
     return state->_main_window;
 }
 
-Bool window_module_main_toggle_framerate(void) {
-    return !state ? false : platform_window_toggle_framerate(state->_main_window);
+WindowProps window_module_get_properties(void) {
+    if (!state)
+        return VT_STRUCT(WindowProps, 0);
+
+    return state->_main_window_props;
 }

@@ -5,16 +5,27 @@
 #include "vytal/core/hal/memory/vtmem.h"
 #include "vytal/core/logger/logger.h"
 #include "vytal/core/misc/console/console.h"
+#include "vytal/core/misc/string/vtstr.h"
 #include "vytal/core/modules/input/input.h"
 #include "vytal/core/modules/window/window.h"
 #include "vytal/core/platform/window/window.h"
 #include "vytal/managers/memory/memmgr.h"
 #include "vytal/managers/module/modmgr.h"
 
-typedef struct Application_State {
-    Bool _active;
-    Bool _initialized;
+#define ENGINE_FRAMERATE_MAX 120
+#define OUTPUT_BUFFER_MAX_SIZE VT_SIZE_KB_MULT(32) // 32 KB
 
+typedef struct Application_State {
+    UInt64             _prev_frame;
+    UInt64             _frame_rate;
+    Flt32              _delta_time;
+    Bool               _active;
+    Bool               _suspended;
+    Bool               _initialized;
+    PlatformWindow     _window;
+    WindowTitlebarFlag _window_titlebar_flags;
+    Char               _window_title[64];
+    Char               _window_updated_title[OUTPUT_BUFFER_MAX_SIZE];
 } Application_State;
 
 static Application_State *state = NULL;
@@ -93,12 +104,6 @@ Bool application_preconstruct(void) {
     // allocate application state
     state = memory_manager_allocate(sizeof(Application_State), MEMORY_TAG_APPLICATION);
 
-    // init state members
-    {
-        state->_active      = true;
-        state->_initialized = true;
-    }
-
     // perform modules startup
     if (!module_manager_startup_modules())
         return false;
@@ -118,6 +123,20 @@ Bool application_preconstruct(void) {
         input_module_register_event(VT_EVENTCODE_MOUSE_SCROLLED, _application_on_mouse_scrolled);
     }
 
+    // init state members
+    {
+        state->_prev_frame  = 0;
+        state->_frame_rate  = ENGINE_FRAMERATE_MAX;
+        state->_delta_time  = 0.f;
+        state->_window      = window_module_get_main();
+        state->_active      = true;
+        state->_suspended   = false;
+        state->_initialized = true;
+
+        misc_str_strcpy(state->_window_title, window_module_get_properties()._title);
+        hal_mem_memzero(state->_window_updated_title, OUTPUT_BUFFER_MAX_SIZE);
+    }
+
     _application_report_status("pre_construct state completed, proceeding to construct stage...");
     return true;
 }
@@ -134,41 +153,69 @@ Bool application_update(void) {
     if (!state)
         return false;
 
+    Flt64       prev_frame_      = platform_window_get_frame(state->_window);
+    Flt64       timer_           = prev_frame_;
+    Flt64       delta_time_      = 0.0;
+    Flt64       curr_frame_      = 0;
+    UInt32      frames_          = 0;
+    Flt64       framerate_limit_ = 1.0 / (state->_frame_rate == 0 ? ENGINE_FRAMERATE_MAX : state->_frame_rate);
+    WindowProps props_           = window_module_get_properties();
+
     do {
-        if (!module_manager_update_modules())
-            return false;
+        // measure frame time
+        curr_frame_ = platform_window_get_frame(state->_window);
+        delta_time_ += (curr_frame_ - prev_frame_) / framerate_limit_;
+        prev_frame_ = curr_frame_;
 
-        if (hal_input_is_key_down(VT_KEYCODE_TAB)) {
-            if (hal_input_is_key_pressed(VT_KEYCODE_F)) {
-                VT_LOG_INFO("Engine", "%s", "Combo Tab + F is performed.");
+        state->_delta_time = delta_time_;
+
+        // update at specified frame-rate
+        while (delta_time_ >= 1.0) {
+            // poll events
+            if (!platform_window_poll_events(state->_window))
+                return false;
+
+            // handle updates here...
+            {
             }
-        } else {
-            if (hal_input_is_key_pressed(VT_KEYCODE_F)) {
-                window_module_main_toggle_framerate();
-            }
+
+            // update modules
+            if (!module_manager_update_modules())
+                return false;
+
+            --delta_time_;
         }
 
-        if (hal_input_is_mouse_pressed(VT_MOUSECODE_LEFT)) {
-            VT_LOG_INFO("Engine", "%s", "left mouse clicked");
+        // render at maximum possible frame
+        {
+            // swap buffers
+            if (!platform_window_swap_buffers(state->_window))
+                return false;
+
+            ++frames_;
         }
 
-        if (hal_input_is_mouse_pressed(VT_MOUSECODE_MIDDLE)) {
-            VT_LOG_INFO("Engine", "%s", "middle mouse clicked");
-        }
+        // for each passing second...
+        // update the title-bar frame-rate (if specified)
+        // reset the frame count
+        if (platform_window_get_frame(state->_window) - timer_ > 1.0) {
+            ++timer_;
 
-        if (hal_input_is_mouse_pressed(VT_MOUSECODE_RIGHT)) {
-            VT_LOG_INFO("Engine", "%s", "right mouse clicked");
-        }
+            // render title-bar
+            Int32 length_ = misc_str_fmt(state->_window_updated_title, OUTPUT_BUFFER_MAX_SIZE, "%s", state->_window_title);
 
-        if (hal_input_is_mouse_moved()) {
-            VT_LOG_INFO("Engine", "mouse coord: %d, %d", hal_input_get_mouse_x(), hal_input_get_mouse_y());
-        }
+            if (VT_BITFLAG_IF_SET(props_._titlebar_flags, WINDOW_TITLEBAR_FLAG_FPS))
+                length_ += misc_str_fmt(state->_window_updated_title + length_, OUTPUT_BUFFER_MAX_SIZE - length_, " _ FPS: %d",
+                                        frames_);
 
-        if (hal_input_is_mouse_scrolled()) {
-            VT_LOG_INFO("Engine", "scroll val: %d", hal_input_get_mouse_scroll_value());
-            VT_LOG_INFO("Engine", "scroll val inv: %d", hal_input_get_mouse_scroll_value_inverted());
-        }
+            if (!platform_window_set_title(state->_window, state->_window_updated_title))
+                return false;
 
+            hal_mem_memzero(state->_window_updated_title, length_);
+
+            // reset for the next interval
+            frames_ = 0;
+        }
     } while (state->_active);
 
     _application_report_status("game loop terminated, proceeding to cleanup...");
