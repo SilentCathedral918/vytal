@@ -26,10 +26,13 @@ Bool audio_backend_al_set_listener_orientation(AudioListener *listener, Flt32 *o
 
 // --------------------------------- source --------------------------------- //
 
-Bool audio_backend_al_generate_source(UInt32 *source);
-Bool audio_backend_al_generate_sources(UInt32 *sources, const ByteSize count);
-Bool audio_backend_al_delete_source(UInt32 *source);
-Bool audio_backend_al_delete_sources(UInt32 *sources, const ByteSize count);
+Bool               audio_backend_al_generate_source(UInt32 *source);
+Bool               audio_backend_al_generate_sources(UInt32 *sources, const ByteSize count);
+Bool               audio_backend_al_delete_source(UInt32 *source);
+Bool               audio_backend_al_delete_sources(UInt32 *sources, const ByteSize count);
+void               audio_backend_al_attach_buffer_to_source(UInt32 source, const UInt32 buffer);
+void               audio_backend_al_source_play(const UInt32 source);
+AudioPlaybackState audio_backend_al_get_playback_state(const UInt32 source);
 
 // --------------------------------- buffer --------------------------------- //
 
@@ -37,6 +40,6 @@ Bool audio_backend_al_generate_buffer(UInt32 *buffer);
 Bool audio_backend_al_generate_buffers(UInt32 *buffers, const ByteSize count);
 Bool audio_backend_al_delete_buffer(UInt32 *buffer);
 Bool audio_backend_al_delete_buffers(UInt32 *buffers, const ByteSize count);
-Bool audio_backend_al_buffer_fill_data(const UInt32 buffer, const UInt64 format, const VoidPtr data, const ByteSize size,
-                                       const ByteSize sample_rate);
+Bool audio_backend_al_buffer_fill_data(const UInt32 buffer, const AudioChannelFormat channel_format, const VoidPtr data,
+                                       const ByteSize size, const ByteSize sample_rate);
 Bool audio_backend_al_is_buffer_valid(const UInt32 buffer);

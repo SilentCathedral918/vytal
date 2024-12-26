@@ -1,6 +1,6 @@
 #include "application.h"
 
-#include "vytal/audio/core/loaders/audio_loader.h"
+#include "vytal/audio/module/audio.h"
 #include "vytal/core/containers/map/map.h"
 #include "vytal/core/hal/input/input.h"
 #include "vytal/core/hal/memory/vtmem.h"
@@ -150,26 +150,10 @@ Bool application_construct(void) {
     {
         ConstStr filepath = "test.wav";
 
-        AudioData audio_data = audio_core_load_from_file(filepath);
-
-        if (!audio_data._pcm_data) {
-            VT_LOG_ERROR("Engine", "%s", "Failed to load audio data.");
+        // play the audio
+        if (!audio_module_play_audio(filepath)) {
+            VT_LOG_ERROR("Engine", "failed to play audio _ filepath: %s", filepath);
             return false;
-        }
-
-        VT_LOG_INFO("Engine", "Successfully loaded audio file: %s", filepath);
-        VT_LOG_INFO("Engine", "Audio Format: %d", audio_data._format);
-        VT_LOG_INFO("Engine", "Channels: %u", audio_data._channels);
-        VT_LOG_INFO("Engine", "Sample Rate: %u Hz", audio_data._sample_rate);
-        VT_LOG_INFO("Engine", "Bits per Sample: %u", audio_data._bits_per_sample);
-        VT_LOG_INFO("Engine", "Data Size: %llu bytes", audio_data._data_size);
-        VT_LOG_INFO("Engine", "Duration: %u ms", audio_data._duration_ms);
-
-        // // Step 3: Unload the audio data
-        if (audio_core_unload_data(&audio_data)) {
-            VT_LOG_INFO("Engine", "%s", "Audio data unloaded successfully.");
-        } else {
-            VT_LOG_ERROR("Engine", "%s", "Failed to unload audio data.");
         }
     }
 

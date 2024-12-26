@@ -32,13 +32,13 @@ AudioData audio_core_load_from_file(ConstStr filepath) {
     AudioData data_ = VT_STRUCT(AudioData, 0);
 
     switch (format_) {
-    case AUDIO_FORMAT_WAV:
+    case AUDIO_FILE_FORMAT_WAV:
         data_ = audio_core_wav_load_from_file(filepath);
 
-    case AUDIO_FORMAT_OGG:
+    case AUDIO_FILE_FORMAT_OGG:
         break;
 
-    case AUDIO_FORMAT_FLAC:
+    case AUDIO_FILE_FORMAT_FLAC:
         break;
 
     default:
@@ -53,13 +53,13 @@ Bool audio_core_unload_data(AudioData *data) {
         return false;
 
     switch (data->_format) {
-    case AUDIO_FORMAT_WAV:
+    case AUDIO_FILE_FORMAT_WAV:
         return audio_core_wav_unload_data(data);
 
-    case AUDIO_FORMAT_OGG:
+    case AUDIO_FILE_FORMAT_OGG:
         break;
 
-    case AUDIO_FORMAT_FLAC:
+    case AUDIO_FILE_FORMAT_FLAC:
         break;
 
     default:

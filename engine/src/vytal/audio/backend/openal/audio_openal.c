@@ -139,6 +139,29 @@ Bool audio_backend_al_delete_sources(UInt32 *sources, const ByteSize count) {
     return true;
 }
 
+void audio_backend_al_attach_buffer_to_source(UInt32 source, const UInt32 buffer) { alSourcei(source, AL_BUFFER, buffer); }
+
+void audio_backend_al_source_play(const UInt32 source) { alSourcePlay(source); }
+
+AudioPlaybackState audio_backend_al_get_playback_state(const UInt32 source) {
+    ALint state_;
+    alGetSourcei(source, AL_SOURCE_STATE, &state_);
+
+    switch (state_) {
+    case AL_STOPPED:
+        return AUDIO_PLAYBACK_STOPPED;
+
+    case AL_PLAYING:
+        return AUDIO_PLAYBACK_PLAYING;
+
+    case AL_PAUSED:
+        return AUDIO_PLAYBACK_PAUSED;
+
+    default:
+        return AL_INVALID;
+    }
+}
+
 // --------------------------------- buffer --------------------------------- //
 
 Bool audio_backend_al_generate_buffer(UInt32 *buffer) {
@@ -173,12 +196,34 @@ Bool audio_backend_al_delete_buffers(UInt32 *buffers, const ByteSize count) {
     return true;
 }
 
-Bool audio_backend_al_buffer_fill_data(const UInt32 buffer, const UInt64 format, const VoidPtr data, const ByteSize size,
-                                       const ByteSize sample_rate) {
+Bool audio_backend_al_buffer_fill_data(const UInt32 buffer, const AudioChannelFormat channel_format, const VoidPtr data,
+                                       const ByteSize size, const ByteSize sample_rate) {
     if ((buffer == 0x00) || !data || (size == 0) || (sample_rate == 0))
         return false;
 
-    alBufferData(buffer, format, data, size, sample_rate);
+    ALenum channel_format_ = 0;
+    switch (channel_format) {
+    case AUDIO_CHANNEL_MONO_8:
+        channel_format_ = AL_FORMAT_MONO8;
+        break;
+
+    case AUDIO_CHANNEL_MONO_16:
+        channel_format_ = AL_FORMAT_MONO16;
+        break;
+
+    case AUDIO_CHANNEL_STEREO_8:
+        channel_format_ = AL_FORMAT_STEREO8;
+        break;
+
+    case AUDIO_CHANNEL_STEREO_16:
+        channel_format_ = AL_FORMAT_STEREO16;
+        break;
+
+    default:
+        return false;
+    }
+
+    alBufferData(buffer, channel_format_, data, size, sample_rate);
     return true;
 }
 

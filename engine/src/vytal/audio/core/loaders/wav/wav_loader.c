@@ -64,7 +64,7 @@ AudioData audio_core_wav_load_from_file(ConstStr filepath) {
 
     // allocate and init audio data
     AudioData data_        = VT_STRUCT(AudioData, 0);
-    data_._format          = AUDIO_FORMAT_WAV;
+    data_._format          = AUDIO_FILE_FORMAT_WAV;
     data_._channels        = fmt_chunk_._channels;
     data_._sample_rate     = fmt_chunk_._sample_rate;
     data_._bits_per_sample = fmt_chunk_._bits_per_sample;

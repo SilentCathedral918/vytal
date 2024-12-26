@@ -24,7 +24,14 @@ typedef struct Audio_Listener {
 
 // ---------------------------- audio formats ---------------------------- //
 
-typedef enum Audio_Format { AUDIO_FORMAT_WAV, AUDIO_FORMAT_OGG, AUDIO_FORMAT_FLAC } AudioFormat;
+typedef enum Audio_File_Format { AUDIO_FILE_FORMAT_WAV, AUDIO_FILE_FORMAT_OGG, AUDIO_FILE_FORMAT_FLAC } AudioFormat;
+
+typedef enum Audio_Channel_Format {
+    AUDIO_CHANNEL_MONO_8,
+    AUDIO_CHANNEL_MONO_16,
+    AUDIO_CHANNEL_STEREO_8,
+    AUDIO_CHANNEL_STEREO_16,
+} AudioChannelFormat;
 
 // ---------------------------- playback state ---------------------------- //
 
