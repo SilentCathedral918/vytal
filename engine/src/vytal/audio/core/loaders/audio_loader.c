@@ -1,7 +1,7 @@
 #include "audio_loader.h"
 
 #include "vytal/audio/core/loaders/wav/wav_loader.h"
-#include "vytal/core/misc/console/console.h"
+#include "vytal/core/logger/logger.h"
 #include "vytal/core/misc/string/vtstr.h"
 
 ConstStr supported_formats[]        = {".wav", ".ogg", ".flac"};
@@ -30,7 +30,6 @@ AudioData audio_core_load_from_file(ConstStr filepath) {
     }
 
     AudioData data_ = VT_STRUCT(AudioData, 0);
-    data_._format   = VT_CAST(AudioFormat, format_);
 
     switch (format_) {
     case AUDIO_FORMAT_WAV:
@@ -64,6 +63,8 @@ Bool audio_core_unload_data(AudioData *data) {
         break;
 
     default:
-        return false;
+        break;
     }
+
+    return false;
 }

@@ -124,26 +124,26 @@ Bool platform_fs_file_write_line(FileHandle *handle, ConstStr text) {
     return (res_ != EOF);
 }
 
-Bool platform_fs_file_read_all(FileHandle *handle, ByteSize *read_size, Str *read_out) {
-    if (!handle->_active || !handle->_stream || !*read_out)
+Bool platform_fs_file_read_all(FileHandle *handle, ByteSize *read_size, Str read_out) {
+    if (!handle->_active || !handle->_stream || !read_out)
         return false;
 
     if (!read_size)
         fread(read_out, sizeof(Char), platform_fs_file_size(handle), handle->_stream);
     else
-        *read_size = fread(*read_out, sizeof(Char), platform_fs_file_size(handle), handle->_stream);
+        *read_size = fread(read_out, sizeof(Char), platform_fs_file_size(handle), handle->_stream);
 
     return true;
 }
 
-Bool platform_fs_file_read_data(FileHandle *handle, const ByteSize data_size, ByteSize *read_size, VoidPtr *read_out) {
+Bool platform_fs_file_read_data(FileHandle *handle, const ByteSize data_size, ByteSize *read_size, VoidPtr read_out) {
     if (!handle->_active || !handle->_stream || (data_size == 0) || !read_out)
         return false;
 
     if (!read_size)
-        fread(read_out, data_size, platform_fs_file_size(handle) / data_size, handle->_stream);
+        fread(read_out, data_size, 1, handle->_stream);
     else
-        *read_size = fread(*read_out, data_size, platform_fs_file_size(handle) / data_size, handle->_stream);
+        *read_size = fread(read_out, data_size, 1, handle->_stream);
 
     return true;
 }
@@ -173,4 +173,20 @@ Bool platform_fs_create_directory(ConstStr directory_name) {
     return (mkdir(directory_name, 0777) == 0);
 
 #endif
+}
+
+Bool platform_fs_seek_to_position(FileHandle *handle, const UIntPtr target) {
+    if (!handle || target == EOF)
+        return false;
+
+    fseek(handle->_stream, target, SEEK_SET);
+    return true;
+}
+
+Bool platform_fs_seek_from_current(FileHandle *handle, const ByteSize distance) {
+    if (!handle || distance == 0)
+        return false;
+
+    fseek(handle->_stream, distance, SEEK_CUR);
+    return true;
 }

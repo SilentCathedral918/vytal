@@ -1,6 +1,6 @@
 #pragma once
 
-#include "defines/core/types.h"
+#include "vytal/defines/core/types.h"
 
 // ---------------------------- chunks ---------------------------- //
 
@@ -23,9 +23,9 @@ typedef struct Audio_Wav_Fmt_Chunk {
 } AudioWavFmtChunk;
 
 typedef struct Audio_Wav_Data_Chunk {
-    Char   _id[4];
-    UInt32 _size;
-    UInt8 *_pcm_data;
+    Char    _id[4];
+    UInt32  _size;
+    VoidPtr _pcm_data;
 } AudioWavDataChunk;
 #pragma pack(pop)
 

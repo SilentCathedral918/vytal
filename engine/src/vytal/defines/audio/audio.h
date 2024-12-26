@@ -1,6 +1,6 @@
 #pragma once
 
-#include "defines/core/types.h"
+#include "vytal/defines/core/types.h"
 
 // ---------------------------- audio formats ---------------------------- //
 
