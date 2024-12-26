@@ -136,12 +136,12 @@ rem --- delete the selected folder
 rmdir /s /q "%dest_dir%\glfw\%selected_folder%"
 
 rem --- set environment variables
-setx /m GLFW_PATH %dest_dir%\glfw
+setx GLFW_PATH %dest_dir%\glfw /m
 
 goto exit
 
 :exit
-echo "GLFW download completed."
+echo "GLFW installation completed."
 pause
 
 

@@ -6,7 +6,8 @@
             "includePath": [
                 "${workspaceFolder}/engine/src/**",
                 "${VULKAN_SDK}/Include",
-                "${GLFW_PATH}/include"
+                "${GLFW_PATH}/include",
+                "${OPENAL_SOFT_PATH}/include"
             ],
             "defines": [
                 "VT_DEBUG",
@@ -24,7 +25,8 @@
             "includePath": [
                 "${workspaceFolder}/engine/src/**",
                 "${VULKAN_SDK}/include",
-                "${GLFW_PATH}/include"
+                "${GLFW_PATH}/include",
+                "${OPENAL_SOFT_PATH}/include"
             ],
             "defines": [
                 "VT_DEBUG",

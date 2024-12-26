@@ -85,6 +85,7 @@ AudioData audio_core_wav_load_from_file(ConstStr filepath) {
                 return VT_STRUCT(AudioData, 0);
             }
 
+            // seek to the data part to read
             platform_fs_seek_from_current(&handle_, sizeof(data_chunk_._id) + sizeof(data_chunk_._size));
 
             // read PCM data
@@ -94,11 +95,6 @@ AudioData audio_core_wav_load_from_file(ConstStr filepath) {
 
                 platform_fs_close_file(&handle_);
                 return VT_STRUCT(AudioData, 0);
-            }
-
-            UInt8 *raw_data = (UInt8 *)data_chunk_._pcm_data;
-            for (int i = 0; i < 16; i++) { // Print the first 16 bytes as hex
-                VT_LOG_INFO("Engine", "Byte %d: 0x%02X", i, raw_data[i]);
             }
 
             data_._pcm_data    = data_chunk_._pcm_data;

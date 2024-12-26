@@ -1,5 +1,6 @@
 #include "modmgr.h"
 
+#include "vytal/audio/module/audio.h"
 #include "vytal/core/memory/allocators/arena.h"
 #include "vytal/core/misc/assertions/assertions.h"
 #include "vytal/core/modules/input/input.h"
@@ -9,6 +10,7 @@
 typedef struct Module_Manager_State {
     VoidPtr _window_module;
     VoidPtr _input_module;
+    VoidPtr _audio_module;
 } Module_Manager_State;
 static Module_Manager_State *state = NULL;
 
@@ -33,6 +35,13 @@ Bool module_manager_startup_modules(void) {
             VT_ASSERT_MESSAGE(window_module_startup(state->_window_module),
                               "vytal: module manager _ window module startup failed.");
         }
+
+        // audio module
+        {
+            state->_audio_module = memory_manager_allocate(audio_module_get_size(), MEMORY_TAG_MODULE);
+            VT_ASSERT_MESSAGE(audio_module_startup(state->_audio_module),
+                              "vytal: module manager _ audio module startup failed.")
+        }
     }
 
     return true;
@@ -49,6 +58,9 @@ Bool module_manager_update_modules(void) {
 
         // window module
         VT_ASSERT_MESSAGE(window_module_update(), "vytal: module manager _ window module update failed.");
+
+        // audio module
+        VT_ASSERT_MESSAGE(audio_module_update(), "vytal: module manager _ audio module update failed.");
     }
 
     return true;
@@ -60,6 +72,9 @@ Bool module_manager_shutdown_modules(void) {
 
     // modules shutdown
     {
+        // audio module
+        VT_ASSERT_MESSAGE(audio_module_shutdown(), "vytal: module manager _ audio module shutdown failed.");
+
         // window module
         VT_ASSERT_MESSAGE(window_module_shutdown(), "vytal: module manager _ window module shutdown failed.");
 
