@@ -34,7 +34,8 @@
     "memory": "c",
     "typeindex": "c",
     "variant": "c",
-    "compare": "c"
+    "compare": "c",
+    "map": "c"
   },
 
   // editor styling

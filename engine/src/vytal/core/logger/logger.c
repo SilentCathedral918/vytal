@@ -66,7 +66,7 @@ Bool logger_startup(void) {
 
     // configure the state members
     {
-        state->_log_map = container_map_construct(sizeof(Logger));
+        state->_log_map = container_map_construct(sizeof(Logger), NULL);
 
         state->_log_flags   = LOG_FLAG_NONE;
         state->_initialized = true;

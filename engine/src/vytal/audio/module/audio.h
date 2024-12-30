@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vytal/defines/audio/audio.h"
+#include "vytal/defines/core/container.h"
 #include "vytal/defines/shared.h"
 
 VT_API ByteSize audio_module_get_size(void);

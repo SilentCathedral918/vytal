@@ -1,9 +1,10 @@
 #pragma once
 
 #include "vytal/defines/core/container.h"
+#include "vytal/defines/core/mem.h"
 #include "vytal/defines/shared.h"
 
-VT_API Map     container_map_construct(const ByteSize data_size);
+VT_API Map     container_map_construct(const ByteSize data_size, const PoolAllocator allocator);
 VT_API Bool    container_map_destruct(Map map);
 VT_API Bool    container_map_insert(Map map, const VoidPtr key, const VoidPtr data);
 VT_API Bool    container_map_remove(Map map, const VoidPtr key);
@@ -20,4 +21,3 @@ VT_API ByteSize container_map_data_size(Map map);
 #define container_map_get(map, type, key) (VT_CAST(type *, container_map_search(map, VT_CAST(VoidPtr, key))))
 #define container_map_get_value(map, type, key)                                                                                \
     ((container_map_get(map, type, key) != NULL) ? *(container_map_get(map, type, key)) : VT_STRUCT(type, 0))
-

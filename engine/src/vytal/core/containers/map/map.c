@@ -2,6 +2,7 @@
 
 #include "vytal/core/hal/memory/vtmem.h"
 #include "vytal/core/hash/hash.h"
+#include "vytal/core/memory/allocators/pool.h"
 #include "vytal/core/misc/string/vtstr.h"
 #include "vytal/managers/memory/memmgr.h"
 
@@ -17,10 +18,11 @@ typedef struct Container_Map_Data_Item {
 } MapDataItem;
 
 typedef struct Container_Map_Data {
-    VoidPtr  _bucket;
-    ByteSize _data_size;
-    ByteSize _length;
-    ByteSize _capacity;
+    VoidPtr       _bucket;
+    ByteSize      _data_size;
+    ByteSize      _length;
+    ByteSize      _capacity;
+    PoolAllocator _allocator;
 } MapData;
 
 static UInt32 vytal_container_map_probe_length = 0;
@@ -33,16 +35,20 @@ VT_INLINE Bool _container_map_full(Map map) {
     return (_container_map_get_internal_data(map)->_length == _container_map_get_internal_data(map)->_capacity);
 }
 
-Map container_map_construct(const ByteSize data_size) {
+Map container_map_construct(const ByteSize data_size, const PoolAllocator allocator) {
     if (data_size == 0)
         return NULL;
 
-    ByteSize data_size_   = data_size;
-    ByteSize item_size_   = sizeof(MapDataItem) + data_size_;
-    ByteSize bucket_size_ = CONTAINER_MAX_SIZE - (sizeof(Container_Map) + sizeof(MapData));
+    ByteSize item_size_   = sizeof(MapDataItem) + data_size;
+    ByteSize bucket_size_ = allocator ? (allocator_pool_capacity(allocator) - (sizeof(Container_Map) + sizeof(MapData)))
+                                      : (CONTAINER_MAX_SIZE - (sizeof(Container_Map) + sizeof(MapData)));
 
-    // size set to 0 since 'containers' use pool allocator, where size is already determined
-    VoidPtr chunk_ = memory_manager_allocate(0, MEMORY_TAG_CONTAINERS);
+    VoidPtr chunk_ = NULL;
+    if (allocator)
+        chunk_ = allocator_pool_allocate(allocator);
+    else
+        // size set to 0 since 'containers' use pool allocator, where size is already determined
+        chunk_ = memory_manager_allocate(0, MEMORY_TAG_CONTAINERS);
 
     if (!chunk_)
         return NULL;
@@ -54,9 +60,10 @@ Map container_map_construct(const ByteSize data_size) {
 
     // element 2: the map internal data struct
     MapData *data_    = VT_CAST(MapData *, map_ + 1);
-    data_->_data_size = data_size_;
+    data_->_data_size = data_size;
     data_->_length    = 0;
     data_->_capacity  = bucket_size_ / item_size_;
+    data_->_allocator = allocator;
 
     // element 3: the memory block
     data_->_bucket = VT_CAST(VoidPtr, data_ + 1);
@@ -73,7 +80,13 @@ Bool container_map_destruct(Map map) {
 
     // free the entire map
     {
-        memory_manager_deallocate(map, MEMORY_TAG_CONTAINERS);
+        PoolAllocator allocator_ = _container_map_get_internal_data(map)->_allocator;
+
+        if (allocator_)
+            allocator_pool_deallocate(allocator_, map);
+        else
+            memory_manager_deallocate(map, MEMORY_TAG_CONTAINERS);
+
         map = NULL;
     }
 

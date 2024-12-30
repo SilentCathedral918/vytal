@@ -44,7 +44,7 @@ typedef enum Audio_Backend { AUDIO_BACKEND_OPENAL } AudioBackend;
 // ---------------------------- audio data ---------------------------- //
 
 typedef struct Audio_Data {
-    Int64              _id;
+    UInt64             _id;
     AudioFormat        _format;
     VoidPtr            _pcm_data;
     ByteSize           _data_size;
@@ -52,8 +52,29 @@ typedef struct Audio_Data {
     UInt32             _sample_rate;
     UInt32             _bits_per_sample;
     UInt32             _duration_ms;
-    Bool               _stream;
-    Bool               _loop;
     AudioPlaybackState _playback_state;
     UInt32             _playback_position;
+    ByteSize           _num_refs;
 } AudioData;
+
+// ---------------------------- audio source ---------------------------- //
+
+typedef struct Audio_Source {
+    UInt64             _id;
+    Flt32              _position[3];
+    Flt32              _velocity[3];
+    Flt32              _orientation[6];
+    Flt32              _volume;
+    Flt32              _pitch;
+    Bool               _loop;
+    AudioPlaybackState _playback_state;
+    VoidPtr            _metadata;
+} AudioSource;
+
+// ---------------------------- audio buffer ---------------------------- //
+
+typedef struct Audio_Buffer {
+    UInt64     _id;
+    AudioData *_data;
+    VoidPtr    _metadata;
+} AudioBuffer;
