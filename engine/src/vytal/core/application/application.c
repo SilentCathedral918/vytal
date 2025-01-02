@@ -148,13 +148,24 @@ Bool application_construct(void) {
 
     // handle startup here...
     {
-        ConstStr filepath = "test.wav";
-
-        // play the audio
-        if (!audio_module_play_audio_from_file(filepath)) {
-            VT_LOG_ERROR("Engine", "failed to play audio _ filepath: %s", filepath);
+        AudioData *test_audio = audio_module_load_audio("bugreporter", "bugreporter_succeeded.wav");
+        if (!test_audio)
             return false;
-        }
+
+        AudioBuffer *test_buffer = audio_module_construct_buffer("bugreporter", "bugreporter");
+        if (!test_buffer)
+            return false;
+
+        // AudioSource *test_source = audio_module_construct_source("bugreporter");
+        // if (!test_source)
+        //     return false;
+
+        // if (!audio_module_assign_buffer_to_source("bugreporter", "bugreporter"))
+        //     return false;
+
+        AudioSource *test_source = audio_module_construct_source_with_buffer("bugreporter", "bugreporter");
+        if (!test_source)
+            return false;
     }
 
     _application_report_status("construct state completed, proceeding to game loop...");
@@ -189,6 +200,13 @@ Bool application_update(void) {
 
             // handle updates here...
             {
+                if (hal_input_is_key_pressed(VT_KEYCODE_R)) {
+                    audio_module_play_audio("bugreporter");
+                }
+
+                if (hal_input_is_key_pressed(VT_KEYCODE_O)) {
+                    audio_module_play_audio_from_file("outdoor.wav");
+                }
             }
 
             // update modules
@@ -237,6 +255,17 @@ Bool application_update(void) {
 Bool application_destruct(void) {
     if (!state)
         return false;
+
+    {
+        if (!audio_module_destruct_source("bugreporter"))
+            return false;
+
+        if (!audio_module_destruct_buffer("bugreporter"))
+            return false;
+
+        if (!audio_module_unload_audio("bugreporter"))
+            return false;
+    }
 
     // unregister events
     {

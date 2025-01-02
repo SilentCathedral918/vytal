@@ -34,7 +34,7 @@ UInt32 _audio_module_al_generate_buffer(ConstStr audio_id, const AudioData *data
     if (!audio_backend_al_generate_buffer(&buffer_))
         return -1;
 
-    if (!audio_backend_al_buffer_fill_data(buffer_, AUDIO_CHANNEL_MONO_8, data->_pcm_data, data->_data_size,
+    if (!audio_backend_al_buffer_fill_data(buffer_, data->_channel_format, data->_pcm_data, data->_data_size,
                                            data->_sample_rate))
         return -1;
 
@@ -118,7 +118,7 @@ Bool _audio_module_al_play_from_file(ConstStr filepath) {
         state_ = audio_backend_al_get_playback_state(source_);
     } while (state_ == AUDIO_PLAYBACK_PLAYING);
 
-    // clean-up
+    // then clean-up
     audio_backend_al_delete_source(&source_);
     audio_backend_al_delete_buffer(&buffer_);
     if (!audio_core_unload_data(id_, state->_data_map))
