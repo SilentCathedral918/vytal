@@ -151,7 +151,7 @@ Bool application_construct(void) {
         ConstStr filepath = "test.wav";
 
         // play the audio
-        if (!audio_module_play_audio(filepath)) {
+        if (!audio_module_play_audio_from_file(filepath)) {
             VT_LOG_ERROR("Engine", "failed to play audio _ filepath: %s", filepath);
             return false;
         }

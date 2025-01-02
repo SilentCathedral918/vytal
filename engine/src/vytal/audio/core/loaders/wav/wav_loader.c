@@ -2,6 +2,7 @@
 
 #include "vytal/core/hal/memory/vtmem.h"
 #include "vytal/core/logger/logger.h"
+#include "vytal/core/misc/console/console.h"
 #include "vytal/core/misc/string/vtstr.h"
 #include "vytal/core/platform/filesystem/filesystem.h"
 #include "vytal/managers/memory/memmgr.h"
@@ -68,6 +69,11 @@ AudioData audio_core_wav_load_from_file(ConstStr filepath) {
     data_._channels        = fmt_chunk_._channels;
     data_._sample_rate     = fmt_chunk_._sample_rate;
     data_._bits_per_sample = fmt_chunk_._bits_per_sample;
+    data_._channel_format  = (data_._channels == 1 && data_._bits_per_sample == 8)    ? AUDIO_CHANNEL_MONO_8
+                             : (data_._channels == 1 && data_._bits_per_sample == 16) ? AUDIO_CHANNEL_MONO_16
+                             : (data_._channels == 2 && data_._bits_per_sample == 8)  ? AUDIO_CHANNEL_STEREO_8
+                             : (data_._channels == 2 && data_._bits_per_sample == 16) ? AUDIO_CHANNEL_STEREO_16
+                                                                                      : -1;
 
     // seek to the data chunk
     platform_fs_seek_to_position(&handle_, sizeof(AudioWavRiffChunk) + sizeof(AudioWavFmtChunk));

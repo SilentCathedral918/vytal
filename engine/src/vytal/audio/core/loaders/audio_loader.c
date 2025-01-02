@@ -41,8 +41,9 @@ AudioData audio_core_load_from_file(ConstStr filepath, Map data_map) {
     case AUDIO_FILE_FORMAT_WAV:
         data_ = audio_core_wav_load_from_file(filepath);
 
-        ConstStr filename = platform_fs_get_filename_from_path(filepath);
-        container_map_insert(data_map, VT_CAST(VoidPtr, filename), &data_);
+        ConstStr filename_ = platform_fs_get_filename_from_path(filepath);
+        if (!container_map_insert(data_map, filename_, &data_))
+            return VT_STRUCT(AudioData, 0);
 
         break;
 

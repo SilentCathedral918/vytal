@@ -113,12 +113,12 @@ Bool delegate_multicast_handle_bind(MulticastDelegateHandle handle, MulticastDel
         return false;
 
     // check if delegate is already binded to the handle
-    if (container_map_contains(handle->_delegate_map, delegate))
+    if (container_map_contains(handle->_delegate_map, VT_CAST(ConstStr, delegate)))
         return false;
 
     // bind new delegate
     {
-        if (!container_map_insert(handle->_delegate_map, delegate, &delegate))
+        if (!container_map_insert(handle->_delegate_map, VT_CAST(ConstStr, delegate), &delegate))
             return false;
 
         container_array_push(handle->_binded_refs, UIntPtr, VT_CAST(UIntPtr, delegate));
@@ -132,12 +132,12 @@ Bool delegate_multicast_handle_unbind(MulticastDelegateHandle handle, MulticastD
         return false;
 
     // check if delegate is not binded to the handle
-    if (!container_map_contains(handle->_delegate_map, delegate))
+    if (!container_map_contains(handle->_delegate_map, VT_CAST(ConstStr, delegate)))
         return false;
 
     // unbind the delegate
     {
-        if (!container_map_remove(handle->_delegate_map, delegate))
+        if (!container_map_remove(handle->_delegate_map, VT_CAST(ConstStr, delegate)))
             return false;
 
         UIntPtr remove_data_ = VT_CAST(UIntPtr, delegate);

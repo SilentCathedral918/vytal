@@ -139,6 +139,29 @@ Bool audio_backend_al_delete_sources(UInt32 *sources, const ByteSize count) {
     return true;
 }
 
+void audio_backend_al_set_source_position(UInt32 source, const Flt32 x, const Flt32 y, const Flt32 z) {
+    alSource3f(source, AL_POSITION, x, y, z);
+}
+
+void audio_backend_al_set_source_velocity(UInt32 source, const Flt32 x, const Flt32 y, const Flt32 z) {
+    alSource3f(source, AL_VELOCITY, x, y, z);
+}
+
+Bool audio_backend_al_set_source_direction(UInt32 source, const Flt32 *direction, const Bool omnidirectional) {
+    if (!direction)
+        return false;
+
+    alSourcefv(source, AL_DIRECTION, direction);
+
+    if (omnidirectional) {
+        alSourcef(source, AL_CONE_INNER_ANGLE, 360.0f);
+        alSourcef(source, AL_CONE_OUTER_ANGLE, 360.0f);
+        alSourcef(source, AL_CONE_OUTER_GAIN, 1.0f);
+    }
+
+    return true;
+}
+
 void audio_backend_al_attach_buffer_to_source(UInt32 source, const UInt32 buffer) { alSourcei(source, AL_BUFFER, buffer); }
 
 void audio_backend_al_source_play(const UInt32 source) { alSourcePlay(source); }

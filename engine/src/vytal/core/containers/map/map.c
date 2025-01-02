@@ -6,8 +6,6 @@
 #include "vytal/core/misc/string/vtstr.h"
 #include "vytal/managers/memory/memmgr.h"
 
-#include "vytal/core/misc/console/console.h"
-
 #define CONTAINER_MAX_SIZE VT_SIZE_KB_MULT(32) // 32 KB
 #define MAX_PROBE_LENGTH(capacity) ((capacity) / 2)
 
@@ -93,12 +91,12 @@ Bool container_map_destruct(Map map) {
     return true;
 }
 
-Bool container_map_insert(Map map, const VoidPtr key, const VoidPtr data) {
+Bool container_map_insert(Map map, ConstStr key, const VoidPtr data) {
     if (!map || !key || !data || _container_map_full(map))
         return false;
 
     MapData     *data_         = _container_map_get_internal_data(map);
-    HashedInt    hashed_       = hash_hashstr(VT_CAST(ConstStr, key), HASH_MODE_XX64);
+    HashedInt    hashed_       = hash_hashstr(key, HASH_MODE_XX64);
     ByteSize     idx_          = hashed_ % data_->_capacity;
     ByteSize     check_offset_ = (sizeof(MapDataItem) + data_->_data_size) * idx_;
     MapDataItem *check_slot_   = VT_CAST(MapDataItem *, VT_CAST(BytePtr, data_->_bucket) + check_offset_);
@@ -133,12 +131,12 @@ Bool container_map_insert(Map map, const VoidPtr key, const VoidPtr data) {
     return true;
 }
 
-Bool container_map_remove(Map map, const VoidPtr key) {
+Bool container_map_remove(Map map, ConstStr key) {
     if (!map || !key || _container_map_empty(map))
         return false;
 
     MapData     *data_         = _container_map_get_internal_data(map);
-    HashedInt    hashed_       = hash_hashstr(VT_CAST(ConstStr, key), HASH_MODE_XX64);
+    HashedInt    hashed_       = hash_hashstr(key, HASH_MODE_XX64);
     ByteSize     idx_          = hashed_ % data_->_capacity;
     ByteSize     check_offset_ = (sizeof(MapDataItem) + data_->_data_size) * idx_;
     MapDataItem *check_slot_   = VT_CAST(MapDataItem *, VT_CAST(BytePtr, data_->_bucket) + check_offset_);
@@ -166,12 +164,12 @@ Bool container_map_remove(Map map, const VoidPtr key) {
     return false;
 }
 
-Bool container_map_update(Map map, const VoidPtr key, const VoidPtr new_data) {
+Bool container_map_update(Map map, ConstStr key, const VoidPtr new_data) {
     if (!map || !key || _container_map_empty(map))
         return false;
 
     MapData     *data_         = _container_map_get_internal_data(map);
-    HashedInt    hashed_       = hash_hashstr(VT_CAST(ConstStr, key), HASH_MODE_XX64);
+    HashedInt    hashed_       = hash_hashstr(key, HASH_MODE_XX64);
     ByteSize     idx_          = hashed_ % data_->_capacity;
     ByteSize     check_offset_ = (sizeof(MapDataItem) + data_->_data_size) * idx_;
     MapDataItem *check_slot_   = VT_CAST(MapDataItem *, VT_CAST(BytePtr, data_->_bucket) + check_offset_);
@@ -198,12 +196,12 @@ Bool container_map_update(Map map, const VoidPtr key, const VoidPtr new_data) {
     return false;
 }
 
-VoidPtr container_map_search(Map map, const VoidPtr key) {
+VoidPtr container_map_search(Map map, ConstStr key) {
     if (!map || !key || _container_map_empty(map))
         return NULL;
 
     MapData     *data_         = _container_map_get_internal_data(map);
-    HashedInt    hashed_       = hash_hashstr(VT_CAST(ConstStr, key), HASH_MODE_XX64);
+    HashedInt    hashed_       = hash_hashstr(key, HASH_MODE_XX64);
     ByteSize     idx_          = hashed_ % data_->_capacity;
     ByteSize     check_offset_ = (sizeof(MapDataItem) + data_->_data_size) * idx_;
     MapDataItem *check_slot_   = VT_CAST(MapDataItem *, VT_CAST(BytePtr, data_->_bucket) + check_offset_);
@@ -229,9 +227,9 @@ VoidPtr container_map_search(Map map, const VoidPtr key) {
     return NULL;
 }
 
-Bool container_map_contains(Map map, const VoidPtr key) { return (!map ? false : (container_map_search(map, key) != NULL)); }
-Bool container_map_isempty(Map map) { return (!map ? true : _container_map_empty(map)); }
-Bool container_map_isfull(Map map) { return (!map ? false : _container_map_full(map)); }
+Bool     container_map_contains(Map map, ConstStr key) { return (!map ? false : (container_map_search(map, key) != NULL)); }
+Bool     container_map_isempty(Map map) { return (!map ? true : _container_map_empty(map)); }
+Bool     container_map_isfull(Map map) { return (!map ? false : _container_map_full(map)); }
 ByteSize container_map_length(Map map) { return (!map ? 0 : _container_map_get_internal_data(map)->_length); }
 ByteSize container_map_capacity(Map map) { return (!map ? 0 : _container_map_get_internal_data(map)->_capacity); }
 ByteSize container_map_data_size(Map map) { return (!map ? 0 : _container_map_get_internal_data(map)->_data_size); }

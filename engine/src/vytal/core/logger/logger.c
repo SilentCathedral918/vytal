@@ -126,7 +126,7 @@ Bool logger_add(ConstStr logger_id, ConstStr filepath) {
             return false;
     }
 
-    return container_map_insert(state->_log_map, VT_CAST(VoidPtr, logger_id), &new_logger_);
+    return container_map_insert(state->_log_map, logger_id, &new_logger_);
 }
 
 Bool logger_remove(ConstStr logger_id) {
@@ -136,7 +136,7 @@ Bool logger_remove(ConstStr logger_id) {
     if (!state->_log_map || container_map_isempty(state->_log_map))
         return false;
 
-    return container_map_remove(state->_log_map, VT_CAST(VoidPtr, logger_id));
+    return container_map_remove(state->_log_map, logger_id);
 }
 
 Bool logger_toggle_flag(const LogFlag flag) {
