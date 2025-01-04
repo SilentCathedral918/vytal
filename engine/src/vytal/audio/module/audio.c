@@ -61,7 +61,7 @@ UInt32 _audio_module_al_generate_source(UInt32 buffer_id, const Flt32 position[3
     }
 
     // set looping state
-    audio_backend_al_set_looping(source_, loop);
+    audio_backend_al_set_source_looping(source_, loop);
 
     return source_;
 }
@@ -388,27 +388,5 @@ Bool audio_module_destruct_source(ConstStr id) {
 AudioBuffer *audio_module_get_buffer(ConstStr id) { return container_map_get(state->_buffer_map, AudioBuffer, id); }
 
 AudioSource *audio_module_get_source(ConstStr id) { return container_map_get(state->_source_map, AudioSource, id); }
-
-Bool audio_module_assign_buffer_to_source(ConstStr source_id, ConstStr buffer_id) {
-    if (!state || !source_id || !buffer_id)
-        return false;
-
-    AudioSource *source_ = container_map_get(state->_source_map, AudioSource, source_id);
-    if (!source_)
-        return false;
-
-    AudioBuffer *buffer_ = container_map_get(state->_buffer_map, AudioBuffer, buffer_id);
-    if (!buffer_)
-        return false;
-
-    switch (state->_backend) {
-    case AUDIO_BACKEND_OPENAL:
-        audio_backend_al_attach_buffer_to_source(source_->_id, buffer_->_id);
-        return true;
-
-    default:
-        return false;
-    }
-}
 
 VT_API VoidPtr audio_module_get_state(void) { return state; }

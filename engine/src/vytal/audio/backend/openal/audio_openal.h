@@ -40,17 +40,17 @@ void               audio_backend_al_attach_buffer_to_source(UInt32 source, const
 void               audio_backend_al_source_play(const UInt32 source);
 void               audio_backend_al_source_pause(const UInt32 source);
 void               audio_backend_al_source_stop(const UInt32 source);
-UInt32             audio_backend_al_get_playback_position(const UInt32 source);
-void               audio_backend_al_set_playback_position(const UInt32 source, const UInt32 position_ms);
-AudioPlaybackState audio_backend_al_get_playback_state(const UInt32 source);
-Flt32              audio_backend_al_get_volume(const UInt32 source);
-void               audio_backend_al_set_volume(const UInt32 source, const Flt32 volume);
-Flt32              audio_backend_al_get_attenuation(const UInt32 source);
-void               audio_backend_al_set_attenuation(const UInt32 source, const Flt32 attenuation);
-Bool               audio_backend_al_is_looping(const UInt32 source);
-void               audio_backend_al_set_looping(const UInt32 source, const Bool loop);
-Bool               audio_backend_al_is_omnidirectional(const UInt32 source);
-void               audio_backend_al_set_omnidirectional(const UInt32 source, const Bool omnidirectional);
+UInt32             audio_backend_al_get_source_playback_position(const UInt32 source);
+void               audio_backend_al_set_source_playback_position(const UInt32 source, const UInt32 position_ms);
+AudioPlaybackState audio_backend_al_get_source_playback_state(const UInt32 source);
+Flt32              audio_backend_al_get_source_volume(const UInt32 source);
+void               audio_backend_al_set_source_volume(const UInt32 source, const Flt32 volume);
+Flt32              audio_backend_al_get_source_attenuation(const UInt32 source);
+void               audio_backend_al_set_source_attenuation(const UInt32 source, const Flt32 attenuation);
+Bool               audio_backend_al_is_source_looping(const UInt32 source);
+void               audio_backend_al_set_source_looping(const UInt32 source, const Bool loop);
+Bool               audio_backend_al_is_source_omnidirectional(const UInt32 source);
+void               audio_backend_al_set_source_omnidirectional(const UInt32 source, const Bool omnidirectional);
 Flt32              audio_backend_al_get_source_pitch(const UInt32 source);
 void               audio_backend_al_set_source_pitch(const UInt32 source, const Flt32 pitch);
 

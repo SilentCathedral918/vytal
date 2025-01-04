@@ -1,5 +1,6 @@
 #include "application.h"
 
+#include "vytal/audio/core/utils/audio_utils.h"
 #include "vytal/audio/module/audio.h"
 #include "vytal/core/containers/map/map.h"
 #include "vytal/core/hal/input/input.h"
@@ -148,6 +149,20 @@ Bool application_construct(void) {
 
     // handle startups here...
     {
+        audio_module_load_audio("background", "outdoor.wav");
+        audio_module_construct_buffer("background", "background");
+        audio_module_construct_source_with_buffer("background", "background", true);
+
+        audio_module_load_audio("test", "test.wav");
+        audio_module_construct_buffer("test", "test");
+        audio_module_construct_source_with_buffer("test", "test", false);
+
+        audio_module_load_audio("report", "bugreporter_succeeded.wav");
+        audio_module_construct_buffer("report", "report");
+        audio_module_construct_source_with_buffer("report", "report", false);
+
+        AudioSource *background = audio_module_get_source("background");
+        audio_utils_source_play(background);
     }
 
     _application_report_status("construct state completed, proceeding to game loop...");
@@ -182,6 +197,11 @@ Bool application_update(void) {
 
             // handle updates here...
             {
+                if (hal_input_is_key_pressed(VT_KEYCODE_T))
+                    audio_utils_source_play(audio_module_get_source("test"));
+
+                if (hal_input_is_key_pressed(VT_KEYCODE_R))
+                    audio_utils_source_play(audio_module_get_source("report"));
             }
 
             // update modules
@@ -233,6 +253,17 @@ Bool application_destruct(void) {
 
     // handle shutdowns here...
     {
+        audio_module_destruct_source("report");
+        audio_module_destruct_buffer("report");
+        audio_module_unload_audio("report");
+
+        audio_module_destruct_source("test");
+        audio_module_destruct_buffer("test");
+        audio_module_unload_audio("test");
+
+        audio_module_destruct_source("background");
+        audio_module_destruct_buffer("background");
+        audio_module_unload_audio("background");
     }
 
     // unregister events

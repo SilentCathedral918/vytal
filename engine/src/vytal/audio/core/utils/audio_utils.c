@@ -24,74 +24,17 @@ typedef struct Audio_Module_State {
 
 // ---------------------------------- source ---------------------------------- //
 
-Bool audio_utils_source_play(AudioSource *source) {
+Bool audio_utils_source_set_position(AudioSource *source, Flt32 x, Flt32 y, Flt32 z) {
     if (!source)
         return false;
 
-    switch (audio_module_state->_backend) {
-    case AUDIO_BACKEND_OPENAL:
-        audio_backend_al_source_play(source->_id);
-        source->_playback_state = audio_backend_al_get_playback_state(source->_id);
-        return true;
-
-    default:
-        return false;
-    }
-}
-
-Bool audio_utils_source_pause(AudioSource *source) {
-    if (!source)
-        return false;
+    source->_position[0] = x;
+    source->_position[1] = y;
+    source->_position[2] = z;
 
     switch (audio_module_state->_backend) {
     case AUDIO_BACKEND_OPENAL:
-        audio_backend_al_source_pause(source->_id);
-        source->_playback_state = audio_backend_al_get_playback_state(source->_id);
-        return true;
-
-    default:
-        return false;
-    }
-}
-
-Bool audio_utils_source_stop(AudioSource *source) {
-    if (!source)
-        return false;
-
-    switch (audio_module_state->_backend) {
-    case AUDIO_BACKEND_OPENAL:
-        audio_backend_al_source_stop(source->_id);
-        source->_playback_state = audio_backend_al_get_playback_state(source->_id);
-        return true;
-
-    default:
-        return false;
-    }
-}
-
-UInt32 audio_utils_source_get_playback_position(AudioSource *source) {
-    if (!source)
-        return 0;
-
-    switch (audio_module_state->_backend) {
-    case AUDIO_BACKEND_OPENAL:
-        UInt32 playback_position_  = audio_backend_al_get_playback_position(source->_id);
-        source->_playback_position = playback_position_;
-        return playback_position_;
-
-    default:
-        return 0;
-    }
-}
-
-Bool audio_utils_source_set_playback_position(AudioSource *source, UInt32 position_ms) {
-    if (!source)
-        return false;
-
-    switch (audio_module_state->_backend) {
-    case AUDIO_BACKEND_OPENAL:
-        source->_playback_position = position_ms;
-        audio_backend_al_set_playback_position(source->_id, position_ms);
+        audio_backend_al_set_source_position(source->_id, source->_position[0], source->_position[1], source->_position[2]);
         return true;
 
     default:
@@ -117,39 +60,17 @@ Bool audio_utils_source_translate(AudioSource *source, Flt32 dx, Flt32 dy, Flt32
     }
 }
 
-Bool audio_utils_source_fade_volume(AudioSource *source, Flt32 target_volume, UInt32 duration_ms) {
-    if (!source || duration_ms == 0 || target_volume < 0.0f || target_volume > 1.0f)
+Bool audio_utils_source_set_direction(AudioSource *source, Flt32 x, Flt32 y, Flt32 z) {
+    if (!source)
         return false;
 
-    HiResClock clock_;
-    hal_hiresclock_init(&clock_);
-
-    Flt32  vol_start_    = source->_volume;
-    Flt32  vol_delta_    = (target_volume - vol_start_) / duration_ms;
-    UInt32 elapsed_time_ = 0;
-
-    while (elapsed_time_ < duration_ms) {
-        source->_volume = vol_start_ + (vol_delta_ * elapsed_time_);
-
-        switch (audio_module_state->_backend) {
-        case AUDIO_BACKEND_OPENAL:
-            audio_backend_al_set_volume(source->_id, source->_volume);
-            break;
-
-        default:
-            return false;
-        }
-
-        Flt64 current_elapsed_ = hal_hiresclock_getelapsed_sec(&clock_) * 1000;
-        elapsed_time_          = VT_CAST(UInt32, current_elapsed_);
-    }
-
-    // ensure that the final volume matches the target (no rounding errors)
-    source->_volume = target_volume;
+    source->_direction[0] = x;
+    source->_direction[1] = y;
+    source->_direction[2] = z;
 
     switch (audio_module_state->_backend) {
     case AUDIO_BACKEND_OPENAL:
-        audio_backend_al_set_volume(source->_id, target_volume);
+        audio_backend_al_set_source_direction(source->_id, source->_direction, source->_omnidirectional);
         return true;
 
     default:
@@ -157,13 +78,17 @@ Bool audio_utils_source_fade_volume(AudioSource *source, Flt32 target_volume, UI
     }
 }
 
-Bool audio_utils_source_adjust_attenuation(AudioSource *source, Flt32 attenuation) {
-    if (!source || attenuation < 0.0f)
+Bool audio_utils_source_rotate(AudioSource *source, Flt32 dx, Flt32 dy, Flt32 dz) {
+    if (!source)
         return false;
+
+    source->_direction[0] += dx;
+    source->_direction[1] += dy;
+    source->_direction[2] += dz;
 
     switch (audio_module_state->_backend) {
     case AUDIO_BACKEND_OPENAL:
-        audio_backend_al_set_attenuation(source->_id, attenuation);
+        audio_backend_al_set_source_direction(source->_id, source->_direction, source->_omnidirectional);
         return true;
 
     default:
@@ -188,17 +113,147 @@ Bool audio_utils_source_reset_direction(AudioSource *source) {
     }
 }
 
-Bool audio_utils_source_set_position(AudioSource *source, Flt32 x, Flt32 y, Flt32 z) {
+Bool audio_utils_source_play(AudioSource *source) {
     if (!source)
         return false;
 
-    source->_position[0] = x;
-    source->_position[1] = y;
-    source->_position[2] = z;
+    switch (audio_module_state->_backend) {
+    case AUDIO_BACKEND_OPENAL:
+        audio_backend_al_source_play(source->_id);
+        source->_playback_state = audio_backend_al_get_source_playback_state(source->_id);
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+Bool audio_utils_source_pause(AudioSource *source) {
+    if (!source)
+        return false;
 
     switch (audio_module_state->_backend) {
     case AUDIO_BACKEND_OPENAL:
-        audio_backend_al_set_source_position(source->_id, source->_position[0], source->_position[1], source->_position[2]);
+        audio_backend_al_source_pause(source->_id);
+        source->_playback_state = audio_backend_al_get_source_playback_state(source->_id);
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+Bool audio_utils_source_stop(AudioSource *source) {
+    if (!source)
+        return false;
+
+    switch (audio_module_state->_backend) {
+    case AUDIO_BACKEND_OPENAL:
+        audio_backend_al_source_stop(source->_id);
+        source->_playback_state = audio_backend_al_get_source_playback_state(source->_id);
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+Bool audio_utils_source_set_playback_position(AudioSource *source, UInt32 position_ms) {
+    if (!source)
+        return false;
+
+    switch (audio_module_state->_backend) {
+    case AUDIO_BACKEND_OPENAL:
+        source->_playback_position = position_ms;
+        audio_backend_al_set_source_playback_position(source->_id, position_ms);
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+Bool audio_utils_source_set_volume(AudioSource *source, Flt32 volume) {
+    if (!source || volume < 0.0f || volume > 1.0f)
+        return false;
+
+    source->_volume = volume;
+
+    switch (audio_module_state->_backend) {
+    case AUDIO_BACKEND_OPENAL:
+        audio_backend_al_set_source_volume(source->_id, volume);
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+Bool audio_utils_source_set_pitch(AudioSource *source, Flt32 pitch) {
+    if (!source || pitch <= 0.0f)
+        return false;
+
+    source->_pitch = pitch;
+
+    switch (audio_module_state->_backend) {
+    case AUDIO_BACKEND_OPENAL:
+        audio_backend_al_set_source_pitch(source->_id, pitch);
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+Bool audio_utils_source_fade_volume(AudioSource *source, Flt32 target_volume, UInt32 duration_ms) {
+    if (!source || duration_ms == 0 || target_volume < 0.0f || target_volume > 1.0f)
+        return false;
+
+    HiResClock clock_;
+    hal_hiresclock_init(&clock_);
+
+    Flt32  vol_start_    = source->_volume;
+    Flt32  vol_delta_    = (target_volume - vol_start_) / duration_ms;
+    UInt32 elapsed_time_ = 0;
+
+    while (elapsed_time_ < duration_ms) {
+        source->_volume = vol_start_ + (vol_delta_ * elapsed_time_);
+
+        switch (audio_module_state->_backend) {
+        case AUDIO_BACKEND_OPENAL:
+            audio_backend_al_set_source_volume(source->_id, source->_volume);
+            break;
+
+        default:
+            return false;
+        }
+
+        Flt64 current_elapsed_ = hal_hiresclock_getelapsed_sec(&clock_) * 1000;
+        elapsed_time_          = VT_CAST(UInt32, current_elapsed_);
+    }
+
+    // ensure that the final volume matches the target (no rounding errors)
+    source->_volume = target_volume;
+
+    switch (audio_module_state->_backend) {
+    case AUDIO_BACKEND_OPENAL:
+        audio_backend_al_set_source_volume(source->_id, target_volume);
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+Bool audio_utils_source_set_looping(AudioSource *source, Bool loop) {
+    if (!source)
+        return false;
+
+    source->_loop = loop;
+
+    switch (audio_module_state->_backend) {
+    case AUDIO_BACKEND_OPENAL:
+        audio_backend_al_set_source_looping(source->_id, loop);
         return true;
 
     default:
@@ -224,65 +279,13 @@ Bool audio_utils_source_set_velocity(AudioSource *source, Flt32 x, Flt32 y, Flt3
     }
 }
 
-Bool audio_utils_source_set_direction(AudioSource *source, Flt32 x, Flt32 y, Flt32 z) {
-    if (!source)
+Bool audio_utils_source_adjust_attenuation(AudioSource *source, Flt32 attenuation) {
+    if (!source || attenuation < 0.0f)
         return false;
-
-    source->_direction[0] = x;
-    source->_direction[1] = y;
-    source->_direction[2] = z;
 
     switch (audio_module_state->_backend) {
     case AUDIO_BACKEND_OPENAL:
-        audio_backend_al_set_source_direction(source->_id, source->_direction, source->_omnidirectional);
-        return true;
-
-    default:
-        return false;
-    }
-}
-
-Bool audio_utils_source_set_volume(AudioSource *source, Flt32 volume) {
-    if (!source || volume < 0.0f || volume > 1.0f)
-        return false;
-
-    source->_volume = volume;
-
-    switch (audio_module_state->_backend) {
-    case AUDIO_BACKEND_OPENAL:
-        audio_backend_al_set_volume(source->_id, volume);
-        return true;
-
-    default:
-        return false;
-    }
-}
-
-Bool audio_utils_source_set_pitch(AudioSource *source, Flt32 pitch) {
-    if (!source || pitch <= 0.0f)
-        return false;
-
-    source->_pitch = pitch;
-
-    switch (audio_module_state->_backend) {
-    case AUDIO_BACKEND_OPENAL:
-        audio_backend_al_set_source_pitch(source->_id, pitch);
-        return true;
-
-    default:
-        return false;
-    }
-}
-
-Bool audio_utils_source_set_looping(AudioSource *source, Bool loop) {
-    if (!source)
-        return false;
-
-    source->_loop = loop;
-
-    switch (audio_module_state->_backend) {
-    case AUDIO_BACKEND_OPENAL:
-        audio_backend_al_set_looping(source->_id, loop);
+        audio_backend_al_set_source_attenuation(source->_id, attenuation);
         return true;
 
     default:
