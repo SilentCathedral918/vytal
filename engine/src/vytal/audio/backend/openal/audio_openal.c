@@ -139,12 +139,36 @@ Bool audio_backend_al_delete_sources(UInt32 *sources, const ByteSize count) {
     return true;
 }
 
+Bool audio_backend_al_get_source_position(const UInt32 source, Flt32 *out_position) {
+    if (!out_position)
+        return false;
+
+    alGetSourcefv(source, AL_POSITION, out_position);
+    return true;
+}
+
 void audio_backend_al_set_source_position(UInt32 source, const Flt32 x, const Flt32 y, const Flt32 z) {
     alSource3f(source, AL_POSITION, x, y, z);
 }
 
+Bool audio_backend_al_get_source_velocity(const UInt32 source, Flt32 *out_velocity) {
+    if (!out_velocity)
+        return false;
+
+    alGetSourcefv(source, AL_VELOCITY, out_velocity);
+    return true;
+}
+
 void audio_backend_al_set_source_velocity(UInt32 source, const Flt32 x, const Flt32 y, const Flt32 z) {
     alSource3f(source, AL_VELOCITY, x, y, z);
+}
+
+Bool audio_backend_al_get_source_direction(const UInt32 source, Flt32 *out_direction) {
+    if (!out_direction)
+        return false;
+
+    alGetSourcefv(source, AL_DIRECTION, out_direction);
+    return true;
 }
 
 Bool audio_backend_al_set_source_direction(UInt32 source, const Flt32 *direction, const Bool omnidirectional) {
@@ -166,6 +190,21 @@ void audio_backend_al_attach_buffer_to_source(UInt32 source, const UInt32 buffer
 
 void audio_backend_al_source_play(const UInt32 source) { alSourcePlay(source); }
 
+void audio_backend_al_source_pause(const UInt32 source) { alSourcePause(source); }
+
+void audio_backend_al_source_stop(const UInt32 source) { alSourceStop(source); }
+
+UInt32 audio_backend_al_get_playback_position(const UInt32 source) {
+    Flt32 sec_ = 0.0f;
+    alGetSourcef(source, AL_SEC_OFFSET, &sec_);
+    return VT_CAST(UInt32, sec_ * 1000.0f);
+}
+
+void audio_backend_al_set_playback_position(const UInt32 source, const UInt32 position_ms) {
+    Flt32 sec_ = VT_CAST(Flt32, position_ms) / 1000.0f;
+    alSourcef(source, AL_SEC_OFFSET, sec_);
+}
+
 AudioPlaybackState audio_backend_al_get_playback_state(const UInt32 source) {
     ALint state_;
     alGetSourcei(source, AL_SOURCE_STATE, &state_);
@@ -184,6 +223,58 @@ AudioPlaybackState audio_backend_al_get_playback_state(const UInt32 source) {
         return AL_INVALID;
     }
 }
+
+Flt32 audio_backend_al_get_volume(const UInt32 source) {
+    Flt32 vol_ = 0.0f;
+    alGetSourcef(source, AL_GAIN, &vol_);
+    return vol_;
+}
+
+void audio_backend_al_set_volume(const UInt32 source, const Flt32 volume) { alSourcef(source, AL_GAIN, volume); }
+
+Flt32 audio_backend_al_get_attenuation(const UInt32 source) {
+    Flt32 att_ = 0.0f;
+    alGetSourcef(source, AL_ROLLOFF_FACTOR, &att_);
+    return att_;
+}
+
+void audio_backend_al_set_attenuation(const UInt32 source, const Flt32 attenuation) {
+    alSourcef(source, AL_ROLLOFF_FACTOR, attenuation);
+}
+
+Bool audio_backend_al_is_looping(const UInt32 source) {
+    Int32 looping_ = 0;
+    alGetSourcei(source, AL_LOOPING, &looping_);
+    return looping_ == AL_TRUE;
+}
+
+void audio_backend_al_set_looping(const UInt32 source, const Bool loop) {
+    alSourcei(source, AL_LOOPING, loop ? AL_TRUE : AL_FALSE);
+}
+
+Bool audio_backend_al_is_omnidirectional(const UInt32 source) {
+    Flt32 inner_angle_ = 0.0f;
+    Flt32 outer_angle_ = 0.0f;
+
+    alGetSourcef(source, AL_CONE_INNER_ANGLE, &inner_angle_);
+    alGetSourcef(source, AL_CONE_OUTER_ANGLE, &outer_angle_);
+
+    return (inner_angle_ == 360.0f && outer_angle_ == 360.0f);
+}
+
+void audio_backend_al_set_omnidirectional(const UInt32 source, const Bool omnidirectional) {
+    alSourcef(source, AL_CONE_INNER_ANGLE, 360.0f);
+    alSourcef(source, AL_CONE_OUTER_ANGLE, 360.0f);
+    alSourcef(source, AL_CONE_OUTER_GAIN, 1.0f);
+}
+
+Flt32 audio_backend_al_get_source_pitch(const UInt32 source) {
+    Flt32 pitch_ = 0.0f;
+    alGetSourcef(source, AL_PITCH, &pitch_);
+    return pitch_;
+}
+
+void audio_backend_al_set_source_pitch(const UInt32 source, const Flt32 pitch) { alSourcef(source, AL_PITCH, pitch); }
 
 // --------------------------------- buffer --------------------------------- //
 

@@ -42,8 +42,8 @@ UInt32 _audio_module_al_generate_buffer(ConstStr audio_id, const AudioData *data
 }
 
 UInt32 _audio_module_al_generate_source(UInt32 buffer_id, const Flt32 position[3], const Flt32 velocity[3],
-                                        const Flt32 direction[6], const Bool omnidirectional, const Flt32 pitch,
-                                        const Flt32 volume) {
+                                        const Flt32 direction[3], const Bool omnidirectional, const Flt32 pitch,
+                                        const Flt32 volume, const Bool loop) {
     UInt32 source_ = 0;
     if (!audio_backend_al_generate_source(&source_))
         return -1;
@@ -60,71 +60,10 @@ UInt32 _audio_module_al_generate_source(UInt32 buffer_id, const Flt32 position[3
             return -1;
     }
 
+    // set looping state
+    audio_backend_al_set_looping(source_, loop);
+
     return source_;
-}
-
-Bool _audio_module_al_play_source(const AudioSource *source) {
-    if (!source)
-        return false;
-
-    audio_backend_al_source_play(source->_id);
-
-    return true;
-}
-
-Bool _audio_module_al_play_from_file(ConstStr filepath) {
-    AudioData data_ = audio_core_load_from_file(filepath, state->_data_map);
-    ConstStr  id_   = platform_fs_get_filename_from_path(filepath);
-
-    UInt32 buffer_ = 0;
-    if (!audio_backend_al_generate_buffer(&buffer_)) {
-        audio_backend_al_destroy_context(&state->_context);
-        audio_backend_al_close_device(&state->_device);
-        if (!audio_core_unload_data(id_, state->_data_map))
-            return false;
-
-        return false;
-    }
-
-    if (!audio_backend_al_buffer_fill_data(buffer_, data_._channel_format, data_._pcm_data, data_._data_size,
-                                           data_._sample_rate)) {
-        audio_backend_al_destroy_context(&state->_context);
-        audio_backend_al_close_device(&state->_device);
-        if (!audio_core_unload_data(id_, state->_data_map))
-            return false;
-
-        return false;
-    }
-
-    UInt32 source_ = 0;
-    if (!audio_backend_al_generate_source(&source_)) {
-        audio_backend_al_destroy_context(&state->_context);
-        audio_backend_al_close_device(&state->_device);
-        if (!audio_core_unload_data(id_, state->_data_map))
-            return false;
-
-        return false;
-    }
-
-    // attach buffer to the source
-    audio_backend_al_attach_buffer_to_source(source_, buffer_);
-
-    // play the source
-    audio_backend_al_source_play(source_);
-
-    // until the source finishes playing
-    AudioPlaybackState state_;
-    do {
-        state_ = audio_backend_al_get_playback_state(source_);
-    } while (state_ == AUDIO_PLAYBACK_PLAYING);
-
-    // then clean-up
-    audio_backend_al_delete_source(&source_);
-    audio_backend_al_delete_buffer(&buffer_);
-    if (!audio_core_unload_data(id_, state->_data_map))
-        return false;
-
-    return true;
 }
 
 ByteSize audio_module_get_size(void) { return sizeof(AudioModuleState); }
@@ -295,13 +234,13 @@ AudioBuffer *audio_module_construct_buffer(ConstStr buffer_id, ConstStr audio_id
     return container_map_get(state->_buffer_map, AudioBuffer, buffer_id);
 }
 
-AudioSource *audio_module_construct_source(ConstStr id) {
+AudioSource *audio_module_construct_source(ConstStr id, const Bool loop) {
     if (!state || !id)
         return NULL;
 
     Flt32 position_[3]     = {0.0f, 0.0f, 0.0f};
     Flt32 velocity_[3]     = {0.0f, 0.0f, 0.0f};
-    Flt32 direction_[6]    = {0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f};
+    Flt32 direction_[3]    = {0.0f, 0.0f, 0.0f};
     Flt32 pitch_           = 1.0f;
     Flt32 volume_          = 1.0f;
     Bool  omnidirectional_ = true;
@@ -311,7 +250,7 @@ AudioSource *audio_module_construct_source(ConstStr id) {
         switch (state->_backend) {
         case AUDIO_BACKEND_OPENAL:
             source_id_ =
-                _audio_module_al_generate_source(-1, position_, velocity_, direction_, omnidirectional_, pitch_, volume_);
+                _audio_module_al_generate_source(-1, position_, velocity_, direction_, omnidirectional_, pitch_, volume_, loop);
             if (source_id_ == -1)
                 return NULL;
 
@@ -322,13 +261,14 @@ AudioSource *audio_module_construct_source(ConstStr id) {
         }
     }
 
-    AudioSource source_ = {._id              = source_id_,
-                           ._loop            = false,
-                           ._metadata        = NULL,
-                           ._omnidirectional = omnidirectional_,
-                           ._pitch           = pitch_,
-                           ._playback_state  = AUDIO_PLAYBACK_STOPPED,
-                           ._volume          = volume_};
+    AudioSource source_ = {._id                = source_id_,
+                           ._loop              = loop,
+                           ._metadata          = NULL,
+                           ._omnidirectional   = omnidirectional_,
+                           ._pitch             = pitch_,
+                           ._playback_state    = AUDIO_PLAYBACK_STOPPED,
+                           ._playback_position = 0.0f,
+                           ._volume            = volume_};
     hal_mem_memcpy(&source_._position, position_, sizeof(source_._position));
     hal_mem_memcpy(&source_._velocity, velocity_, sizeof(source_._velocity));
     hal_mem_memcpy(&source_._direction, direction_, sizeof(source_._direction));
@@ -339,13 +279,13 @@ AudioSource *audio_module_construct_source(ConstStr id) {
     return container_map_get(state->_source_map, AudioSource, id);
 }
 
-AudioSource *audio_module_construct_source_with_buffer(ConstStr source_id, ConstStr buffer_id) {
+AudioSource *audio_module_construct_source_with_buffer(ConstStr source_id, ConstStr buffer_id, const Bool loop) {
     if (!state || !source_id || !buffer_id)
         return NULL;
 
     Flt32 position_[3]     = {0.0f, 0.0f, 0.0f};
     Flt32 velocity_[3]     = {0.0f, 0.0f, 0.0f};
-    Flt32 direction_[6]    = {0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f};
+    Flt32 direction_[3]    = {0.0f, 0.0f, 0.0f};
     Flt32 pitch_           = 1.0f;
     Flt32 volume_          = 1.0f;
     Bool  omnidirectional_ = true;
@@ -359,7 +299,7 @@ AudioSource *audio_module_construct_source_with_buffer(ConstStr source_id, Const
         switch (state->_backend) {
         case AUDIO_BACKEND_OPENAL:
             source_id_ = _audio_module_al_generate_source(buffer_->_id, position_, velocity_, direction_, omnidirectional_,
-                                                          pitch_, volume_);
+                                                          pitch_, volume_, loop);
             if (source_id_ == -1)
                 return NULL;
 
@@ -371,7 +311,7 @@ AudioSource *audio_module_construct_source_with_buffer(ConstStr source_id, Const
     }
 
     AudioSource source_ = {._id              = source_id_,
-                           ._loop            = false,
+                           ._loop            = loop,
                            ._metadata        = NULL,
                            ._omnidirectional = omnidirectional_,
                            ._pitch           = pitch_,
@@ -445,6 +385,10 @@ Bool audio_module_destruct_source(ConstStr id) {
     return true;
 }
 
+AudioBuffer *audio_module_get_buffer(ConstStr id) { return container_map_get(state->_buffer_map, AudioBuffer, id); }
+
+AudioSource *audio_module_get_source(ConstStr id) { return container_map_get(state->_source_map, AudioSource, id); }
+
 Bool audio_module_assign_buffer_to_source(ConstStr source_id, ConstStr buffer_id) {
     if (!state || !source_id || !buffer_id)
         return false;
@@ -467,41 +411,4 @@ Bool audio_module_assign_buffer_to_source(ConstStr source_id, ConstStr buffer_id
     }
 }
 
-Bool audio_module_play_audio(ConstStr source_id) {
-    if (!state || !source_id)
-        return false;
-
-    AudioSource *source_ = container_map_get(state->_source_map, AudioSource, source_id);
-    if (!source_)
-        return false;
-
-    switch (state->_backend) {
-    case AUDIO_BACKEND_OPENAL:
-        return _audio_module_al_play_source(source_);
-
-    default:
-        return false;
-    }
-}
-
-Bool audio_module_play_audio_from_file(ConstStr filepath) {
-    if (!state || !filepath)
-        return false;
-
-    if (container_map_contains(state->_source_map, filepath)) {
-        AudioSource *source_ = audio_module_construct_source(filepath);
-
-        if (!_audio_module_al_play_source(source_))
-            return false;
-
-        return true;
-    }
-
-    switch (state->_backend) {
-    case AUDIO_BACKEND_OPENAL:
-        return _audio_module_al_play_from_file(filepath);
-
-    default:
-        return false;
-    }
-}
+VT_API VoidPtr audio_module_get_state(void) { return state; }

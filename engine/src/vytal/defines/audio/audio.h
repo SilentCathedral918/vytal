@@ -52,8 +52,6 @@ typedef struct Audio_Data {
     UInt32             _sample_rate;
     UInt32             _bits_per_sample;
     UInt32             _duration_ms;
-    AudioPlaybackState _playback_state;
-    UInt32             _playback_position;
     ByteSize           _num_refs;
     AudioChannelFormat _channel_format;
 } AudioData;
@@ -64,11 +62,12 @@ typedef struct Audio_Source {
     UInt32             _id;
     Flt32              _position[3];
     Flt32              _velocity[3];
-    Flt32              _direction[6];
+    Flt32              _direction[3];
     Flt32              _volume;
     Flt32              _pitch;
     Bool               _loop;
     AudioPlaybackState _playback_state;
+    UInt32             _playback_position;
     Bool               _omnidirectional;
     VoidPtr            _metadata;
 } AudioSource;
