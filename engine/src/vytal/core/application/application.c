@@ -1,7 +1,6 @@
 #include "application.h"
 
 #include "vytal/audio/audio.h"
-#include "vytal/audio/core/utils/audio_utils.h"
 #include "vytal/core/containers/map/map.h"
 #include "vytal/core/hal/input/input.h"
 #include "vytal/core/hal/memory/vtmem.h"
@@ -193,10 +192,13 @@ Bool application_update(void) {
 
                 if (hal_input_is_key_pressed(VT_KEYCODE_R))
                     audio_play("report", false);
+
+                if (hal_input_is_key_pressed(VT_KEYCODE_F))
+                    audio_fade_volume("background", 0.0f, 2000);
             }
 
             // update modules
-            if (!module_manager_update_modules())
+            if (!module_manager_update_modules(delta_time_))
                 return false;
 
             --delta_time_;

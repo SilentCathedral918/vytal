@@ -12,8 +12,9 @@
 #include "vytal/core/platform/filesystem/filesystem.h"
 
 #define ENGINE_AUDIO_BACKEND_DEFAULT (AUDIO_BACKEND_OPENAL)
-#define ENGINE_AUDIO_ALLOCATOR_CAPACITY (VT_SIZE_MB_MULT(16)) // 16 MB
-#define ENGINE_AUDIO_TRACKER_CAPACITY (VT_SIZE_MB_MULT(4))    // 4 MB
+#define ENGINE_AUDIO_ALLOCATOR_CAPACITY (VT_SIZE_MB_MULT(16))       // 16 MB
+#define ENGINE_AUDIO_TRACKER_CAPACITY (VT_SIZE_MB_MULT(4))          // 4 MB
+#define ENGINE_AUDIO_TRANSITION_TASKS_CAPACITY (VT_SIZE_MB_MULT(4)) // 4 MB
 
 typedef struct Audio_Module_State {
     AudioDevice   _device;
@@ -28,6 +29,7 @@ typedef struct Audio_Module_State {
     Array          _loaded_audios;
     Array          _loaded_buffers;
     Array          _active_sources;
+    Array          _transition_tasks;
 } AudioModuleState;
 static AudioModuleState *state = NULL;
 
@@ -172,7 +174,8 @@ Bool audio_module_startup(VoidPtr module) {
     }
 
     // allocator
-    state->_allocator = allocator_arena_construct((ENGINE_AUDIO_ALLOCATOR_CAPACITY * 3) + (ENGINE_AUDIO_TRACKER_CAPACITY * 3));
+    state->_allocator = allocator_arena_construct((ENGINE_AUDIO_ALLOCATOR_CAPACITY * 3) + (ENGINE_AUDIO_TRACKER_CAPACITY * 3) +
+                                                  ENGINE_AUDIO_TRANSITION_TASKS_CAPACITY);
 
     // allocate state map members
     {
@@ -203,6 +206,10 @@ Bool audio_module_startup(VoidPtr module) {
             container_array_construct_custom(AudioSource, state->_allocator, ENGINE_AUDIO_TRACKER_CAPACITY);
     }
 
+    // allocate transition tasks member
+    state->_transition_tasks =
+        container_array_construct_custom(AudioTransitionTask, state->_allocator, ENGINE_AUDIO_TRANSITION_TASKS_CAPACITY);
+
     return true;
 }
 
@@ -212,6 +219,10 @@ Bool audio_module_shutdown(void) {
 
     // free and set members to zero
     {
+        // deallocate transition tasks member
+        if (!container_array_destruct(state->_transition_tasks))
+            return false;
+
         // deallocate state tracker members
         {
             if (!_audio_module_trackers_cleanup())
@@ -272,7 +283,41 @@ Bool audio_module_shutdown(void) {
     return true;
 }
 
-Bool audio_module_update(void) { return true; }
+Bool audio_module_update(const Flt32 delta_time) {
+    // audio transition tasks
+    {
+        for (ByteSize i = 0; i < container_array_length(state->_transition_tasks); ++i) {
+            AudioTransitionTask *task_ = container_array_get_at_index(state->_transition_tasks, i);
+            if (!task_)
+                continue;
+
+            task_->_elapsed_ms += delta_time * 1000.0f;
+
+            if (task_->_elapsed_ms >= task_->_duration_ms)
+                task_->_elapsed_ms = task_->_duration_ms;
+
+            // calculate progress and clamp it between 0 and 1
+            Flt32 progress_ = VT_CAST(Flt32, task_->_elapsed_ms) / task_->_duration_ms;
+            progress_       = (progress_ > 1.0f) ? 1.0f : progress_; // Clamp progress to 1.0f
+
+            // apply transition with the clamped progress
+            task_->_apply_transition(task_->_source, task_->_current_data, task_->_target_data, progress_);
+
+            // when done...
+            if (task_->_elapsed_ms >= task_->_duration_ms) {
+                // ensure current value is reached exactly to target value
+                task_->_apply_transition(task_->_source, task_->_current_data, task_->_target_data, 1.0f);
+
+                // task done, remove
+                container_array_remove_at_index(state->_transition_tasks, i);
+
+                --i; // prevent skipping the next task
+            }
+        }
+    }
+
+    return true;
+}
 
 AudioData *audio_module_load_audio(ConstStr id, ConstStr filepath) {
     if (!state || !id || !filepath)
@@ -520,4 +565,6 @@ AudioSource *audio_module_get_active_source(ConstStr id) {
     return _audio_module_search_active_source(source_->_id);
 }
 
-VT_API VoidPtr audio_module_get_state(void) { return state; }
+VoidPtr audio_module_get_state(void) { return state; }
+
+VoidPtr audio_module_get_transition_tasks(void) { return state->_transition_tasks; }

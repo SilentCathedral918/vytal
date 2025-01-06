@@ -2,6 +2,7 @@
 #include "vytal/audio/backend/openal/audio_openal.h"
 #include "vytal/audio/core/utils/audio_utils.h"
 #include "vytal/audio/module/audio.h"
+#include "vytal/audio/transition/audio_transition.h"
 
 Bool audio_load(ConstStr id, ConstStr filepath) {
     if (!id || !filepath)
@@ -139,4 +140,15 @@ Bool audio_set_pitch(ConstStr id, const Flt32 pitch) {
         return false;
 
     return audio_utils_source_set_pitch(source_, pitch);
+}
+
+Bool audio_fade_volume(ConstStr id, const Flt32 target, const UInt32 duration_ms) {
+    if (!id)
+        return false;
+
+    AudioSource *source_ = audio_module_get_source(id);
+    if (!source_)
+        return false;
+
+    return audio_transition_set_volume(source_, target, duration_ms);
 }
