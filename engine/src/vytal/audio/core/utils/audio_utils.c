@@ -12,12 +12,13 @@ typedef struct Audio_Module_State {
     AudioListener _listener;
     AudioBackend  _backend;
 
-    PoolAllocator _buffer_allocator;
-    Map           _buffer_map;
-    PoolAllocator _source_allocator;
-    Map           _source_map;
-    PoolAllocator _data_allocator;
-    Map           _data_map;
+    ArenaAllocator _allocator;
+    Map            _buffer_map;
+    Map            _source_map;
+    Map            _audio_map;
+    Array          _loaded_audios;
+    Array          _loaded_buffers;
+    Array          _active_sources;
 } AudioModuleState;
 
 #define audio_module_state (VT_CAST(AudioModuleState *, audio_module_get_state()))
@@ -67,24 +68,6 @@ Bool audio_utils_source_set_direction(AudioSource *source, Flt32 x, Flt32 y, Flt
     source->_direction[0] = x;
     source->_direction[1] = y;
     source->_direction[2] = z;
-
-    switch (audio_module_state->_backend) {
-    case AUDIO_BACKEND_OPENAL:
-        audio_backend_al_set_source_direction(source->_id, source->_direction, source->_omnidirectional);
-        return true;
-
-    default:
-        return false;
-    }
-}
-
-Bool audio_utils_source_rotate(AudioSource *source, Flt32 dx, Flt32 dy, Flt32 dz) {
-    if (!source)
-        return false;
-
-    source->_direction[0] += dx;
-    source->_direction[1] += dy;
-    source->_direction[2] += dz;
 
     switch (audio_module_state->_backend) {
     case AUDIO_BACKEND_OPENAL:
@@ -205,46 +188,6 @@ Bool audio_utils_source_set_pitch(AudioSource *source, Flt32 pitch) {
     }
 }
 
-Bool audio_utils_source_fade_volume(AudioSource *source, Flt32 target_volume, UInt32 duration_ms) {
-    if (!source || duration_ms == 0 || target_volume < 0.0f || target_volume > 1.0f)
-        return false;
-
-    HiResClock clock_;
-    hal_hiresclock_init(&clock_);
-
-    Flt32  vol_start_    = source->_volume;
-    Flt32  vol_delta_    = (target_volume - vol_start_) / duration_ms;
-    UInt32 elapsed_time_ = 0;
-
-    while (elapsed_time_ < duration_ms) {
-        source->_volume = vol_start_ + (vol_delta_ * elapsed_time_);
-
-        switch (audio_module_state->_backend) {
-        case AUDIO_BACKEND_OPENAL:
-            audio_backend_al_set_source_volume(source->_id, source->_volume);
-            break;
-
-        default:
-            return false;
-        }
-
-        Flt64 current_elapsed_ = hal_hiresclock_getelapsed_sec(&clock_) * 1000;
-        elapsed_time_          = VT_CAST(UInt32, current_elapsed_);
-    }
-
-    // ensure that the final volume matches the target (no rounding errors)
-    source->_volume = target_volume;
-
-    switch (audio_module_state->_backend) {
-    case AUDIO_BACKEND_OPENAL:
-        audio_backend_al_set_source_volume(source->_id, target_volume);
-        return true;
-
-    default:
-        return false;
-    }
-}
-
 Bool audio_utils_source_set_looping(AudioSource *source, Bool loop) {
     if (!source)
         return false;
@@ -299,10 +242,10 @@ Bool audio_utils_buffer_reload(AudioBuffer *buffer, ConstStr audio_id) {
     if (!buffer || !audio_id)
         return false;
 
-    if (!container_map_contains(audio_module_state->_data_map, audio_id))
+    if (!container_map_contains(audio_module_state->_audio_map, audio_id))
         return false;
 
-    AudioData *data_ = container_map_get(audio_module_state->_data_map, AudioData, audio_id);
+    AudioData *data_ = container_map_get(audio_module_state->_audio_map, AudioData, audio_id);
     if (!data_)
         return false;
 

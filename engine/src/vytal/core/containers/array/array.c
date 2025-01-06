@@ -1,16 +1,18 @@
 #include "array.h"
 
 #include "vytal/core/hal/memory/vtmem.h"
+#include "vytal/core/memory/allocators/arena.h"
 #include "vytal/core/misc/string/vtstr.h"
 #include "vytal/managers/memory/memmgr.h"
 
 #define CONTAINER_MAX_SIZE VT_SIZE_KB_MULT(32) // 32 KB
 
 typedef struct Container_Array_Header {
-    ByteSize _data_size;
-    ByteSize _length;
-    ByteSize _capacity;
-    VoidPtr  _memory_block;
+    ByteSize       _data_size;
+    ByteSize       _length;
+    ByteSize       _capacity;
+    VoidPtr        _memory_block;
+    ArenaAllocator _allocator;
 } ArrayHeader;
 
 ArrayHeader *_container_array_get_header(Array array) { return !array ? NULL : VT_CAST(ArrayHeader *, array->_internal_data); }
@@ -37,6 +39,38 @@ Array __vtimpl_ctnr_darr_construct(const ByteSize data_size) {
     header_->_data_size  = data_size;
     header_->_length     = 0;
     header_->_capacity   = bucket_size_ / data_size;
+    header_->_allocator  = NULL;
+
+    // element 3: the array
+    header_->_memory_block = VT_CAST(VoidPtr, header_ + 1);
+
+    // assign header to array ownership
+    arr_->_internal_data = header_;
+
+    return arr_;
+}
+
+Array __vtimpl_ctnr_darr_construct_custom(const ByteSize data_size, const ArenaAllocator allocator, const ByteSize capacity) {
+    if (data_size == 0 || !allocator || capacity == 0)
+        return NULL;
+
+    ByteSize bucket_size_ = capacity - (sizeof(Container_Array));
+
+    VoidPtr chunk_ = allocator_arena_allocate(allocator, capacity);
+    if (!chunk_)
+        return NULL;
+
+    // there would be three elements...
+
+    // element 1: the array container self
+    Array arr_ = VT_CAST(Array, chunk_);
+
+    // element 2: the array header
+    ArrayHeader *header_ = VT_CAST(ArrayHeader *, arr_ + 1);
+    header_->_data_size  = data_size;
+    header_->_length     = 0;
+    header_->_capacity   = bucket_size_ / data_size;
+    header_->_allocator  = allocator;
 
     // element 3: the array
     header_->_memory_block = VT_CAST(VoidPtr, header_ + 1);
@@ -53,7 +87,11 @@ Bool container_array_destruct(Array array) {
 
     // free the entire array container
     {
-        memory_manager_deallocate(array, MEMORY_TAG_CONTAINERS);
+        ArenaAllocator allocator_ = _container_array_get_header(array)->_allocator;
+
+        if (!allocator_)
+            memory_manager_deallocate(array, MEMORY_TAG_CONTAINERS);
+
         array = NULL;
     }
 

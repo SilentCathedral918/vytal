@@ -60,7 +60,28 @@ AudioData audio_core_load_from_file(ConstStr filepath, Map data_map) {
     return data_;
 }
 
-Bool audio_core_unload_data(ConstStr id, Map data_map) {
+Bool audio_core_unload_data(AudioData *data) {
+    if (!data)
+        return false;
+
+    switch (data->_format) {
+    case AUDIO_FILE_FORMAT_WAV:
+        return audio_core_wav_unload_data(data);
+
+    case AUDIO_FILE_FORMAT_OGG:
+        break;
+
+    case AUDIO_FILE_FORMAT_FLAC:
+        break;
+
+    default:
+        break;
+    }
+
+    return false;
+}
+
+Bool audio_core_unload_data_by_id(ConstStr id, Map data_map) {
     if (!id || !data_map)
         return false;
 

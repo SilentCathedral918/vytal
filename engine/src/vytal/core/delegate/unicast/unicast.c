@@ -54,7 +54,7 @@ UnicastDelegateHandle delegate_unicast_handle_construct(void) {
 
     // init handle members
     {
-        handle_->_delegate_map = container_map_construct(sizeof(UnicastDelegate), NULL);
+        handle_->_delegate_map = container_map_construct(sizeof(UnicastDelegate));
         handle_->_binded_refs  = container_array_construct(UIntPtr);
     }
 

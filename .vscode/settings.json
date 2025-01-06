@@ -40,7 +40,7 @@
 
   // editor styling
   "editor.cursorStyle": "block",
-  "editor.cursorBlinking": "phase",
+  "editor.cursorBlinking": "blink",
   "editor.cursorSmoothCaretAnimation": "on",
   "editor.formatOnSave": true,
   "editor.formatOnType": true,

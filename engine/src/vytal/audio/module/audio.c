@@ -2,14 +2,18 @@
 
 #include "vytal/audio/backend/openal/audio_openal.h"
 #include "vytal/audio/core/loaders/audio_loader.h"
+#include "vytal/core/containers/array/array.h"
 #include "vytal/core/containers/map/map.h"
 #include "vytal/core/hal/memory/vtmem.h"
+#include "vytal/core/hash/hash.h"
+#include "vytal/core/memory/allocators/arena.h"
 #include "vytal/core/memory/allocators/pool.h"
 #include "vytal/core/misc/console/console.h"
 #include "vytal/core/platform/filesystem/filesystem.h"
 
 #define ENGINE_AUDIO_BACKEND_DEFAULT (AUDIO_BACKEND_OPENAL)
 #define ENGINE_AUDIO_ALLOCATOR_CAPACITY (VT_SIZE_MB_MULT(16)) // 16 MB
+#define ENGINE_AUDIO_TRACKER_CAPACITY (VT_SIZE_MB_MULT(4))    // 4 MB
 
 typedef struct Audio_Module_State {
     AudioDevice   _device;
@@ -17,12 +21,13 @@ typedef struct Audio_Module_State {
     AudioListener _listener;
     AudioBackend  _backend;
 
-    PoolAllocator _buffer_allocator;
-    Map           _buffer_map;
-    PoolAllocator _source_allocator;
-    Map           _source_map;
-    PoolAllocator _data_allocator;
-    Map           _data_map;
+    ArenaAllocator _allocator;
+    Map            _buffer_map;
+    Map            _source_map;
+    Map            _audio_map;
+    Array          _loaded_audios;
+    Array          _loaded_buffers;
+    Array          _active_sources;
 } AudioModuleState;
 static AudioModuleState *state = NULL;
 
@@ -60,10 +65,77 @@ UInt32 _audio_module_al_generate_source(UInt32 buffer_id, const Flt32 position[3
             return -1;
     }
 
+    // set source volume and pitch
+    {
+        audio_backend_al_set_source_volume(source_, volume);
+        audio_backend_al_set_source_pitch(source_, pitch);
+    }
+
     // set looping state
     audio_backend_al_set_source_looping(source_, loop);
 
     return source_;
+}
+
+AudioData *_audio_module_search_loaded_audio(const UInt64 id) {
+    for (ByteSize i = 0; i < container_array_length(state->_loaded_audios); ++i) {
+        AudioData *data_ = container_array_get_at_index(state->_loaded_audios, i);
+        if (data_ && data_->_id == id)
+            return data_;
+    }
+
+    return NULL;
+}
+
+AudioBuffer *_audio_module_search_loaded_buffer(const UInt32 id) {
+    for (ByteSize i = 0; i < container_array_length(state->_loaded_buffers); ++i) {
+        AudioBuffer *buffer_ = container_array_get_at_index(state->_loaded_buffers, i);
+        if (buffer_ && buffer_->_id == id)
+            return buffer_;
+    }
+
+    return NULL;
+}
+
+AudioSource *_audio_module_search_active_source(const UInt32 id) {
+    for (ByteSize i = 0; i < container_array_length(state->_active_sources); ++i) {
+        AudioSource *source_ = container_array_get_at_index(state->_active_sources, i);
+        if (source_ && source_->_id == id)
+            return source_;
+    }
+
+    return NULL;
+}
+
+Bool _audio_module_trackers_cleanup(void) {
+    switch (state->_backend) {
+    case AUDIO_BACKEND_OPENAL:
+        // loaded audio sources
+        for (ByteSize i = 0; i < container_array_length(state->_active_sources); ++i) {
+            AudioSource *source_ = container_array_get_at_index(state->_active_sources, i);
+            if (!audio_backend_al_delete_source(&source_->_id))
+                return false;
+        }
+
+        // loaded audio buffers
+        for (ByteSize i = 0; i < container_array_length(state->_loaded_buffers); ++i) {
+            AudioBuffer *buffer_ = container_array_get_at_index(state->_loaded_buffers, i);
+            if (!audio_backend_al_delete_buffer(&buffer_->_id))
+                return false;
+        }
+
+        // loaded audio data
+        for (ByteSize i = 0; i < container_array_length(state->_loaded_audios); ++i) {
+            AudioData *data_ = container_array_get_at_index(state->_loaded_audios, i);
+            if (!audio_core_unload_data(data_))
+                return false;
+        }
+
+        return true;
+
+    default:
+        return false;
+    }
 }
 
 ByteSize audio_module_get_size(void) { return sizeof(AudioModuleState); }
@@ -75,7 +147,7 @@ Bool audio_module_startup(VoidPtr module) {
     // assign module to state and init its members
     state = VT_CAST(AudioModuleState *, module);
     {
-        state->_backend = ENGINE_AUDIO_BACKEND_DEFAULT; // TODO: configure this with cvar
+        state->_backend = ENGINE_AUDIO_BACKEND_DEFAULT; // TODO: configure this
 
         switch (state->_backend) {
         case AUDIO_BACKEND_OPENAL:
@@ -92,28 +164,43 @@ Bool audio_module_startup(VoidPtr module) {
             const Flt32 orientation_[6] = {0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f};
             audio_backend_al_set_listener_orientation(&state->_listener, VT_CAST(Flt32 *, orientation_));
 
-            // allocators
-            state->_buffer_allocator = allocator_pool_construct(ENGINE_AUDIO_ALLOCATOR_CAPACITY, 1);
-            state->_source_allocator = allocator_pool_construct(ENGINE_AUDIO_ALLOCATOR_CAPACITY, 1);
-            state->_data_allocator   = allocator_pool_construct(ENGINE_AUDIO_ALLOCATOR_CAPACITY, 1);
-
-            // allocate state map members
-            {
-                // buffers
-                state->_buffer_map = container_map_construct(sizeof(AudioBuffer), state->_buffer_allocator);
-
-                // sources
-                state->_source_map = container_map_construct(sizeof(AudioSource), state->_source_allocator);
-
-                // audio datas
-                state->_data_map = container_map_construct(sizeof(AudioData), state->_data_allocator);
-            }
-
             break;
 
         default:
             return false;
         }
+    }
+
+    // allocator
+    state->_allocator = allocator_arena_construct((ENGINE_AUDIO_ALLOCATOR_CAPACITY * 3) + (ENGINE_AUDIO_TRACKER_CAPACITY * 3));
+
+    // allocate state map members
+    {
+        // buffers
+        state->_buffer_map =
+            container_map_construct_custom(sizeof(AudioBuffer), state->_allocator, ENGINE_AUDIO_ALLOCATOR_CAPACITY);
+
+        // sources
+        state->_source_map =
+            container_map_construct_custom(sizeof(AudioSource), state->_allocator, ENGINE_AUDIO_ALLOCATOR_CAPACITY);
+
+        // audio datas
+        state->_audio_map =
+            container_map_construct_custom(sizeof(AudioData), state->_allocator, ENGINE_AUDIO_ALLOCATOR_CAPACITY);
+    }
+
+    // allocate state tracker members
+    {
+        // loaded audio data
+        state->_loaded_audios = container_array_construct_custom(AudioData, state->_allocator, ENGINE_AUDIO_TRACKER_CAPACITY);
+
+        // loaded audio buffers
+        state->_loaded_buffers =
+            container_array_construct_custom(AudioBuffer, state->_allocator, ENGINE_AUDIO_TRACKER_CAPACITY);
+
+        // active audio sources
+        state->_active_sources =
+            container_array_construct_custom(AudioSource, state->_allocator, ENGINE_AUDIO_TRACKER_CAPACITY);
     }
 
     return true;
@@ -125,34 +212,43 @@ Bool audio_module_shutdown(void) {
 
     // free and set members to zero
     {
+        // deallocate state tracker members
+        {
+            if (!_audio_module_trackers_cleanup())
+                return false;
+
+            // loaded audio data
+            if (!container_array_destruct(state->_loaded_audios))
+                return false;
+
+            // loaded audio buffers
+            if (!container_array_destruct(state->_loaded_buffers))
+                return false;
+
+            // active audio sources
+            if (!container_array_destruct(state->_active_sources))
+                return false;
+        }
+
+        // deallocate state map members
+        {
+            // buffers
+            if (!container_map_destruct(state->_buffer_map))
+                return false;
+
+            // sources
+            if (!container_map_destruct(state->_source_map))
+                return false;
+
+            // audio datas
+            if (!container_map_destruct(state->_audio_map))
+                return false;
+        }
+
         switch (state->_backend) {
         case AUDIO_BACKEND_OPENAL:
-            // deallocate state map members
-            {
-                // buffers
-                if (!container_map_destruct(state->_buffer_map))
-                    return false;
-
-                // sources
-                if (!container_map_destruct(state->_source_map))
-                    return false;
-
-                // audio datas
-                if (!container_map_destruct(state->_data_map))
-                    return false;
-            }
-
-            // allocators
-            {
-                if (!allocator_pool_destruct(state->_buffer_allocator))
-                    return false;
-
-                if (!allocator_pool_destruct(state->_source_allocator))
-                    return false;
-
-                if (!allocator_pool_destruct(state->_data_allocator))
-                    return false;
-            }
+            // allocator
+            allocator_arena_destruct(state->_allocator);
 
             // context
             audio_backend_al_make_context_current(NULL);
@@ -182,31 +278,40 @@ AudioData *audio_module_load_audio(ConstStr id, ConstStr filepath) {
     if (!state || !id || !filepath)
         return NULL;
 
-    AudioData data_ = audio_core_load_from_file(filepath, state->_data_map);
+    AudioData data_ = audio_core_load_from_file(filepath, state->_audio_map);
+    data_._id       = hash_hashstr(id, HASH_MODE_XX64);
 
-    if (!container_map_insert(state->_data_map, id, &data_))
+    if (!container_map_insert(state->_audio_map, id, &data_))
         return NULL;
 
-    return container_map_get(state->_data_map, AudioData, id);
+    container_array_push(state->_loaded_audios, AudioData, data_);
+
+    return container_map_get(state->_audio_map, AudioData, id);
 }
 
 Bool audio_module_unload_audio(ConstStr id) {
     if (!state || !id)
         return false;
 
-    if (!audio_core_unload_data(id, state->_data_map))
+    if (!audio_core_unload_data_by_id(id, state->_audio_map))
         return false;
 
-    return container_map_remove(state->_data_map, id);
+    AudioData *data_ = _audio_module_search_loaded_audio(hash_hashstr(id, HASH_MODE_XX64));
+    if (!data_)
+        return false;
+
+    container_array_remove(state->_loaded_audios, data_);
+
+    return container_map_remove(state->_audio_map, id);
 }
 
-AudioData *audio_module_get_audio(ConstStr id) { return container_map_get(state->_data_map, AudioData, id); }
+AudioData *audio_module_get_audio(ConstStr id) { return container_map_get(state->_audio_map, AudioData, id); }
 
 AudioBuffer *audio_module_construct_buffer(ConstStr buffer_id, ConstStr audio_id) {
     if (!state || !buffer_id || !audio_id)
         return NULL;
 
-    AudioData *data_ = container_map_get(state->_data_map, AudioData, audio_id);
+    AudioData *data_ = container_map_get(state->_audio_map, AudioData, audio_id);
     if (!data_)
         return NULL;
 
@@ -240,7 +345,7 @@ AudioSource *audio_module_construct_source(ConstStr id, const Bool loop) {
 
     Flt32 position_[3]     = {0.0f, 0.0f, 0.0f};
     Flt32 velocity_[3]     = {0.0f, 0.0f, 0.0f};
-    Flt32 direction_[3]    = {0.0f, 0.0f, 0.0f};
+    Flt32 direction_[3]    = {0.0f, 0.0f, -1.0f};
     Flt32 pitch_           = 1.0f;
     Flt32 volume_          = 1.0f;
     Bool  omnidirectional_ = true;
@@ -276,6 +381,8 @@ AudioSource *audio_module_construct_source(ConstStr id, const Bool loop) {
     if (!container_map_insert(state->_source_map, id, &source_))
         return NULL;
 
+    container_array_push(state->_active_sources, AudioSource, source_);
+
     return container_map_get(state->_source_map, AudioSource, id);
 }
 
@@ -285,7 +392,7 @@ AudioSource *audio_module_construct_source_with_buffer(ConstStr source_id, Const
 
     Flt32 position_[3]     = {0.0f, 0.0f, 0.0f};
     Flt32 velocity_[3]     = {0.0f, 0.0f, 0.0f};
-    Flt32 direction_[3]    = {0.0f, 0.0f, 0.0f};
+    Flt32 direction_[3]    = {0.0f, 0.0f, -1.0f};
     Flt32 pitch_           = 1.0f;
     Flt32 volume_          = 1.0f;
     Bool  omnidirectional_ = true;
@@ -323,6 +430,8 @@ AudioSource *audio_module_construct_source_with_buffer(ConstStr source_id, Const
 
     if (!container_map_insert(state->_source_map, source_id, &source_))
         return NULL;
+
+    container_array_push(state->_active_sources, AudioSource, source_);
 
     return container_map_get(state->_source_map, AudioSource, source_id);
 }
@@ -388,5 +497,27 @@ Bool audio_module_destruct_source(ConstStr id) {
 AudioBuffer *audio_module_get_buffer(ConstStr id) { return container_map_get(state->_buffer_map, AudioBuffer, id); }
 
 AudioSource *audio_module_get_source(ConstStr id) { return container_map_get(state->_source_map, AudioSource, id); }
+
+AudioBuffer *audio_module_get_loaded_buffer(ConstStr id) {
+    if (!id)
+        return NULL;
+
+    AudioBuffer *buffer_ = container_map_get(state->_buffer_map, AudioBuffer, id);
+    if (!buffer_)
+        return NULL;
+
+    return _audio_module_search_loaded_buffer(buffer_->_id);
+}
+
+AudioSource *audio_module_get_active_source(ConstStr id) {
+    if (!id)
+        return NULL;
+
+    AudioSource *source_ = container_map_get(state->_source_map, AudioSource, id);
+    if (!source_)
+        return NULL;
+
+    return _audio_module_search_active_source(source_->_id);
+}
 
 VT_API VoidPtr audio_module_get_state(void) { return state; }

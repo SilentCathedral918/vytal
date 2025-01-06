@@ -19,4 +19,6 @@ VT_API Bool         audio_module_destruct_buffer(ConstStr id);
 VT_API Bool         audio_module_destruct_source(ConstStr id);
 VT_API AudioBuffer *audio_module_get_buffer(ConstStr id);
 VT_API AudioSource *audio_module_get_source(ConstStr id);
+VT_API AudioBuffer *audio_module_get_loaded_buffer(ConstStr id);
+VT_API AudioSource *audio_module_get_active_source(ConstStr id);
 VT_API VoidPtr      audio_module_get_state(void);

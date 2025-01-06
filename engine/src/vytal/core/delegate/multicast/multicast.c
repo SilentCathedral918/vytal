@@ -83,7 +83,7 @@ MulticastDelegateHandle delegate_multicast_handle_construct(void) {
 
     // init handle members
     {
-        handle_->_delegate_map = container_map_construct(sizeof(MulticastDelegate), NULL);
+        handle_->_delegate_map = container_map_construct(sizeof(MulticastDelegate));
         handle_->_binded_refs  = container_array_construct(UIntPtr);
     }
 
