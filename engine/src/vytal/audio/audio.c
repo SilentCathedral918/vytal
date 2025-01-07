@@ -142,7 +142,7 @@ Bool audio_set_pitch(ConstStr id, const Flt32 pitch) {
     return audio_utils_source_set_pitch(source_, pitch);
 }
 
-Bool audio_fade_volume(ConstStr id, const Flt32 target, const UInt32 duration_ms) {
+Bool audio_interpolate_volume(ConstStr id, const Flt32 target, const UInt32 duration_ms) {
     if (!id)
         return false;
 
@@ -151,4 +151,30 @@ Bool audio_fade_volume(ConstStr id, const Flt32 target, const UInt32 duration_ms
         return false;
 
     return audio_transition_set_volume(source_, target, duration_ms);
+}
+
+Bool audio_interpolate_pitch(ConstStr id, const Flt32 target, const UInt32 duration_ms) {
+    if (!id)
+        return false;
+
+    AudioSource *source_ = audio_module_get_source(id);
+    if (!source_)
+        return false;
+
+    return audio_transition_set_pitch(source_, target, duration_ms);
+}
+
+Bool audio_cross_interpolate_volume(ConstStr out_audio, ConstStr in_audio, const UInt32 duration_ms) {
+    if (!out_audio || !in_audio)
+        return false;
+
+    AudioSource *out_source_ = audio_module_get_source(out_audio);
+    if (!out_source_)
+        return false;
+
+    AudioSource *in_source_ = audio_module_get_source(in_audio);
+    if (!in_source_)
+        return false;
+
+    return audio_transition_cross_set_volume(out_source_, in_source_, duration_ms);
 }

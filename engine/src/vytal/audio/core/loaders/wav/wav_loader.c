@@ -110,15 +110,16 @@ AudioData audio_core_wav_load_from_file(ConstStr filepath) {
             break;
         } else {
             UInt32 chunk_size_ = VT_STRUCT(UInt32, 0);
-            if (!platform_fs_file_read_data(&handle_, sizeof(chunk_size_), NULL, VT_CAST(VoidPtr, &chunk_size_))) {
-                VT_LOG_ERROR("Engine", "Failed to read chunk size in WAV file _ filepath: %s", filepath);
+            if (!platform_fs_file_read_data(&handle_, sizeof(data_chunk_._id) + sizeof(data_chunk_._size), NULL,
+                                            VT_CAST(VoidPtr, &data_chunk_))) {
+                VT_LOG_ERROR("Engine", "Failed to read chunk id: %.4s in WAV file _ filepath: %s", data_chunk_._id, filepath);
 
                 platform_fs_close_file(&handle_);
                 return VT_STRUCT(AudioData, 0);
             }
 
             // skip the chunk
-            platform_fs_seek_from_current(&handle_, chunk_size_);
+            platform_fs_seek_from_current(&handle_, chunk_size_ == 0 ? 1 : chunk_size_);
         }
     }
 

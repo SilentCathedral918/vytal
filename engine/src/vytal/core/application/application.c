@@ -2,7 +2,6 @@
 
 #include "vytal/audio/audio.h"
 #include "vytal/core/containers/map/map.h"
-#include "vytal/core/hal/delay/delay.h"
 #include "vytal/core/hal/input/input.h"
 #include "vytal/core/hal/memory/vtmem.h"
 #include "vytal/core/logger/logger.h"
@@ -149,14 +148,14 @@ Bool application_construct(void) {
 
     // handle startups here...
     {
-        audio_load("background", "outdoor.wav");
         audio_load("test", "test.wav");
         audio_load("report", "bugreporter_succeeded.wav");
+        audio_load("indoor", "chatter_ambience.wav");
+        audio_load("outdoor", "crickets.wav");
 
-        audio_play("background", true);
-
-        // try delaying for 5 secs
-        hal_delay(1000);
+        audio_play("indoor", true);
+        audio_play("outdoor", true);
+        audio_set_volume("outdoor", 0.0f);
     }
 
     _application_report_status("construct state completed, proceeding to game loop...");
@@ -203,7 +202,7 @@ Bool application_update(void) {
                     audio_play("report", false);
 
                 if (hal_input_is_key_pressed(VT_KEYCODE_F))
-                    audio_fade_volume("background", 0.0f, 2000);
+                    audio_cross_interpolate_volume("indoor", "outdoor", 1500);
             }
 
             // update modules

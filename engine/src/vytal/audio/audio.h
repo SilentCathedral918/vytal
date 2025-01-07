@@ -15,4 +15,6 @@ VT_API Bool audio_translate(ConstStr id, const Flt32 delta_x, const Flt32 delta_
 VT_API Bool audio_translate_by_velocity(ConstStr id);
 VT_API Bool audio_set_volume(ConstStr id, const Flt32 volume);
 VT_API Bool audio_set_pitch(ConstStr id, const Flt32 pitch);
-VT_API Bool audio_fade_volume(ConstStr id, const Flt32 target, const UInt32 duration_ms);
+VT_API Bool audio_interpolate_volume(ConstStr id, const Flt32 target, const UInt32 duration_ms);
+VT_API Bool audio_interpolate_pitch(ConstStr id, const Flt32 target, const UInt32 duration_ms);
+VT_API Bool audio_cross_interpolate_volume(ConstStr out_audio, ConstStr in_audio, const UInt32 duration_ms);

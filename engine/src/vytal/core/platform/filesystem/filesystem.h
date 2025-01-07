@@ -17,3 +17,4 @@ VT_API ConstStr platform_fs_get_filename_from_path(ConstStr filepath);
 VT_API Bool     platform_fs_create_directory(ConstStr directory_name);
 VT_API Bool     platform_fs_seek_to_position(FileHandle *handle, const UIntPtr target);
 VT_API Bool     platform_fs_seek_from_current(FileHandle *handle, const ByteSize distance);
+VT_API Int64    platform_fs_get_seek_position(FileHandle *handle);

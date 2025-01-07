@@ -190,3 +190,10 @@ Bool platform_fs_seek_from_current(FileHandle *handle, const ByteSize distance) 
     fseek(handle->_stream, distance, SEEK_CUR);
     return true;
 }
+
+Int64 platform_fs_get_seek_position(FileHandle *handle) {
+    if (!handle)
+        return -1;
+
+    return ftell(handle->_stream);
+}
