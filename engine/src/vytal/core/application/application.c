@@ -2,6 +2,7 @@
 
 #include "vytal/audio/audio.h"
 #include "vytal/core/containers/map/map.h"
+#include "vytal/core/hal/delay/delay.h"
 #include "vytal/core/hal/input/input.h"
 #include "vytal/core/hal/memory/vtmem.h"
 #include "vytal/core/logger/logger.h"
@@ -12,8 +13,6 @@
 #include "vytal/core/platform/window/window.h"
 #include "vytal/managers/memory/memmgr.h"
 #include "vytal/managers/module/modmgr.h"
-
-#include <GLFW/glfw3.h>
 
 #define ENGINE_FRAMERATE_MAX 120
 #define OUTPUT_BUFFER_MAX_SIZE VT_SIZE_KB_MULT(32) // 32 KB
@@ -155,6 +154,9 @@ Bool application_construct(void) {
         audio_load("report", "bugreporter_succeeded.wav");
 
         audio_play("background", true);
+
+        // try delaying for 5 secs
+        hal_delay(1000);
     }
 
     _application_report_status("construct state completed, proceeding to game loop...");
