@@ -9,7 +9,7 @@ VT_API ByteSize audio_module_get_size(void);
 
 VT_API Bool         audio_module_startup(VoidPtr module);
 VT_API Bool         audio_module_shutdown(void);
-VT_API Bool         audio_module_update(const Flt32 delta_time);
+VT_API Bool         audio_module_update(const Flt32 delta_time, const Flt32 fixed_update_time);
 VT_API AudioData   *audio_module_load_audio(ConstStr id, ConstStr filepath);
 VT_API Bool         audio_module_unload_audio(ConstStr id);
 VT_API AudioData   *audio_module_get_audio(ConstStr id);

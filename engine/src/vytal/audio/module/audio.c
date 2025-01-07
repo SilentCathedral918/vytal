@@ -283,7 +283,7 @@ Bool audio_module_shutdown(void) {
     return true;
 }
 
-Bool audio_module_update(const Flt32 delta_time) {
+Bool audio_module_update(const Flt32 delta_time, const Flt32 fixed_update_time) {
     // audio transition tasks
     {
         for (ByteSize i = 0; i < container_array_length(state->_transition_tasks); ++i) {
@@ -291,9 +291,8 @@ Bool audio_module_update(const Flt32 delta_time) {
             if (!task_)
                 continue;
 
-            task_->_elapsed_ms += delta_time * 1000.0f;
-
-            if (task_->_elapsed_ms >= task_->_duration_ms)
+            task_->_elapsed_ms += 1000.0f * fixed_update_time;
+            if (task_->_elapsed_ms > task_->_duration_ms)
                 task_->_elapsed_ms = task_->_duration_ms;
 
             // calculate progress and clamp it between 0 and 1

@@ -13,6 +13,8 @@
 #include "vytal/managers/memory/memmgr.h"
 #include "vytal/managers/module/modmgr.h"
 
+#include <GLFW/glfw3.h>
+
 #define ENGINE_FRAMERATE_MAX 120
 #define OUTPUT_BUFFER_MAX_SIZE VT_SIZE_KB_MULT(32) // 32 KB
 
@@ -163,24 +165,29 @@ Bool application_update(void) {
     if (!state)
         return false;
 
-    Flt64       prev_frame_      = platform_window_get_frame(state->_window);
-    Flt64       timer_           = prev_frame_;
-    Flt64       delta_time_      = 0.0;
-    Flt64       curr_frame_      = 0;
-    UInt32      frames_          = 0;
-    Flt64       framerate_limit_ = 1.0 / (state->_frame_rate == 0 ? ENGINE_FRAMERATE_MAX : state->_frame_rate);
-    WindowProps props_           = window_module_get_properties();
+    Flt64       prev_frame_       = platform_window_get_frame(state->_window);
+    Flt64       timer_            = prev_frame_;
+    Flt64       delta_time_       = 0.0;
+    Flt64       accumulated_time_ = 0.0;
+    Flt64       curr_frame_       = 0;
+    UInt32      frames_           = 0;
+    Flt64       framerate_limit_  = 1.0 / (state->_frame_rate == 0 ? ENGINE_FRAMERATE_MAX : state->_frame_rate);
+    WindowProps props_            = window_module_get_properties();
 
     do {
         // measure frame time
         curr_frame_ = platform_window_get_frame(state->_window);
-        delta_time_ += (curr_frame_ - prev_frame_) / framerate_limit_;
+        delta_time_ = curr_frame_ - prev_frame_;
         prev_frame_ = curr_frame_;
 
+        if (delta_time_ > framerate_limit_)
+            delta_time_ = framerate_limit_;
+
+        accumulated_time_ += delta_time_;
         state->_delta_time = delta_time_;
 
         // update at specified frame-rate
-        while (delta_time_ >= 1.0) {
+        while (accumulated_time_ >= framerate_limit_) {
             // poll events
             if (!platform_window_poll_events(state->_window))
                 return false;
@@ -198,10 +205,10 @@ Bool application_update(void) {
             }
 
             // update modules
-            if (!module_manager_update_modules(delta_time_))
+            if (!module_manager_update_modules(delta_time_, accumulated_time_))
                 return false;
 
-            --delta_time_;
+            accumulated_time_ -= framerate_limit_;
         }
 
         // render at maximum possible frame

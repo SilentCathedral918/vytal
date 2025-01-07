@@ -47,7 +47,7 @@ Bool module_manager_startup_modules(void) {
     return true;
 }
 
-Bool module_manager_update_modules(const Flt32 delta_time) {
+Bool module_manager_update_modules(const Flt32 delta_time, const Flt32 fixed_update_time) {
     if (!state)
         return false;
 
@@ -60,7 +60,8 @@ Bool module_manager_update_modules(const Flt32 delta_time) {
         VT_ASSERT_MESSAGE(window_module_update(), "vytal: module manager _ window module update failed.");
 
         // audio module
-        VT_ASSERT_MESSAGE(audio_module_update(delta_time), "vytal: module manager _ audio module update failed.");
+        VT_ASSERT_MESSAGE(audio_module_update(delta_time, fixed_update_time),
+                          "vytal: module manager _ audio module update failed.");
     }
 
     return true;

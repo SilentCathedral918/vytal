@@ -18,8 +18,8 @@ typedef struct Audio_Transition_Task {
     AudioTransitionData _current_data;
     AudioTransitionData _target_data;
     ByteSize            _data_size;
-    UInt32              _duration_ms;
-    UInt32              _elapsed_ms;
+    Flt32               _duration_ms;
+    Flt32               _elapsed_ms;
 
     void (*_apply_transition)(AudioSource *source, AudioTransitionData current, AudioTransitionData target, Flt32 progress);
 } AudioTransitionTask;

@@ -11,10 +11,6 @@ void _audio_transition_set_volume_callback(AudioSource *source, AudioTransitionD
     Flt32 vol_target_ = target._value_flt32;
     Flt32 vol_new_    = vol_curr_ + ((vol_target_ - vol_curr_) * progress);
 
-    // Debugging log to check the values
-    misc_console_writeln("Transitioning Volume: curr=%.4f, target=%.4f, progress=%.4f, new=%.4f", vol_curr_, vol_target_,
-                         progress, vol_new_);
-
     audio_utils_source_set_volume(source, vol_new_);
 }
 
