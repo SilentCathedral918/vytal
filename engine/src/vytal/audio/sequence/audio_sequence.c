@@ -28,13 +28,8 @@ void _audio_sequence_set_volume_callback(AudioSource *source, AudioSource *other
 
 void _audio_sequence_cross_set_volume_callback(AudioSource *source, AudioSource *other, AudioTransitionData left,
                                                AudioTransitionData right, Flt32 progress) {
-    Flt32 vol_out_curr_   = 1.0f;
-    Flt32 vol_out_target_ = 0.0f;
-    Flt32 vol_out_new_    = vol_out_curr_ + ((vol_out_target_ - vol_out_curr_) * progress);
-
-    Flt32 vol_in_curr_   = 0.0f;
-    Flt32 vol_in_target_ = 1.0f;
-    Flt32 vol_in_new_    = vol_in_curr_ + ((vol_in_target_ - vol_in_curr_) * progress);
+    Flt32 vol_out_new_ = left._value_flt32 + ((right._value_flt32 - left._value_flt32) * progress);
+    Flt32 vol_in_new_  = right._value_flt32 + ((left._value_flt32 - right._value_flt32) * progress);
 
     audio_utils_source_set_volume(source, vol_out_new_);
     audio_utils_source_set_volume(other, vol_in_new_);

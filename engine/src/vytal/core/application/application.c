@@ -187,7 +187,7 @@ Bool application_construct(void) {
                                 NULL, 2000, 5000, VT_STRUCT(AudioTransitionData, 0.0f), VT_STRUCT(AudioTransitionData, 1.0f));
         audio_sequence_add_task(background, "task_crossfade_out_ambient_in_outdoor", AUDIO_SEQUENCE_TASK_CROSSFADE,
                                 audio_module_get_source("indoor"), audio_module_get_source("outdoor"), 7000, 2000,
-                                VT_STRUCT(AudioTransitionData, 0.0f), VT_STRUCT(AudioTransitionData, 0.0f));
+                                VT_STRUCT(AudioTransitionData, 1.0f), VT_STRUCT(AudioTransitionData, 0.0f));
 
         audio_sequence_add_task(car, "task_car_engine_start", AUDIO_SEQUENCE_TASK_PLAY,
                                 audio_module_get_source("car_engine_start"), NULL, 9000, 1,
