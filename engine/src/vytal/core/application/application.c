@@ -1,6 +1,8 @@
 #include "application.h"
 
 #include "vytal/audio/audio.h"
+#include "vytal/audio/module/audio.h"
+#include "vytal/audio/sequence/audio_sequence.h"
 #include "vytal/core/containers/map/map.h"
 #include "vytal/core/hal/input/input.h"
 #include "vytal/core/hal/memory/vtmem.h"
@@ -152,10 +154,49 @@ Bool application_construct(void) {
         audio_load("report", "bugreporter_succeeded.wav");
         audio_load("indoor", "chatter_ambience.wav");
         audio_load("outdoor", "crickets.wav");
+        audio_load("knocking_on_gate", "knocking_on_gate.wav");
+        audio_load("gate_latch", "gate_latch.wav");
+        audio_load("car_engine_start", "car_engine_start.wav");
+        audio_load("car_passing_by", "car_passing_by.wav");
+        audio_load("stop_on_gravel", "abrupt_stop_on_gravel.wav");
+
+        audio_module_construct_buffer("knocking_on_gate", "knocking_on_gate");
+        audio_module_construct_source_with_buffer("knocking_on_gate", "knocking_on_gate", false);
+        audio_module_construct_buffer("car_passing_by", "car_passing_by");
+        audio_module_construct_source_with_buffer("car_passing_by", "car_passing_by", false);
+        audio_module_construct_buffer("car_engine_start", "car_engine_start");
+        audio_module_construct_source_with_buffer("car_engine_start", "car_engine_start", false);
 
         audio_play("indoor", true);
+        audio_set_volume("indoor", 0.0f);
         audio_play("outdoor", true);
         audio_set_volume("outdoor", 0.0f);
+
+        AudioSequence *background = audio_sequence_construct("background", false);
+        if (!background)
+            return false;
+
+        AudioSequence *car = audio_sequence_construct("car", true);
+        if (!car)
+            return false;
+
+        audio_sequence_add_task(background, "task_play_knocking", AUDIO_SEQUENCE_TASK_PLAY,
+                                audio_module_get_source("knocking_on_gate"), NULL, 0, 1, VT_STRUCT(AudioTransitionData, 1.0f),
+                                VT_STRUCT(AudioTransitionData, 0.0f));
+        audio_sequence_add_task(background, "task_fade_in_ambient", AUDIO_SEQUENCE_TASK_FADE, audio_module_get_source("indoor"),
+                                NULL, 2000, 5000, VT_STRUCT(AudioTransitionData, 0.0f), VT_STRUCT(AudioTransitionData, 1.0f));
+        audio_sequence_add_task(background, "task_crossfade_out_ambient_in_outdoor", AUDIO_SEQUENCE_TASK_CROSSFADE,
+                                audio_module_get_source("indoor"), audio_module_get_source("outdoor"), 7000, 2000,
+                                VT_STRUCT(AudioTransitionData, 0.0f), VT_STRUCT(AudioTransitionData, 0.0f));
+
+        audio_sequence_add_task(car, "task_car_engine_start", AUDIO_SEQUENCE_TASK_PLAY,
+                                audio_module_get_source("car_engine_start"), NULL, 9000, 1,
+                                VT_STRUCT(AudioTransitionData, 1.0f), VT_STRUCT(AudioTransitionData, 0.0f));
+        audio_sequence_add_task(car, "task_car_passing_by", AUDIO_SEQUENCE_TASK_PLAY, audio_module_get_source("car_passing_by"),
+                                NULL, 10000, 1, VT_STRUCT(AudioTransitionData, 1.0f), VT_STRUCT(AudioTransitionData, 0.0f));
+        audio_sequence_add_task(car, "task_car_fading_away", AUDIO_SEQUENCE_TASK_FADE,
+                                audio_module_get_source("car_passing_by"), NULL, 11000, 2500,
+                                VT_STRUCT(AudioTransitionData, 1.0f), VT_STRUCT(AudioTransitionData, 0.0f));
     }
 
     _application_report_status("construct state completed, proceeding to game loop...");
@@ -201,8 +242,21 @@ Bool application_update(void) {
                 if (hal_input_is_key_pressed(VT_KEYCODE_R))
                     audio_play("report", false);
 
-                if (hal_input_is_key_pressed(VT_KEYCODE_F))
-                    audio_cross_interpolate_volume("indoor", "outdoor", 1500);
+                if (hal_input_is_key_pressed(VT_KEYCODE_S)) {
+                    AudioSequence *sequence_ = audio_sequence_get("car");
+                    audio_sequence_add_task(sequence_, "task_car_passing_by", AUDIO_SEQUENCE_TASK_PLAY,
+                                            audio_module_get_source("car_passing_by"), NULL, sequence_->_elapsed_ms, 1,
+                                            VT_STRUCT(AudioTransitionData, 0.0f), VT_STRUCT(AudioTransitionData, 0.0f));
+                    audio_sequence_add_task(sequence_, "task_car_fading_in", AUDIO_SEQUENCE_TASK_FADE,
+                                            audio_module_get_source("car_passing_by"), NULL, sequence_->_elapsed_ms, 1500,
+                                            VT_STRUCT(AudioTransitionData, 0.0f), VT_STRUCT(AudioTransitionData, 1.0f));
+                    audio_sequence_add_task(sequence_, "task_car_fading_out", AUDIO_SEQUENCE_TASK_FADE,
+                                            audio_module_get_source("car_passing_by"), NULL, sequence_->_elapsed_ms + 1500,
+                                            2000, VT_STRUCT(AudioTransitionData, 1.0f), VT_STRUCT(AudioTransitionData, 0.0f));
+                    audio_sequence_add_task(sequence_, "task_car_gone", AUDIO_SEQUENCE_TASK_STOP,
+                                            audio_module_get_source("car_passing_by"), NULL, sequence_->_elapsed_ms + 3500, 1,
+                                            VT_STRUCT(AudioTransitionData, 0.0f), VT_STRUCT(AudioTransitionData, 0.0f));
+                }
             }
 
             // update modules
@@ -254,6 +308,8 @@ Bool application_destruct(void) {
 
     // handle shutdowns here...
     {
+        if (!audio_sequence_destruct(audio_sequence_get("car")))
+            return false;
     }
 
     // unregister events

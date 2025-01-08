@@ -12,16 +12,18 @@
 #include "vytal/core/platform/filesystem/filesystem.h"
 
 #define ENGINE_AUDIO_BACKEND_DEFAULT (AUDIO_BACKEND_OPENAL)
-#define ENGINE_AUDIO_ALLOCATOR_CAPACITY (VT_SIZE_MB_MULT(16))       // 16 MB
-#define ENGINE_AUDIO_TRACKER_CAPACITY (VT_SIZE_MB_MULT(4))          // 4 MB
-#define ENGINE_AUDIO_TRANSITION_TASKS_CAPACITY (VT_SIZE_MB_MULT(4)) // 4 MB
+#define ENGINE_AUDIO_ALLOCATOR_CAPACITY (VT_SIZE_MB_MULT(16))         // 16 MB
+#define ENGINE_AUDIO_TRACKER_CAPACITY (VT_SIZE_MB_MULT(4))            // 4 MB
+#define ENGINE_AUDIO_TRANSITION_TASKS_CAPACITY (VT_SIZE_MB_MULT(4))   // 4 MB
+#define ENGINE_AUDIO_SEQUENCES_CAPACITY (VT_SIZE_MB_MULT(2))          // 2 MB
+#define ENGINE_AUDIO_SEQUENCE_TASK_POOL_CAPACITY (VT_SIZE_MB_MULT(4)) // 4 MB
 
 typedef struct Audio_Module_State {
-    AudioDevice   _device;
-    AudioContext  _context;
-    AudioListener _listener;
-    AudioBackend  _backend;
-
+    AudioDevice    _device;
+    AudioContext   _context;
+    AudioListener  _listener;
+    AudioBackend   _backend;
+    PoolAllocator  _sequence_task_pool;
     ArenaAllocator _allocator;
     Map            _buffer_map;
     Map            _source_map;
@@ -30,6 +32,7 @@ typedef struct Audio_Module_State {
     Array          _loaded_buffers;
     Array          _active_sources;
     Array          _transition_tasks;
+    Array          _sequences;
 } AudioModuleState;
 static AudioModuleState *state = NULL;
 
@@ -173,9 +176,12 @@ Bool audio_module_startup(VoidPtr module) {
         }
     }
 
+    // sequence task pool
+    state->_sequence_task_pool = allocator_pool_construct(ENGINE_AUDIO_SEQUENCE_TASK_POOL_CAPACITY, 256);
+
     // allocator
     state->_allocator = allocator_arena_construct((ENGINE_AUDIO_ALLOCATOR_CAPACITY * 3) + (ENGINE_AUDIO_TRACKER_CAPACITY * 3) +
-                                                  ENGINE_AUDIO_TRANSITION_TASKS_CAPACITY);
+                                                  ENGINE_AUDIO_TRANSITION_TASKS_CAPACITY + ENGINE_AUDIO_SEQUENCES_CAPACITY);
 
     // allocate state map members
     {
@@ -195,20 +201,25 @@ Bool audio_module_startup(VoidPtr module) {
     // allocate state tracker members
     {
         // loaded audio data
-        state->_loaded_audios = container_array_construct_custom(AudioData, state->_allocator, ENGINE_AUDIO_TRACKER_CAPACITY);
+        state->_loaded_audios =
+            container_array_construct_custom(AudioData, state->_allocator, ALLOCTYPE_ARENA, ENGINE_AUDIO_TRACKER_CAPACITY);
 
         // loaded audio buffers
         state->_loaded_buffers =
-            container_array_construct_custom(AudioBuffer, state->_allocator, ENGINE_AUDIO_TRACKER_CAPACITY);
+            container_array_construct_custom(AudioBuffer, state->_allocator, ALLOCTYPE_ARENA, ENGINE_AUDIO_TRACKER_CAPACITY);
 
         // active audio sources
         state->_active_sources =
-            container_array_construct_custom(AudioSource, state->_allocator, ENGINE_AUDIO_TRACKER_CAPACITY);
+            container_array_construct_custom(AudioSource, state->_allocator, ALLOCTYPE_ARENA, ENGINE_AUDIO_TRACKER_CAPACITY);
     }
 
     // allocate transition tasks member
-    state->_transition_tasks =
-        container_array_construct_custom(AudioTransitionTask, state->_allocator, ENGINE_AUDIO_TRANSITION_TASKS_CAPACITY);
+    state->_transition_tasks = container_array_construct_custom(AudioTransitionTask, state->_allocator, ALLOCTYPE_ARENA,
+                                                                ENGINE_AUDIO_TRANSITION_TASKS_CAPACITY);
+
+    // allocate sequences member
+    state->_sequences =
+        container_array_construct_custom(AudioSequence, state->_allocator, ALLOCTYPE_ARENA, ENGINE_AUDIO_SEQUENCES_CAPACITY);
 
     return true;
 }
@@ -219,6 +230,10 @@ Bool audio_module_shutdown(void) {
 
     // free and set members to zero
     {
+        // deallocate sequences member
+        if (!container_array_destruct(state->_sequences))
+            return false;
+
         // deallocate transition tasks member
         if (!container_array_destruct(state->_transition_tasks))
             return false;
@@ -256,11 +271,14 @@ Bool audio_module_shutdown(void) {
                 return false;
         }
 
+        // allocator
+        allocator_arena_destruct(state->_allocator);
+
+        // sequence task pool
+        allocator_pool_destruct(state->_sequence_task_pool);
+
         switch (state->_backend) {
         case AUDIO_BACKEND_OPENAL:
-            // allocator
-            allocator_arena_destruct(state->_allocator);
-
             // context
             audio_backend_al_make_context_current(NULL);
             if (!audio_backend_al_destroy_context(&state->_context))
@@ -285,33 +303,72 @@ Bool audio_module_shutdown(void) {
 
 Bool audio_module_update(const Flt32 delta_time, const Flt32 fixed_update_time) {
     // audio transition tasks
-    {
-        for (ByteSize i = 0; i < container_array_length(state->_transition_tasks); ++i) {
-            AudioTransitionTask *task_ = container_array_get_at_index(state->_transition_tasks, i);
+    for (ByteSize i = 0; i < container_array_length(state->_transition_tasks); ++i) {
+        AudioTransitionTask *task_ = container_array_get_at_index(state->_transition_tasks, i);
+        if (!task_)
+            continue;
+
+        task_->_elapsed_ms += 1000.0f * fixed_update_time;
+        if (task_->_elapsed_ms > task_->_duration_ms)
+            task_->_elapsed_ms = task_->_duration_ms;
+
+        // calculate progress and clamp it between 0 and 1
+        Flt32 progress_ = VT_CAST(Flt32, task_->_elapsed_ms) / task_->_duration_ms;
+        progress_       = (progress_ > 1.0f) ? 1.0f : progress_; // Clamp progress to 1.0f
+
+        // apply transition with the clamped progress
+        task_->_apply_transition(task_->_source, task_->_current_data, task_->_target_data, progress_);
+
+        // when done...
+        if (task_->_elapsed_ms >= task_->_duration_ms) {
+            // ensure current value is reached exactly to target value
+            task_->_apply_transition(task_->_source, task_->_current_data, task_->_target_data, 1.0f);
+
+            // task done, remove
+            container_array_remove_at_index(state->_transition_tasks, i);
+
+            --i; // prevent skipping the next task
+        }
+    }
+
+    // audio sequences
+    for (ByteSize i = 0; i < container_array_length(state->_sequences); ++i) {
+        AudioSequence *sequence_ = container_array_get_at_index(state->_sequences, i);
+        if (!sequence_)
+            continue;
+
+        if (container_array_isempty(sequence_->_tasks))
+            continue;
+
+        sequence_->_elapsed_ms += 1000.0f * fixed_update_time;
+
+        Flt32 sequence_progress_ = VT_CAST(Flt32, sequence_->_elapsed_ms) / sequence_->_duration_ms;
+        sequence_progress_       = (sequence_progress_ > 1.0f) ? 1.0f : sequence_progress_;
+
+        for (ByteSize j = 0; j < container_array_length(sequence_->_tasks); ++j) {
+            AudioSequenceTask *task_ = container_array_get_at_index(sequence_->_tasks, j);
             if (!task_)
                 continue;
 
-            task_->_elapsed_ms += 1000.0f * fixed_update_time;
-            if (task_->_elapsed_ms > task_->_duration_ms)
-                task_->_elapsed_ms = task_->_duration_ms;
+            if (sequence_->_elapsed_ms < task_->_start_time_ms)
+                continue;
 
-            // calculate progress and clamp it between 0 and 1
-            Flt32 progress_ = VT_CAST(Flt32, task_->_elapsed_ms) / task_->_duration_ms;
-            progress_       = (progress_ > 1.0f) ? 1.0f : progress_; // Clamp progress to 1.0f
+            Flt32 task_progress_ = VT_CAST(Flt32, sequence_->_elapsed_ms - task_->_start_time_ms) / task_->_duration_ms;
+            task_progress_       = (task_progress_ > 1.0f) ? 1.0f : task_progress_;
 
-            // apply transition with the clamped progress
-            task_->_apply_transition(task_->_source, task_->_current_data, task_->_target_data, progress_);
+            task_->_apply_transition(task_->_source, task_->_source_other, task_->_current_data, task_->_target_data,
+                                     task_progress_);
 
-            // when done...
-            if (task_->_elapsed_ms >= task_->_duration_ms) {
-                // ensure current value is reached exactly to target value
-                task_->_apply_transition(task_->_source, task_->_current_data, task_->_target_data, 1.0f);
-
-                // task done, remove
-                container_array_remove_at_index(state->_transition_tasks, i);
-
-                --i; // prevent skipping the next task
+            const UInt32 task_end_time_ = task_->_start_time_ms + task_->_duration_ms;
+            if (sequence_->_elapsed_ms >= task_end_time_) {
+                container_array_remove_at_index(sequence_->_tasks, j);
+                --j;
             }
+        }
+
+        if (!sequence_->_retain && sequence_->_elapsed_ms >= sequence_->_duration_ms) {
+            container_array_remove_at_index(state->_sequences, i);
+            --i;
         }
     }
 
@@ -567,3 +624,7 @@ AudioSource *audio_module_get_active_source(ConstStr id) {
 VoidPtr audio_module_get_state(void) { return state; }
 
 VoidPtr audio_module_get_transition_tasks(void) { return state->_transition_tasks; }
+
+VoidPtr audio_module_get_sequence_task_pool(void) { return state->_sequence_task_pool; }
+
+VoidPtr audio_module_get_sequences(void) { return state->_sequences; }

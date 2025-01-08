@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vytal/defines/audio/audio.h"
+#include "vytal/defines/audio/audio_sequence.h"
 #include "vytal/defines/audio/audio_transition.h"
 #include "vytal/defines/core/container.h"
 #include "vytal/defines/shared.h"
@@ -24,3 +25,5 @@ VT_API AudioBuffer *audio_module_get_loaded_buffer(ConstStr id);
 VT_API AudioSource *audio_module_get_active_source(ConstStr id);
 VT_API VoidPtr      audio_module_get_state(void);
 VT_API VoidPtr      audio_module_get_transition_tasks(void);
+VT_API VoidPtr      audio_module_get_sequence_task_pool(void);
+VT_API VoidPtr      audio_module_get_sequences(void);

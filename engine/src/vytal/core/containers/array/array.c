@@ -2,17 +2,19 @@
 
 #include "vytal/core/hal/memory/vtmem.h"
 #include "vytal/core/memory/allocators/arena.h"
+#include "vytal/core/memory/allocators/pool.h"
 #include "vytal/core/misc/string/vtstr.h"
 #include "vytal/managers/memory/memmgr.h"
 
 #define CONTAINER_MAX_SIZE VT_SIZE_KB_MULT(32) // 32 KB
 
 typedef struct Container_Array_Header {
-    ByteSize       _data_size;
-    ByteSize       _length;
-    ByteSize       _capacity;
-    VoidPtr        _memory_block;
-    ArenaAllocator _allocator;
+    ByteSize        _data_size;
+    ByteSize        _length;
+    ByteSize        _capacity;
+    VoidPtr         _memory_block;
+    VoidPtr         _allocator;
+    MemMgrAllocType _alloc_type;
 } ArrayHeader;
 
 ArrayHeader *_container_array_get_header(Array array) { return !array ? NULL : VT_CAST(ArrayHeader *, array->_internal_data); }
@@ -50,13 +52,27 @@ Array __vtimpl_ctnr_darr_construct(const ByteSize data_size) {
     return arr_;
 }
 
-Array __vtimpl_ctnr_darr_construct_custom(const ByteSize data_size, const ArenaAllocator allocator, const ByteSize capacity) {
+Array __vtimpl_ctnr_darr_construct_custom(const ByteSize data_size, const VoidPtr allocator, const MemMgrAllocType alloc_type,
+                                          const ByteSize capacity) {
     if (data_size == 0 || !allocator || capacity == 0)
         return NULL;
 
     ByteSize bucket_size_ = capacity - (sizeof(Container_Array));
+    VoidPtr  chunk_       = NULL;
 
-    VoidPtr chunk_ = allocator_arena_allocate(allocator, capacity);
+    switch (alloc_type) {
+    case ALLOCTYPE_ARENA:
+        chunk_ = allocator_arena_allocate(allocator, capacity);
+        break;
+
+    case ALLOCTYPE_POOL:
+        chunk_ = allocator_pool_allocate(allocator);
+        break;
+
+    default:
+        return NULL;
+    }
+
     if (!chunk_)
         return NULL;
 
@@ -71,6 +87,7 @@ Array __vtimpl_ctnr_darr_construct_custom(const ByteSize data_size, const ArenaA
     header_->_length     = 0;
     header_->_capacity   = bucket_size_ / data_size;
     header_->_allocator  = allocator;
+    header_->_alloc_type = alloc_type;
 
     // element 3: the array
     header_->_memory_block = VT_CAST(VoidPtr, header_ + 1);
@@ -87,10 +104,24 @@ Bool container_array_destruct(Array array) {
 
     // free the entire array container
     {
-        ArenaAllocator allocator_ = _container_array_get_header(array)->_allocator;
+        VoidPtr allocator_ = _container_array_get_header(array)->_allocator;
 
         if (!allocator_)
             memory_manager_deallocate(array, MEMORY_TAG_CONTAINERS);
+        else {
+            switch (_container_array_get_header(array)->_alloc_type) {
+            case ALLOCTYPE_ARENA:
+                break;
+
+            case ALLOCTYPE_POOL:
+                if (!allocator_pool_deallocate(allocator_, array))
+                    return false;
+                break;
+
+            default:
+                break;
+            }
+        }
 
         array = NULL;
     }
@@ -162,6 +193,16 @@ Bool container_array_clear(Array array) {
 
     ArrayHeader *header_ = _container_array_get_header(array);
     header_->_length     = 0;
+
+    return true;
+}
+
+Bool container_array_sort(Array array, Int32 (*compare)(const void *left, const void *right)) {
+    if (!array || container_array_length(array) < 2 || !compare)
+        return false;
+
+    ArrayHeader *header = _container_array_get_header(array);
+    qsort(header->_memory_block, header->_length, header->_data_size, compare);
 
     return true;
 }

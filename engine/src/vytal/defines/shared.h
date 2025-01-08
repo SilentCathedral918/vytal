@@ -24,7 +24,8 @@
 
 // ------------------------- struct assignment ------------------------- //
 
-#define VT_STRUCT(type, ...) ((type){__VA_ARGS__})
+#define VT_STRUCT(type, ...)                                                                                                   \
+    (type) { __VA_ARGS__ }
 
 // ------------------------- force-inlining ------------------------- //
 
