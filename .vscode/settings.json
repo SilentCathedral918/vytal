@@ -35,7 +35,8 @@
     "typeindex": "c",
     "variant": "c",
     "compare": "c",
-    "map": "c"
+    "map": "c",
+    "limits": "c"
   },
 
   // editor styling
