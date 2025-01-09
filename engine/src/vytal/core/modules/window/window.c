@@ -28,14 +28,12 @@ void _window_module_callback_on_window_close(VoidPtr context) {
 }
 
 void _window_module_callback_on_key_pressed(VoidPtr context, InputKeyCode key_code, Bool pressed) {
-    InputKeyEventData data = {._event_code = pressed ? VT_EVENTCODE_KEY_PRESSED : VT_EVENTCODE_KEY_RELEASED,
-                              ._key_code   = key_code};
+    InputKeyEventData data = {._event_code = pressed ? VT_EVENTCODE_KEY_PRESSED : VT_EVENTCODE_KEY_RELEASED, ._key_code = key_code};
     input_module_invoke_event(data._event_code, &data);
 }
 
 void _window_module_callback_on_mouse_pressed(VoidPtr context, InputMouseCode mouse_code, Bool pressed) {
-    InputMouseEventData data = {._event_code = pressed ? VT_EVENTCODE_MOUSE_PRESSED : VT_EVENTCODE_MOUSE_RELEASED,
-                                ._mouse_code = mouse_code};
+    InputMouseEventData data = {._event_code = pressed ? VT_EVENTCODE_MOUSE_PRESSED : VT_EVENTCODE_MOUSE_RELEASED, ._mouse_code = mouse_code};
     input_module_invoke_event(data._event_code, &data);
 }
 
@@ -121,8 +119,7 @@ Bool window_module_construct_main(void) {
         return false;
 
     // callbacks setup
-    state->_main_window = platform_window_construct(state->_main_window_props, &(state->_main_window_props._callbacks),
-                                                    state->_main_window_props._titlebar_flags);
+    state->_main_window = platform_window_construct(state->_main_window_props, &(state->_main_window_props._callbacks), state->_main_window_props._titlebar_flags);
 
     if (!state->_main_window)
         return false;

@@ -160,9 +160,7 @@ Bool platform_fs_file_write_data(FileHandle *handle, const VoidPtr data, const B
 }
 
 ConstStr platform_fs_get_filename_from_path(ConstStr filepath) {
-    return VT_CAST(ConstStr, misc_str_strrchr(VT_CAST(Str, filepath), '\\') ? misc_str_strrchr(VT_CAST(Str, filepath), '\\') + 1
-                             : misc_str_strrchr(VT_CAST(Str, filepath), '/') ? misc_str_strrchr(VT_CAST(Str, filepath), '/') + 1
-                                                                             : filepath);
+    return VT_CAST(ConstStr, misc_str_strrchr(VT_CAST(Str, filepath), '\\') ? misc_str_strrchr(VT_CAST(Str, filepath), '\\') + 1 : misc_str_strrchr(VT_CAST(Str, filepath), '/') ? misc_str_strrchr(VT_CAST(Str, filepath), '/') + 1 : filepath);
 }
 
 Bool platform_fs_create_directory(ConstStr directory_name) {

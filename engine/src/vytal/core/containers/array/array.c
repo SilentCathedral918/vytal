@@ -52,8 +52,7 @@ Array __vtimpl_ctnr_darr_construct(const ByteSize data_size) {
     return arr_;
 }
 
-Array __vtimpl_ctnr_darr_construct_custom(const ByteSize data_size, const VoidPtr allocator, const MemMgrAllocType alloc_type,
-                                          const ByteSize capacity) {
+Array __vtimpl_ctnr_darr_construct_custom(const ByteSize data_size, const VoidPtr allocator, const MemMgrAllocType alloc_type, const ByteSize capacity) {
     if (data_size == 0 || !allocator || capacity == 0)
         return NULL;
 
@@ -215,8 +214,4 @@ ByteSize container_array_data_size(Array array) { return !array ? 0 : _container
 
 VoidPtr container_array_get(Array array) { return !array ? NULL : _container_array_get_header(array)->_memory_block; }
 
-VoidPtr container_array_get_at_index(Array array, const ByteSize index) {
-    return !array ? NULL
-                  : (VT_CAST(BytePtr, _container_array_get_header(array)->_memory_block) +
-                     (container_array_data_size(array) * index));
-}
+VoidPtr container_array_get_at_index(Array array, const ByteSize index) { return !array ? NULL : (VT_CAST(BytePtr, _container_array_get_header(array)->_memory_block) + (container_array_data_size(array) * index)); }

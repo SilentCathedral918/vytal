@@ -34,26 +34,18 @@ Bool hal_input_was_key_down(const InputKeyCode key) { return (input_module_state
 Bool hal_input_was_key_up(const InputKeyCode key) { return !(input_module_state->_prev_keyboard_state._keys[key]); }
 Bool hal_input_is_key_pressed(const InputKeyCode key) { return (hal_input_is_key_up(key) && hal_input_was_key_down(key)); }
 
-Bool hal_input_is_mouse_down(const InputMouseCode code) { return (input_module_state->_curr_mouse_state._values[code]); }
-Bool hal_input_is_mouse_up(const InputMouseCode code) { return !(input_module_state->_curr_mouse_state._values[code]); }
-Bool hal_input_was_mouse_down(const InputMouseCode code) { return (input_module_state->_prev_mouse_state._values[code]); }
-Bool hal_input_was_mouse_up(const InputMouseCode code) { return !(input_module_state->_prev_mouse_state._values[code]); }
-Bool hal_input_is_mouse_pressed(const InputMouseCode code) {
-    return (hal_input_is_mouse_up(code) && hal_input_was_mouse_down(code));
-}
+Bool  hal_input_is_mouse_down(const InputMouseCode code) { return (input_module_state->_curr_mouse_state._values[code]); }
+Bool  hal_input_is_mouse_up(const InputMouseCode code) { return !(input_module_state->_curr_mouse_state._values[code]); }
+Bool  hal_input_was_mouse_down(const InputMouseCode code) { return (input_module_state->_prev_mouse_state._values[code]); }
+Bool  hal_input_was_mouse_up(const InputMouseCode code) { return !(input_module_state->_prev_mouse_state._values[code]); }
+Bool  hal_input_is_mouse_pressed(const InputMouseCode code) { return (hal_input_is_mouse_up(code) && hal_input_was_mouse_down(code)); }
 Int32 hal_input_get_mouse_x(void) { return (input_module_state->_curr_mouse_state._x); }
 Int32 hal_input_get_mouse_y(void) { return (input_module_state->_curr_mouse_state._y); }
 Int32 hal_input_get_prev_mouse_x(void) { return (input_module_state->_prev_mouse_state._x); }
 Int32 hal_input_get_prev_mouse_y(void) { return (input_module_state->_prev_mouse_state._y); }
-Bool  hal_input_is_mouse_moved(void) {
-    return (hal_input_get_mouse_x() != hal_input_get_prev_mouse_x()) ||
-           (hal_input_get_mouse_y() != hal_input_get_prev_mouse_y());
-}
-Int8 hal_input_get_mouse_scroll_value(void) { return (input_module_state->_curr_mouse_state._scroll_value); }
-Int8 hal_input_get_mouse_scroll_value_inverted(void) { return (input_module_state->_curr_mouse_state._scroll_value * -1); }
-Int8 hal_input_get_prev_mouse_scroll_value(void) { return (input_module_state->_prev_mouse_state._scroll_value); }
-Int8 hal_input_get_prev_mouse_scroll_value_inverted(void) { return (input_module_state->_prev_mouse_state._scroll_value * -1); }
-Bool hal_input_is_mouse_scrolled(void) {
-    return ((input_module_state->_curr_mouse_state._scroll_value != 0.0) &&
-            (hal_input_get_mouse_scroll_value() != hal_input_get_prev_mouse_scroll_value()));
-}
+Bool  hal_input_is_mouse_moved(void) { return (hal_input_get_mouse_x() != hal_input_get_prev_mouse_x()) || (hal_input_get_mouse_y() != hal_input_get_prev_mouse_y()); }
+Int8  hal_input_get_mouse_scroll_value(void) { return (input_module_state->_curr_mouse_state._scroll_value); }
+Int8  hal_input_get_mouse_scroll_value_inverted(void) { return (input_module_state->_curr_mouse_state._scroll_value * -1); }
+Int8  hal_input_get_prev_mouse_scroll_value(void) { return (input_module_state->_prev_mouse_state._scroll_value); }
+Int8  hal_input_get_prev_mouse_scroll_value_inverted(void) { return (input_module_state->_prev_mouse_state._scroll_value * -1); }
+Bool  hal_input_is_mouse_scrolled(void) { return ((input_module_state->_curr_mouse_state._scroll_value != 0.0) && (hal_input_get_mouse_scroll_value() != hal_input_get_prev_mouse_scroll_value())); }

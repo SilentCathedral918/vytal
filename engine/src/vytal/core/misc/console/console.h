@@ -15,12 +15,8 @@ VT_API VT_INLINE void misc_console_reset(void) { fprintf(stdout, "\x1b[0m"); }
 
 VT_API VT_INLINE void misc_console_setforeground(Int32 code) { fprintf(stdout, "\x1b[38;5;%dm", code); }
 VT_API VT_INLINE void misc_console_setbackground(Int32 code) { fprintf(stdout, "\x1b[48;5;%dm", code); }
-VT_API VT_INLINE void misc_console_setforeground_rgb(Int32 r, Int32 g, Int32 b) {
-    fprintf(stdout, "\x1b[38;2;%d;%d;%dm", r, g, b);
-}
-VT_API VT_INLINE void misc_console_setbackground_rgb(Int32 r, Int32 g, Int32 b) {
-    fprintf(stdout, "\x1b[48;2;%d;%d;%dm", r, g, b);
-}
+VT_API VT_INLINE void misc_console_setforeground_rgb(Int32 r, Int32 g, Int32 b) { fprintf(stdout, "\x1b[38;2;%d;%d;%dm", r, g, b); }
+VT_API VT_INLINE void misc_console_setbackground_rgb(Int32 r, Int32 g, Int32 b) { fprintf(stdout, "\x1b[48;2;%d;%d;%dm", r, g, b); }
 
 // -------------------------------- clear -------------------------------- //
 

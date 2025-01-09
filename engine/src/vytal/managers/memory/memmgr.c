@@ -35,12 +35,9 @@ typedef struct Memory_Manager_Tag_Info {
     ByteSize        _capacity;
 } MemMgrTagInfo;
 static const MemMgrTagInfo memory_tag_infos[] = {
-    {"Application", ALLOCTYPE_ARENA, VT_SIZE_KB_MULT(512)}, {"Module", ALLOCTYPE_ARENA, VT_SIZE_KB_MULT(32)},
-    {"Physics", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(16)},      {"AI", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(2)},
-    {"Audio", ALLOCTYPE_POOL, VT_SIZE_MB_MULT(256)},        {"Network", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(4)},
-    {"Platform", ALLOCTYPE_ARENA, VT_SIZE_KB_MULT(512)},    {"Core Game Logic", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(2)},
-    {"Game Entity", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(32)},  {"Game Scene", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(8)},
-    {"Containers", ALLOCTYPE_POOL, VT_SIZE_MB_MULT(8)},     {"Delegates", ALLOCTYPE_POOL, VT_SIZE_KB_MULT(512)},
+    {"Application", ALLOCTYPE_ARENA, VT_SIZE_KB_MULT(512)}, {"Module", ALLOCTYPE_ARENA, VT_SIZE_KB_MULT(32)},    {"Physics", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(16)},   {"AI", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(2)},
+    {"Audio", ALLOCTYPE_POOL, VT_SIZE_MB_MULT(256)},        {"Network", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(4)},    {"Platform", ALLOCTYPE_ARENA, VT_SIZE_KB_MULT(512)}, {"Core Game Logic", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(2)},
+    {"Game Entity", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(32)},  {"Game Scene", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(8)}, {"Containers", ALLOCTYPE_POOL, VT_SIZE_MB_MULT(8)},  {"Delegates", ALLOCTYPE_POOL, VT_SIZE_KB_MULT(512)},
     {"Renderer", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(32)},     {"Resources", ALLOCTYPE_ARENA, VT_SIZE_MB_MULT(128)}};
 
 static Memory_Manager_State *state;
@@ -112,8 +109,7 @@ MemMgrAllocatorMapEntry *_memory_manager_allocmap_insert_arena(ConstStr id, cons
     // resize if needed
     if (map_->_count >= map_->_capacity) {
         ByteSize                 new_capacity_ = map_->_capacity * 2;
-        MemMgrAllocatorMapEntry *new_entries_ =
-            hal_mem_realloc(map_->_entries, sizeof(MemMgrAllocatorMapEntry) * new_capacity_);
+        MemMgrAllocatorMapEntry *new_entries_  = hal_mem_realloc(map_->_entries, sizeof(MemMgrAllocatorMapEntry) * new_capacity_);
 
         if (!new_entries_)
             return NULL;
@@ -134,8 +130,7 @@ MemMgrAllocatorMapEntry *_memory_manager_allocmap_insert_arena(ConstStr id, cons
     return &(map_->_entries[return_idx_]);
 }
 
-MemMgrAllocatorMapEntry *_memory_manager_allocmap_insert_pool(ConstStr id, const ByteSize capacity,
-                                                              const ByteSize chunk_count) {
+MemMgrAllocatorMapEntry *_memory_manager_allocmap_insert_pool(ConstStr id, const ByteSize capacity, const ByteSize chunk_count) {
     MemMgrAllocatorMap *map_ = &(state->_alloc_map);
 
     UInt64 return_idx_ = map_->_count;
@@ -143,8 +138,7 @@ MemMgrAllocatorMapEntry *_memory_manager_allocmap_insert_pool(ConstStr id, const
     // resize if needed
     if (map_->_count >= map_->_capacity) {
         ByteSize                 new_capacity_ = map_->_capacity * 2;
-        MemMgrAllocatorMapEntry *new_entries_ =
-            hal_mem_realloc(map_->_entries, sizeof(MemMgrAllocatorMapEntry) * new_capacity_);
+        MemMgrAllocatorMapEntry *new_entries_  = hal_mem_realloc(map_->_entries, sizeof(MemMgrAllocatorMapEntry) * new_capacity_);
 
         if (!new_entries_)
             return NULL;
@@ -336,16 +330,13 @@ ConstStr _memory_manager_report_format_memory_size(const ByteSize memory_size) {
         snprintf(vt_memory_manager_memory_format_, sizeof vt_memory_manager_memory_format_, "%lld B", memory_size);
 
     else if (memory_size < VT_SIZE_MB_IN_BYTES)
-        snprintf(vt_memory_manager_memory_format_, sizeof vt_memory_manager_memory_format_, "%.2f KB",
-                 VT_CAST(Flt32, memory_size) / VT_CAST(Flt32, VT_SIZE_KB_IN_BYTES));
+        snprintf(vt_memory_manager_memory_format_, sizeof vt_memory_manager_memory_format_, "%.2f KB", VT_CAST(Flt32, memory_size) / VT_CAST(Flt32, VT_SIZE_KB_IN_BYTES));
 
     else if (memory_size < VT_SIZE_GB_IN_BYTES)
-        snprintf(vt_memory_manager_memory_format_, sizeof vt_memory_manager_memory_format_, "%.2f MB",
-                 VT_CAST(Flt32, memory_size) / VT_CAST(Flt32, VT_SIZE_MB_IN_BYTES));
+        snprintf(vt_memory_manager_memory_format_, sizeof vt_memory_manager_memory_format_, "%.2f MB", VT_CAST(Flt32, memory_size) / VT_CAST(Flt32, VT_SIZE_MB_IN_BYTES));
 
     else
-        snprintf(vt_memory_manager_memory_format_, sizeof vt_memory_manager_memory_format_, "%.2f GB",
-                 VT_CAST(Flt32, memory_size) / VT_CAST(Flt32, VT_SIZE_GB_IN_BYTES));
+        snprintf(vt_memory_manager_memory_format_, sizeof vt_memory_manager_memory_format_, "%.2f GB", VT_CAST(Flt32, memory_size) / VT_CAST(Flt32, VT_SIZE_GB_IN_BYTES));
 
     return vt_memory_manager_memory_format_;
 }

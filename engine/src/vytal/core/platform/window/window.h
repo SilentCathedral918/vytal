@@ -5,8 +5,7 @@
 
 VT_API Bool           platform_window_startup(const WindowBackend backend);
 VT_API void           platform_window_shutdown(void);
-VT_API PlatformWindow platform_window_construct(const WindowProps properties, const WindowCallbacks *callbacks,
-                                                const UInt64 titlebar_flags);
+VT_API PlatformWindow platform_window_construct(const WindowProps properties, const WindowCallbacks *callbacks, const UInt64 titlebar_flags);
 VT_API Bool           platform_window_destruct(PlatformWindow window);
 VT_API VoidPtr        platform_window_get_native(PlatformWindow window);
 VT_API ConstStr       platform_window_get_title(PlatformWindow window);

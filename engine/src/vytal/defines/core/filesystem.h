@@ -6,12 +6,7 @@
 
 // -------------------------------- modes -------------------------------- //
 
-typedef enum FileSystem_File_IO_Mode {
-    FILE_IO_MODE_READ,
-    FILE_IO_MODE_WRITE,
-    FILE_IO_MODE_READ_WRITE,
-    FILE_IO_MODE_APPEND
-} FileIOMode;
+typedef enum FileSystem_File_IO_Mode { FILE_IO_MODE_READ, FILE_IO_MODE_WRITE, FILE_IO_MODE_READ_WRITE, FILE_IO_MODE_APPEND } FileIOMode;
 
 typedef enum FileSystem_File_Mode { FILE_MODE_TEXT, FILE_MODE_BINARY } FileMode;
 

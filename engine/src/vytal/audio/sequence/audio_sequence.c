@@ -11,14 +11,12 @@
 #define sequences VT_CAST(Array, audio_module_get_sequences())
 #define sequence_task_pool VT_CAST(PoolAllocator, audio_module_get_sequence_task_pool())
 
-void _audio_sequence_play_callback(AudioSource *source, AudioSource *other, AudioTransitionData current,
-                                   AudioTransitionData target, Flt32 progress) {
+void _audio_sequence_play_callback(AudioSource *source, AudioSource *other, AudioTransitionData current, AudioTransitionData target, Flt32 progress) {
     audio_utils_source_play(source);
     audio_utils_source_set_volume(source, current._value_flt32);
 }
 
-void _audio_sequence_set_volume_callback(AudioSource *source, AudioSource *other, AudioTransitionData current,
-                                         AudioTransitionData target, Flt32 progress) {
+void _audio_sequence_set_volume_callback(AudioSource *source, AudioSource *other, AudioTransitionData current, AudioTransitionData target, Flt32 progress) {
     Flt32 vol_curr_   = current._value_flt32;
     Flt32 vol_target_ = target._value_flt32;
     Flt32 vol_new_    = vol_curr_ + ((vol_target_ - vol_curr_) * progress);
@@ -26,8 +24,7 @@ void _audio_sequence_set_volume_callback(AudioSource *source, AudioSource *other
     audio_utils_source_set_volume(source, vol_new_);
 }
 
-void _audio_sequence_cross_set_volume_callback(AudioSource *source, AudioSource *other, AudioTransitionData left,
-                                               AudioTransitionData right, Flt32 progress) {
+void _audio_sequence_cross_set_volume_callback(AudioSource *source, AudioSource *other, AudioTransitionData left, AudioTransitionData right, Flt32 progress) {
     Flt32 vol_out_new_ = left._value_flt32 + ((right._value_flt32 - left._value_flt32) * progress);
     Flt32 vol_in_new_  = right._value_flt32 + ((left._value_flt32 - right._value_flt32) * progress);
 
@@ -35,18 +32,13 @@ void _audio_sequence_cross_set_volume_callback(AudioSource *source, AudioSource 
     audio_utils_source_set_volume(other, vol_in_new_);
 }
 
-void _audio_sequence_stop_callback(AudioSource *source, AudioSource *other, AudioTransitionData current,
-                                   AudioTransitionData target, Flt32 progress) {
-    audio_utils_source_stop(source);
-}
+void _audio_sequence_stop_callback(AudioSource *source, AudioSource *other, AudioTransitionData current, AudioTransitionData target, Flt32 progress) { audio_utils_source_stop(source); }
 
 Int32 _audio_sequence_compare_task_start_time(const void *left, const void *right) {
     AudioSequenceTask *task_left_  = VT_CAST(AudioSequenceTask *, left);
     AudioSequenceTask *task_right_ = VT_CAST(AudioSequenceTask *, right);
 
-    return (task_left_->_start_time_ms < task_right_->_start_time_ms)   ? -1
-           : (task_left_->_start_time_ms > task_right_->_start_time_ms) ? 1
-                                                                        : 0;
+    return (task_left_->_start_time_ms < task_right_->_start_time_ms) ? -1 : (task_left_->_start_time_ms > task_right_->_start_time_ms) ? 1 : 0;
 }
 
 AudioSequenceTask *_audio_sequence_search_task(const Array tasks, const UInt64 id) {
@@ -98,12 +90,7 @@ AudioSequence *audio_sequence_construct(ConstStr id, const Bool retain) {
         return NULL; // sequence of specified id already exists
 
     const ByteSize chunk_size_ = allocator_pool_chunksize(sequence_task_pool);
-    AudioSequence  sequence_   = {
-           ._id          = id_,
-           ._tasks       = container_array_construct_custom(AudioSequenceTask, sequence_task_pool, ALLOCTYPE_POOL, chunk_size_),
-           ._duration_ms = 0,
-           ._elapsed_ms  = 0,
-           ._retain      = retain};
+    AudioSequence  sequence_   = {._id = id_, ._tasks = container_array_construct_custom(AudioSequenceTask, sequence_task_pool, ALLOCTYPE_POOL, chunk_size_), ._duration_ms = 0, ._elapsed_ms = 0, ._retain = retain};
 
     container_array_push(sequences, AudioSequence, sequence_);
     return container_array_get_at_index(sequences, container_array_length(sequences) - 1);
@@ -123,9 +110,8 @@ Bool audio_sequence_destruct(AudioSequence *sequence) {
     return container_array_remove(sequences, sequence);
 }
 
-Bool audio_sequence_add_task(AudioSequence *sequence, ConstStr id, AudioSequenceTaskVariant variant, AudioSource *source,
-                             AudioSource *other, const Flt32 start_time_ms, const Flt32 duration_ms,
-                             const AudioTransitionData current, const AudioTransitionData target) {
+Bool audio_sequence_add_task(AudioSequence *sequence, ConstStr id, AudioSequenceTaskVariant variant, AudioSource *source, AudioSource *other, const Flt32 start_time_ms, const Flt32 duration_ms, const AudioTransitionData current,
+                             const AudioTransitionData target) {
     if (!sequence || !id || !source)
         return false;
 

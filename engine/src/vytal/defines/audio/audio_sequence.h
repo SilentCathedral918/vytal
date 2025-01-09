@@ -6,12 +6,7 @@
 
 // ------------------------------ task variant ------------------------------ //
 
-typedef enum Audio_Sequence_Task_Variant {
-    AUDIO_SEQUENCE_TASK_PLAY,
-    AUDIO_SEQUENCE_TASK_FADE,
-    AUDIO_SEQUENCE_TASK_CROSSFADE,
-    AUDIO_SEQUENCE_TASK_STOP
-} AudioSequenceTaskVariant;
+typedef enum Audio_Sequence_Task_Variant { AUDIO_SEQUENCE_TASK_PLAY, AUDIO_SEQUENCE_TASK_FADE, AUDIO_SEQUENCE_TASK_CROSSFADE, AUDIO_SEQUENCE_TASK_STOP } AudioSequenceTaskVariant;
 
 // --------------------------------- task --------------------------------- //
 
@@ -25,8 +20,7 @@ typedef struct Audio_Sequence_Task {
     AudioTransitionData      _current_data;
     AudioTransitionData      _target_data;
 
-    void (*_apply_transition)(AudioSource *source, AudioSource *other, AudioTransitionData current, AudioTransitionData target,
-                              Flt32 progress);
+    void (*_apply_transition)(AudioSource *source, AudioSource *other, AudioTransitionData current, AudioTransitionData target, Flt32 progress);
 } AudioSequenceTask;
 
 // ------------------------------- sequence ------------------------------- //

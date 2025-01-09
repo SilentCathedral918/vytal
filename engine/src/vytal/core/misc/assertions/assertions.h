@@ -17,20 +17,20 @@
 
 #if defined(VT_ENABLE_ASSERTIONS)
 
-#    define VT_ASSERT(condition)                                                                                               \
-        {                                                                                                                      \
-            if (!(condition)) {                                                                                                \
-                VT_LOG_FATAL("Engine", "Invalid Condition '%s'", #condition);                                                            \
-                VT_DEBUG_BREAK;                                                                                                \
-            }                                                                                                                  \
+#    define VT_ASSERT(condition)                                                                                                                                                                                                                               \
+        {                                                                                                                                                                                                                                                      \
+            if (!(condition)) {                                                                                                                                                                                                                                \
+                VT_LOG_FATAL("Engine", "Invalid Condition '%s'", #condition);                                                                                                                                                                                  \
+                VT_DEBUG_BREAK;                                                                                                                                                                                                                                \
+            }                                                                                                                                                                                                                                                  \
         }
 
-#    define VT_ASSERT_MESSAGE(condition, message)                                                                              \
-        {                                                                                                                      \
-            if (!(condition)) {                                                                                                \
-                VT_LOG_FATAL("Engine", "Invalid Condition '%s', Message: %s", #condition, message);                            \
-                VT_DEBUG_BREAK;                                                                                                \
-            }                                                                                                                  \
+#    define VT_ASSERT_MESSAGE(condition, message)                                                                                                                                                                                                              \
+        {                                                                                                                                                                                                                                                      \
+            if (!(condition)) {                                                                                                                                                                                                                                \
+                VT_LOG_FATAL("Engine", "Invalid Condition '%s', Message: %s", #condition, message);                                                                                                                                                            \
+                VT_DEBUG_BREAK;                                                                                                                                                                                                                                \
+            }                                                                                                                                                                                                                                                  \
         }
 
 #else

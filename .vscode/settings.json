@@ -1,7 +1,7 @@
 {
   // C/C++
   "C_Cpp.vcFormat.space.pointerReferenceAlignment": "right",
-  "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: LLVM, AlignConsecutiveDeclarations: true, AlignConsecutiveAssignments: true, IndentWidth: 4, IndentPPDirectives: AfterHash, BreakBeforeBraces: Attach, ColumnLimit: 128 }",
+  "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: LLVM, AlignConsecutiveDeclarations: true, AlignConsecutiveAssignments: true, IndentWidth: 4, IndentPPDirectives: AfterHash, BreakBeforeBraces: Attach, ColumnLimit: 256 }",
   "C_Cpp.default.compilerPath": "C:\\mingw64\\bin\\gcc.exe",
 
   // file associations

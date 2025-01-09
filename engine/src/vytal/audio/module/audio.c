@@ -2,6 +2,7 @@
 
 #include "vytal/audio/backend/openal/audio_openal.h"
 #include "vytal/audio/core/loaders/audio_loader.h"
+#include "vytal/audio/sequence/audio_sequence.h"
 #include "vytal/core/containers/array/array.h"
 #include "vytal/core/containers/map/map.h"
 #include "vytal/core/hal/memory/vtmem.h"
@@ -44,16 +45,13 @@ UInt32 _audio_module_al_generate_buffer(ConstStr audio_id, const AudioData *data
     if (!audio_backend_al_generate_buffer(&buffer_))
         return -1;
 
-    if (!audio_backend_al_buffer_fill_data(buffer_, data->_channel_format, data->_pcm_data, data->_data_size,
-                                           data->_sample_rate))
+    if (!audio_backend_al_buffer_fill_data(buffer_, data->_channel_format, data->_pcm_data, data->_data_size, data->_sample_rate))
         return -1;
 
     return buffer_;
 }
 
-UInt32 _audio_module_al_generate_source(UInt32 buffer_id, const Flt32 position[3], const Flt32 velocity[3],
-                                        const Flt32 direction[3], const Bool omnidirectional, const Flt32 pitch,
-                                        const Flt32 volume, const Bool loop) {
+UInt32 _audio_module_al_generate_source(UInt32 buffer_id, const Flt32 position[3], const Flt32 velocity[3], const Flt32 direction[3], const Bool omnidirectional, const Flt32 pitch, const Flt32 volume, const Bool loop) {
     UInt32 source_ = 0;
     if (!audio_backend_al_generate_source(&source_))
         return -1;
@@ -113,6 +111,13 @@ AudioSource *_audio_module_search_active_source(const UInt32 id) {
 }
 
 Bool _audio_module_trackers_cleanup(void) {
+    // audio sequences
+    for (ByteSize i = 0; i < container_array_length(state->_sequences); ++i) {
+        AudioSequence *sequence_ = container_array_get_at_index(state->_sequences, i);
+        if (!audio_sequence_destruct(sequence_))
+            return false;
+    }
+
     switch (state->_backend) {
     case AUDIO_BACKEND_OPENAL:
         // loaded audio sources
@@ -180,46 +185,37 @@ Bool audio_module_startup(VoidPtr module) {
     state->_sequence_task_pool = allocator_pool_construct(ENGINE_AUDIO_SEQUENCE_TASK_POOL_CAPACITY, 256);
 
     // allocator
-    state->_allocator = allocator_arena_construct((ENGINE_AUDIO_ALLOCATOR_CAPACITY * 3) + (ENGINE_AUDIO_TRACKER_CAPACITY * 3) +
-                                                  ENGINE_AUDIO_TRANSITION_TASKS_CAPACITY + ENGINE_AUDIO_SEQUENCES_CAPACITY);
+    state->_allocator = allocator_arena_construct((ENGINE_AUDIO_ALLOCATOR_CAPACITY * 3) + (ENGINE_AUDIO_TRACKER_CAPACITY * 3) + ENGINE_AUDIO_TRANSITION_TASKS_CAPACITY + ENGINE_AUDIO_SEQUENCES_CAPACITY);
 
     // allocate state map members
     {
         // buffers
-        state->_buffer_map =
-            container_map_construct_custom(sizeof(AudioBuffer), state->_allocator, ENGINE_AUDIO_ALLOCATOR_CAPACITY);
+        state->_buffer_map = container_map_construct_custom(sizeof(AudioBuffer), state->_allocator, ENGINE_AUDIO_ALLOCATOR_CAPACITY);
 
         // sources
-        state->_source_map =
-            container_map_construct_custom(sizeof(AudioSource), state->_allocator, ENGINE_AUDIO_ALLOCATOR_CAPACITY);
+        state->_source_map = container_map_construct_custom(sizeof(AudioSource), state->_allocator, ENGINE_AUDIO_ALLOCATOR_CAPACITY);
 
         // audio datas
-        state->_audio_map =
-            container_map_construct_custom(sizeof(AudioData), state->_allocator, ENGINE_AUDIO_ALLOCATOR_CAPACITY);
+        state->_audio_map = container_map_construct_custom(sizeof(AudioData), state->_allocator, ENGINE_AUDIO_ALLOCATOR_CAPACITY);
     }
 
     // allocate state tracker members
     {
         // loaded audio data
-        state->_loaded_audios =
-            container_array_construct_custom(AudioData, state->_allocator, ALLOCTYPE_ARENA, ENGINE_AUDIO_TRACKER_CAPACITY);
+        state->_loaded_audios = container_array_construct_custom(AudioData, state->_allocator, ALLOCTYPE_ARENA, ENGINE_AUDIO_TRACKER_CAPACITY);
 
         // loaded audio buffers
-        state->_loaded_buffers =
-            container_array_construct_custom(AudioBuffer, state->_allocator, ALLOCTYPE_ARENA, ENGINE_AUDIO_TRACKER_CAPACITY);
+        state->_loaded_buffers = container_array_construct_custom(AudioBuffer, state->_allocator, ALLOCTYPE_ARENA, ENGINE_AUDIO_TRACKER_CAPACITY);
 
         // active audio sources
-        state->_active_sources =
-            container_array_construct_custom(AudioSource, state->_allocator, ALLOCTYPE_ARENA, ENGINE_AUDIO_TRACKER_CAPACITY);
+        state->_active_sources = container_array_construct_custom(AudioSource, state->_allocator, ALLOCTYPE_ARENA, ENGINE_AUDIO_TRACKER_CAPACITY);
     }
 
     // allocate transition tasks member
-    state->_transition_tasks = container_array_construct_custom(AudioTransitionTask, state->_allocator, ALLOCTYPE_ARENA,
-                                                                ENGINE_AUDIO_TRANSITION_TASKS_CAPACITY);
+    state->_transition_tasks = container_array_construct_custom(AudioTransitionTask, state->_allocator, ALLOCTYPE_ARENA, ENGINE_AUDIO_TRANSITION_TASKS_CAPACITY);
 
     // allocate sequences member
-    state->_sequences =
-        container_array_construct_custom(AudioSequence, state->_allocator, ALLOCTYPE_ARENA, ENGINE_AUDIO_SEQUENCES_CAPACITY);
+    state->_sequences = container_array_construct_custom(AudioSequence, state->_allocator, ALLOCTYPE_ARENA, ENGINE_AUDIO_SEQUENCES_CAPACITY);
 
     return true;
 }
@@ -356,8 +352,7 @@ Bool audio_module_update(const Flt32 delta_time, const Flt32 fixed_update_time) 
             Flt32 task_progress_ = VT_CAST(Flt32, sequence_->_elapsed_ms - task_->_start_time_ms) / task_->_duration_ms;
             task_progress_       = (task_progress_ > 1.0f) ? 1.0f : task_progress_;
 
-            task_->_apply_transition(task_->_source, task_->_source_other, task_->_current_data, task_->_target_data,
-                                     task_progress_);
+            task_->_apply_transition(task_->_source, task_->_source_other, task_->_current_data, task_->_target_data, task_progress_);
 
             const UInt32 task_end_time_ = task_->_start_time_ms + task_->_duration_ms;
             if (sequence_->_elapsed_ms >= task_end_time_) {
@@ -455,8 +450,7 @@ AudioSource *audio_module_construct_source(ConstStr id, const Bool loop) {
     {
         switch (state->_backend) {
         case AUDIO_BACKEND_OPENAL:
-            source_id_ =
-                _audio_module_al_generate_source(-1, position_, velocity_, direction_, omnidirectional_, pitch_, volume_, loop);
+            source_id_ = _audio_module_al_generate_source(-1, position_, velocity_, direction_, omnidirectional_, pitch_, volume_, loop);
             if (source_id_ == -1)
                 return NULL;
 
@@ -467,14 +461,7 @@ AudioSource *audio_module_construct_source(ConstStr id, const Bool loop) {
         }
     }
 
-    AudioSource source_ = {._id                = source_id_,
-                           ._loop              = loop,
-                           ._metadata          = NULL,
-                           ._omnidirectional   = omnidirectional_,
-                           ._pitch             = pitch_,
-                           ._playback_state    = AUDIO_PLAYBACK_STOPPED,
-                           ._playback_position = 0.0f,
-                           ._volume            = volume_};
+    AudioSource source_ = {._id = source_id_, ._loop = loop, ._metadata = NULL, ._omnidirectional = omnidirectional_, ._pitch = pitch_, ._playback_state = AUDIO_PLAYBACK_STOPPED, ._playback_position = 0.0f, ._volume = volume_};
     hal_mem_memcpy(&source_._position, position_, sizeof(source_._position));
     hal_mem_memcpy(&source_._velocity, velocity_, sizeof(source_._velocity));
     hal_mem_memcpy(&source_._direction, direction_, sizeof(source_._direction));
@@ -506,8 +493,7 @@ AudioSource *audio_module_construct_source_with_buffer(ConstStr source_id, Const
     {
         switch (state->_backend) {
         case AUDIO_BACKEND_OPENAL:
-            source_id_ = _audio_module_al_generate_source(buffer_->_id, position_, velocity_, direction_, omnidirectional_,
-                                                          pitch_, volume_, loop);
+            source_id_ = _audio_module_al_generate_source(buffer_->_id, position_, velocity_, direction_, omnidirectional_, pitch_, volume_, loop);
             if (source_id_ == -1)
                 return NULL;
 
@@ -518,13 +504,7 @@ AudioSource *audio_module_construct_source_with_buffer(ConstStr source_id, Const
         }
     }
 
-    AudioSource source_ = {._id              = source_id_,
-                           ._loop            = loop,
-                           ._metadata        = NULL,
-                           ._omnidirectional = omnidirectional_,
-                           ._pitch           = pitch_,
-                           ._playback_state  = AUDIO_PLAYBACK_STOPPED,
-                           ._volume          = volume_};
+    AudioSource source_ = {._id = source_id_, ._loop = loop, ._metadata = NULL, ._omnidirectional = omnidirectional_, ._pitch = pitch_, ._playback_state = AUDIO_PLAYBACK_STOPPED, ._volume = volume_};
     hal_mem_memcpy(&source_._position, position_, sizeof(source_._position));
     hal_mem_memcpy(&source_._velocity, velocity_, sizeof(source_._velocity));
     hal_mem_memcpy(&source_._direction, direction_, sizeof(source_._direction));

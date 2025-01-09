@@ -14,9 +14,7 @@ VT_INLINE VoidPtr _allocator_arena_alignforward(VoidPtr block, ByteSize alignmen
     return VT_CAST(VoidPtr, VT_CAST(UIntPtr, block) + ((MISALIGNMENT != 0) ? (alignment - MISALIGNMENT) : 0));
 }
 
-VT_INLINE Memory_Allocator_Arena_State *_allocator_arena_get_state(ArenaAllocator arena) {
-    return (!arena ? NULL : VT_CAST(Memory_Allocator_Arena_State *, arena->_internal_state));
-}
+VT_INLINE Memory_Allocator_Arena_State *_allocator_arena_get_state(ArenaAllocator arena) { return (!arena ? NULL : VT_CAST(Memory_Allocator_Arena_State *, arena->_internal_state)); }
 
 ArenaAllocator allocator_arena_construct(const ByteSize capacity) {
     ArenaAllocator                arena_ = hal_mem_malloc(sizeof(Memory_Allocator_Arena));
@@ -99,12 +97,8 @@ void allocator_arena_clear(ArenaAllocator arena) {
 }
 
 VoidPtr allocator_arena_head(ArenaAllocator arena) { return (_allocator_arena_get_state(arena)->_mem_block); }
-VoidPtr allocator_arena_tail(ArenaAllocator arena) {
-    return (_allocator_arena_get_state(arena)->_mem_block + _allocator_arena_get_state(arena)->_capacity);
-}
-VoidPtr allocator_arena_current(ArenaAllocator arena) {
-    return (_allocator_arena_get_state(arena)->_mem_block + _allocator_arena_get_state(arena)->_used_mem);
-}
-UInt64 allocator_arena_allocscount(ArenaAllocator arena) { return (_allocator_arena_get_state(arena)->_num_alloc); }
-UInt64 allocator_arena_usedmem(ArenaAllocator arena) { return (_allocator_arena_get_state(arena)->_used_mem); }
-UInt64 allocator_arena_capacity(ArenaAllocator arena) { return (_allocator_arena_get_state(arena)->_capacity); }
+VoidPtr allocator_arena_tail(ArenaAllocator arena) { return (_allocator_arena_get_state(arena)->_mem_block + _allocator_arena_get_state(arena)->_capacity); }
+VoidPtr allocator_arena_current(ArenaAllocator arena) { return (_allocator_arena_get_state(arena)->_mem_block + _allocator_arena_get_state(arena)->_used_mem); }
+UInt64  allocator_arena_allocscount(ArenaAllocator arena) { return (_allocator_arena_get_state(arena)->_num_alloc); }
+UInt64  allocator_arena_usedmem(ArenaAllocator arena) { return (_allocator_arena_get_state(arena)->_used_mem); }
+UInt64  allocator_arena_capacity(ArenaAllocator arena) { return (_allocator_arena_get_state(arena)->_capacity); }

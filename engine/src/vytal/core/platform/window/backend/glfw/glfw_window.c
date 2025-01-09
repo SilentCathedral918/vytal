@@ -69,8 +69,7 @@ PlatformWindow glfw_window_construct(const WindowProps props, const WindowCallba
     if (!callbacks)
         return NULL;
 
-    GLFWwindow *handle_ =
-        glfwCreateWindow(props._width, props._height, props._title, props._fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
+    GLFWwindow *handle_ = glfwCreateWindow(props._width, props._height, props._title, props._fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
     if (!handle_)
         return NULL;
 

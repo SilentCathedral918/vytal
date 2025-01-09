@@ -50,8 +50,7 @@ ConstStr _misc_str_strstr_sse2_scanstr(Str str, const Char pattern[2]) {
     if (align_offset_ > 0) {
         __m128i  data_  = load_m128i(str - align_offset_);
         unsigned zero_  = compare_m128i(vec_zero_, data_) >> align_offset_;
-        unsigned match_ = ((compare_m128i(vec_pat0_, data_) & (compare_m128i(vec_pat1_, data_) >> 1)) >> align_offset_) &
-                          ~zero_ & (zero_ - 1);
+        unsigned match_ = ((compare_m128i(vec_pat0_, data_) & (compare_m128i(vec_pat1_, data_) >> 1)) >> align_offset_) & ~zero_ & (zero_ - 1);
 
         if (zero_)
             return NULL;

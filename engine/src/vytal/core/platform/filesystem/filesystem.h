@@ -4,9 +4,9 @@
 #include "vytal/defines/core/mem.h"
 #include "vytal/defines/shared.h"
 
-VT_API Bool platform_fs_open_file(FileHandle *handle, ConstStr filepath, const FileIOMode io_mode, const FileMode file_mode);
-VT_API Bool platform_fs_close_file(FileHandle *handle);
-VT_API Bool platform_fs_file_exists(ConstStr filepath);
+VT_API Bool     platform_fs_open_file(FileHandle *handle, ConstStr filepath, const FileIOMode io_mode, const FileMode file_mode);
+VT_API Bool     platform_fs_close_file(FileHandle *handle);
+VT_API Bool     platform_fs_file_exists(ConstStr filepath);
 VT_API ByteSize platform_fs_file_size(FileHandle *handle);
 VT_API Bool     platform_fs_file_read_line(FileHandle *handle, Str *line_buffer, ByteSize *line_buffer_length);
 VT_API Bool     platform_fs_file_write_line(FileHandle *handle, ConstStr text);

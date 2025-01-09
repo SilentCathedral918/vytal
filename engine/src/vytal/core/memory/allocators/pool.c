@@ -21,9 +21,7 @@ typedef struct Memory_Allocator_Pool_State {
     ByteSize          _used_count;
 } Memory_Allocator_Pool_State;
 
-VT_INLINE Memory_Allocator_Pool_State *_allocator_pool_get_state(PoolAllocator pool) {
-    return (!pool ? NULL : VT_CAST(Memory_Allocator_Pool_State *, pool->_internal_state));
-}
+VT_INLINE Memory_Allocator_Pool_State *_allocator_pool_get_state(PoolAllocator pool) { return (!pool ? NULL : VT_CAST(Memory_Allocator_Pool_State *, pool->_internal_state)); }
 
 VoidPtr _allocator_pool_alloc_aligned(const ByteSize size, const ByteSize alignment, ByteSize *get_adjustment) {
     if ((alignment == 0) || (alignment > VT_MEM_ALIGNMENT_MAX))
@@ -106,8 +104,7 @@ Bool allocator_pool_destruct(PoolAllocator pool) {
 
     // free the state and its members
     {
-        if (!_allocator_pool_free_aligned(state_->_memory_block, state_->_chunk_size * state_->_chunk_count,
-                                          state_->_adjustment)) {
+        if (!_allocator_pool_free_aligned(state_->_memory_block, state_->_chunk_size * state_->_chunk_count, state_->_adjustment)) {
             return false;
         }
 
@@ -177,9 +174,7 @@ Bool allocator_pool_deallocate_all(PoolAllocator pool) {
 
 VoidPtr allocator_pool_head(PoolAllocator pool) { return (!pool ? NULL : _allocator_pool_get_state(pool)->_head); }
 
-ByteSize allocator_pool_usedmem(PoolAllocator pool) {
-    return (!pool ? 0 : (_allocator_pool_get_state(pool)->_used_count * _allocator_pool_get_state(pool)->_chunk_size));
-}
+ByteSize allocator_pool_usedmem(PoolAllocator pool) { return (!pool ? 0 : (_allocator_pool_get_state(pool)->_used_count * _allocator_pool_get_state(pool)->_chunk_size)); }
 
 ByteSize allocator_pool_capacity(PoolAllocator pool) { return (!pool ? 0 : _allocator_pool_get_state(pool)->_capacity); }
 

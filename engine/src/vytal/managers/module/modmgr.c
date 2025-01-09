@@ -25,22 +25,19 @@ Bool module_manager_startup_modules(void) {
         // input module
         {
             state->_input_module = memory_manager_allocate(input_module_get_size(), MEMORY_TAG_MODULE);
-            VT_ASSERT_MESSAGE(input_module_startup(state->_input_module),
-                              "vytal: module manager _ input module startup failed.");
+            VT_ASSERT_MESSAGE(input_module_startup(state->_input_module), "vytal: module manager _ input module startup failed.");
         }
 
         // window module
         {
             state->_window_module = memory_manager_allocate(window_module_get_size(), MEMORY_TAG_MODULE);
-            VT_ASSERT_MESSAGE(window_module_startup(state->_window_module),
-                              "vytal: module manager _ window module startup failed.");
+            VT_ASSERT_MESSAGE(window_module_startup(state->_window_module), "vytal: module manager _ window module startup failed.");
         }
 
         // audio module
         {
             state->_audio_module = memory_manager_allocate(audio_module_get_size(), MEMORY_TAG_MODULE);
-            VT_ASSERT_MESSAGE(audio_module_startup(state->_audio_module),
-                              "vytal: module manager _ audio module startup failed.")
+            VT_ASSERT_MESSAGE(audio_module_startup(state->_audio_module), "vytal: module manager _ audio module startup failed.")
         }
     }
 
@@ -60,8 +57,7 @@ Bool module_manager_update_modules(const Flt32 delta_time, const Flt32 fixed_upd
         VT_ASSERT_MESSAGE(window_module_update(), "vytal: module manager _ window module update failed.");
 
         // audio module
-        VT_ASSERT_MESSAGE(audio_module_update(delta_time, fixed_update_time),
-                          "vytal: module manager _ audio module update failed.");
+        VT_ASSERT_MESSAGE(audio_module_update(delta_time, fixed_update_time), "vytal: module manager _ audio module update failed.");
     }
 
     return true;

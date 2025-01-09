@@ -6,22 +6,11 @@
 
 // ------------------------------ verbosity ------------------------------ //
 
-typedef enum Logger_LogVerbosity {
-    LOG_VERBOSITY_FATAL,
-    LOG_VERBOSITY_ERROR,
-    LOG_VERBOSITY_WARNING,
-    LOG_VERBOSITY_INFO,
-    LOG_VERBOSITY_DEBUG,
-    LOG_VERBOSITY_TRACE
-} LogVerbosity;
+typedef enum Logger_LogVerbosity { LOG_VERBOSITY_FATAL, LOG_VERBOSITY_ERROR, LOG_VERBOSITY_WARNING, LOG_VERBOSITY_INFO, LOG_VERBOSITY_DEBUG, LOG_VERBOSITY_TRACE } LogVerbosity;
 
 // -------------------------------- flags -------------------------------- //
 
-typedef enum Logger_LogFlag {
-    LOG_FLAG_NONE      = VT_BITFLAG_FIELD(0),
-    LOG_FLAG_TIMESTAMP = VT_BITFLAG_FIELD(1),
-    LOG_FLAG_FILE_LINE = VT_BITFLAG_FIELD(2)
-} LogFlag;
+typedef enum Logger_LogFlag { LOG_FLAG_NONE = VT_BITFLAG_FIELD(0), LOG_FLAG_TIMESTAMP = VT_BITFLAG_FIELD(1), LOG_FLAG_FILE_LINE = VT_BITFLAG_FIELD(2) } LogFlag;
 
 // -------------------------------- type -------------------------------- //
 

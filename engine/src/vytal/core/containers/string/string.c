@@ -17,9 +17,7 @@ typedef struct Container_String_Data {
     Str      _str;
 } StringData;
 
-VT_INLINE StringData *_container_string_get_internal_data(String str) {
-    return (!str || !(str->_internal_data)) ? NULL : (str->_internal_data);
-}
+VT_INLINE StringData *_container_string_get_internal_data(String str) { return (!str || !(str->_internal_data)) ? NULL : (str->_internal_data); }
 
 String container_string_construct(ConstStr input) {
     ByteSize input_length_ = misc_str_strlen(input);
@@ -234,13 +232,9 @@ Bool container_string_filter_char(String str, const Char c) {
     return true;
 }
 
-Int32 container_string_compare(String left, ConstStr right, const Bool sensitive) {
-    return misc_str_strcmp(container_string_get(left), right, sensitive);
-}
+Int32 container_string_compare(String left, ConstStr right, const Bool sensitive) { return misc_str_strcmp(container_string_get(left), right, sensitive); }
 
-Int32 container_string_compare_string(String left, String right, const Bool sensitive) {
-    return misc_str_strcmp(container_string_get(left), container_string_get(right), sensitive);
-}
+Int32 container_string_compare_string(String left, String right, const Bool sensitive) { return misc_str_strcmp(container_string_get(left), container_string_get(right), sensitive); }
 
 Bool container_string_contains(String str, ConstStr substr, const Bool sensitive) {
     if (!str || container_string_isempty(str) || !substr)
@@ -683,9 +677,7 @@ Str _container_string_lowercase_batched(Str target) {
 #    endif
 }
 
-VT_INLINE UInt64 _container_string_range_check_batched(UInt64 chunk, UInt64 lower_bound, UInt64 upper_bound) {
-    return ((~((chunk - lower_bound) | ((upper_bound - lower_bound) - (chunk - lower_bound))) & 0x8080808080808080) >> 7);
-}
+VT_INLINE UInt64 _container_string_range_check_batched(UInt64 chunk, UInt64 lower_bound, UInt64 upper_bound) { return ((~((chunk - lower_bound) | ((upper_bound - lower_bound) - (chunk - lower_bound))) & 0x8080808080808080) >> 7); }
 
 Str _container_string_uppercase_batched(Str target) {
     ByteSize target_length_ = misc_str_strlen(target);
@@ -792,11 +784,8 @@ Str      container_string_get(String str) { return (_container_string_get_intern
 ByteSize container_string_length(String str) { return (_container_string_get_internal_data(str)->_length); }
 ByteSize container_string_capacity(String str) { return (_container_string_get_internal_data(str)->_capacity); }
 Bool     container_string_isempty(String str) { return (_container_string_get_internal_data(str)->_length == 0); }
-Bool     container_string_index_valid(String str, const ByteSize index) {
-    return (str && !container_string_isempty(str) && (index >= 0) &&
-            (index < VT_CAST(Int32, _container_string_get_internal_data(str)->_length)));
-}
-Str container_string_mid(String str, const ByteSize start_index) {
+Bool     container_string_index_valid(String str, const ByteSize index) { return (str && !container_string_isempty(str) && (index >= 0) && (index < VT_CAST(Int32, _container_string_get_internal_data(str)->_length))); }
+Str      container_string_mid(String str, const ByteSize start_index) {
     if (!str || container_string_isempty(str) || !container_string_index_valid(str, start_index))
         return NULL;
 

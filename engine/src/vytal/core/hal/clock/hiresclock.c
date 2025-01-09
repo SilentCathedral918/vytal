@@ -26,8 +26,7 @@ Flt64 hal_hiresclock_getelapsed_sec(HiResClock *clock) {
     HiResTimeSpec current_;
     clock_gettime(CLOCK_MONOTONIC, &current_);
 
-    HiResInterval interval_ =
-        (current_.tv_sec - clock->_timestamp.tv_sec) * SEC_NANOSEC_SUBMULT + (current_.tv_nsec - clock->_timestamp.tv_nsec);
+    HiResInterval interval_ = (current_.tv_sec - clock->_timestamp.tv_sec) * SEC_NANOSEC_SUBMULT + (current_.tv_nsec - clock->_timestamp.tv_nsec);
 
     return VT_CAST(Flt64, interval_) / SEC_NANOSEC_SUBMULT;
 

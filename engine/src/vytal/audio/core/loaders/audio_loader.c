@@ -17,8 +17,7 @@ Int32 _audio_core_detect_format(ConstStr filepath) {
         if (path_length_ <= supported_format_lengths[i])
             continue;
 
-        if (misc_str_strncmp(filepath + path_length_ - supported_format_lengths[i], supported_formats[i],
-                             supported_format_lengths[i], true) == 0)
+        if (misc_str_strncmp(filepath + path_length_ - supported_format_lengths[i], supported_formats[i], supported_format_lengths[i], true) == 0)
             return i;
     }
 

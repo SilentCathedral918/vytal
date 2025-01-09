@@ -21,10 +21,7 @@ typedef struct Window_Callbacks {
     void (*_on_mouse_scrolled)(VoidPtr context, Int8 scroll_value);
 } WindowCallbacks;
 
-typedef enum Window_Titlebar_Flag {
-    WINDOW_TITLEBAR_FLAG_NONE = VT_BITFLAG_FIELD(0),
-    WINDOW_TITLEBAR_FLAG_FPS  = VT_BITFLAG_FIELD(1)
-} WindowTitlebarFlag;
+typedef enum Window_Titlebar_Flag { WINDOW_TITLEBAR_FLAG_NONE = VT_BITFLAG_FIELD(0), WINDOW_TITLEBAR_FLAG_FPS = VT_BITFLAG_FIELD(1) } WindowTitlebarFlag;
 
 // ------------------------- backends ------------------------- //
 

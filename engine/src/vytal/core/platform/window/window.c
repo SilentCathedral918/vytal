@@ -39,8 +39,7 @@ void platform_window_shutdown(void) {
     window_backend = -1;
 }
 
-PlatformWindow platform_window_construct(const WindowProps properties, const WindowCallbacks *callbacks,
-                                         const UInt64 titlebar_flags) {
+PlatformWindow platform_window_construct(const WindowProps properties, const WindowCallbacks *callbacks, const UInt64 titlebar_flags) {
     if (!is_valid_backend() || !callbacks)
         return NULL;
 

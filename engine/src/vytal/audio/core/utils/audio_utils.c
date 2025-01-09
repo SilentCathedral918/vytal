@@ -251,8 +251,7 @@ Bool audio_utils_buffer_reload(AudioBuffer *buffer, ConstStr audio_id) {
 
     switch (audio_module_state->_backend) {
     case AUDIO_BACKEND_OPENAL:
-        if (!audio_backend_al_buffer_fill_data(buffer->_id, data_->_channel_format, data_->_pcm_data, data_->_data_size,
-                                               data_->_sample_rate))
+        if (!audio_backend_al_buffer_fill_data(buffer->_id, data_->_channel_format, data_->_pcm_data, data_->_data_size, data_->_sample_rate))
             return false;
         break;
 
@@ -282,10 +281,6 @@ ByteSize audio_utils_buffer_get_size(AudioBuffer *buffer) { return !buffer ? 0 :
 
 UInt32 audio_utils_buffer_get_duration(AudioBuffer *buffer) { return !buffer ? 0 : buffer->_data->_duration_ms; }
 
-AudioFormat audio_utils_buffer_get_format(AudioBuffer *buffer) {
-    return !buffer ? 0 : VT_CAST(AudioFormat, buffer->_data->_format);
-}
+AudioFormat audio_utils_buffer_get_format(AudioBuffer *buffer) { return !buffer ? 0 : VT_CAST(AudioFormat, buffer->_data->_format); }
 
-AudioChannelFormat audio_utils_buffer_get_channel_format(AudioBuffer *buffer) {
-    return !buffer ? 0 : VT_CAST(AudioChannelFormat, buffer->_data->_channel_format);
-}
+AudioChannelFormat audio_utils_buffer_get_channel_format(AudioBuffer *buffer) { return !buffer ? 0 : VT_CAST(AudioChannelFormat, buffer->_data->_channel_format); }

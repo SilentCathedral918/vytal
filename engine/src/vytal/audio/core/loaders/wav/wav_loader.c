@@ -25,8 +25,7 @@ AudioData audio_core_wav_load_from_file(ConstStr filepath) {
             return VT_STRUCT(AudioData, 0);
         }
 
-        if (misc_str_strncmp(riff_chunk_._riff, "RIFF", 4, true) != 0 ||
-            misc_str_strncmp(riff_chunk_._wave, "WAVE", 4, true) != 0) {
+        if (misc_str_strncmp(riff_chunk_._riff, "RIFF", 4, true) != 0 || misc_str_strncmp(riff_chunk_._wave, "WAVE", 4, true) != 0) {
             VT_LOG_ERROR("Engine", "Invalid or unsupported WAV file format _ filepath: %s", filepath);
 
             platform_fs_close_file(&handle_);
@@ -80,8 +79,7 @@ AudioData audio_core_wav_load_from_file(ConstStr filepath) {
 
     // read the data chunk
     AudioWavDataChunk data_chunk_;
-    while (platform_fs_file_read_data(&handle_, sizeof(data_chunk_._id) + sizeof(data_chunk_._size), NULL,
-                                      VT_CAST(VoidPtr, &data_chunk_))) {
+    while (platform_fs_file_read_data(&handle_, sizeof(data_chunk_._id) + sizeof(data_chunk_._size), NULL, VT_CAST(VoidPtr, &data_chunk_))) {
         if (misc_str_strncmp(data_chunk_._id, "data", 4, true) == 0) {
             data_chunk_._pcm_data = memory_manager_allocate(0, MEMORY_TAG_AUDIO);
             if (!data_chunk_._pcm_data) {
@@ -105,13 +103,11 @@ AudioData audio_core_wav_load_from_file(ConstStr filepath) {
 
             data_._pcm_data    = data_chunk_._pcm_data;
             data_._data_size   = data_chunk_._size;
-            data_._duration_ms = VT_CAST(UInt32, (data_chunk_._size / (data_._channels * (data_._bits_per_sample / 8))) * 1000 /
-                                                     data_._sample_rate);
+            data_._duration_ms = VT_CAST(UInt32, (data_chunk_._size / (data_._channels * (data_._bits_per_sample / 8))) * 1000 / data_._sample_rate);
             break;
         } else {
             UInt32 chunk_size_ = VT_STRUCT(UInt32, 0);
-            if (!platform_fs_file_read_data(&handle_, sizeof(data_chunk_._id) + sizeof(data_chunk_._size), NULL,
-                                            VT_CAST(VoidPtr, &data_chunk_))) {
+            if (!platform_fs_file_read_data(&handle_, sizeof(data_chunk_._id) + sizeof(data_chunk_._size), NULL, VT_CAST(VoidPtr, &data_chunk_))) {
                 VT_LOG_ERROR("Engine", "Failed to read chunk id: %.4s in WAV file _ filepath: %s", data_chunk_._id, filepath);
 
                 platform_fs_close_file(&handle_);

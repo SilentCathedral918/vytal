@@ -96,8 +96,7 @@ Bool logger_shutdown(void) {
 }
 
 Bool logger_add(ConstStr logger_id, ConstStr filepath) {
-    if (!state || !state->_initialized || !state->_log_map || !logger_id ||
-        (misc_str_strcmp(logger_id, ENGINE_LOGGER_ID, false) == 0))
+    if (!state || !state->_initialized || !state->_log_map || !logger_id || (misc_str_strcmp(logger_id, ENGINE_LOGGER_ID, false) == 0))
         return false;
 
     Logger new_logger_;
@@ -274,7 +273,6 @@ Bool logger_print(ConstStr logger_id, LogVerbosity verbosity, ConstStr at_file, 
     misc_console_writeln(" %s", log_content_);
 
     // write to log file under associated logger ID
-    misc_str_fmt(log_file_, OUTPUT_BUFFER_MAX_SIZE, "[%s] (%s, %d) %s: %s \n", log_time_, at_file, at_line, verbosity_,
-                 log_content_);
+    misc_str_fmt(log_file_, OUTPUT_BUFFER_MAX_SIZE, "[%s] (%s, %d) %s: %s \n", log_time_, at_file, at_line, verbosity_, log_content_);
     return _logger_append_to_file(&(logger_._file_handle), log_file_);
 }

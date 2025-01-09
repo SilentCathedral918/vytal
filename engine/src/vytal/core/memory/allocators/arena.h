@@ -14,7 +14,5 @@ VT_API UInt64         allocator_arena_allocscount(ArenaAllocator arena);
 VT_API UInt64         allocator_arena_usedmem(ArenaAllocator arena);
 VT_API UInt64         allocator_arena_capacity(ArenaAllocator arena);
 
-VT_API VT_INLINE VoidPtr allocator_arena_allocate(ArenaAllocator arena, const ByteSize size) {
-    return allocator_arena_allocate_aligned(arena, size, VT_MEM_DEFAULT_ALIGNMENT);
-}
+VT_API VT_INLINE VoidPtr  allocator_arena_allocate(ArenaAllocator arena, const ByteSize size) { return allocator_arena_allocate_aligned(arena, size, VT_MEM_DEFAULT_ALIGNMENT); }
 VT_API VT_INLINE ConstStr allocator_arena_getname(void) { return "Arena"; }

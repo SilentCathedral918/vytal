@@ -20,23 +20,15 @@ typedef struct Hash_XX64_State {
 static Hash_XX64_State state;
 
 void             _hash_xx64_reset(void) { hal_mem_memzero(&state, sizeof(Hash_XX64_State)); }
-VT_INLINE UInt64 _hash_xx64_rotate(UInt64 value, UInt32 shift) {
-    return (shift == 0) ? value : ((value << shift) | (value >> (64 - shift)));
-}
+VT_INLINE UInt64 _hash_xx64_rotate(UInt64 value, UInt32 shift) { return (shift == 0) ? value : ((value << shift) | (value >> (64 - shift))); }
 VT_INLINE UInt64 _hash_xx64_read(const VoidPtr ptr, const Bool big_endian) {
-    return big_endian ? (VT_CAST(BytePtr, ptr)[7] | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[6]) << 8) |
-                         (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[5]) << 16) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[4]) << 24) |
-                         (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[3]) << 32) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[2]) << 40) |
-                         (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[1]) << 48) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[0]) << 56))
-                      : (VT_CAST(BytePtr, ptr)[0] | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[1]) << 8) |
-                         (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[2]) << 16) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[3]) << 24) |
-                         (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[4]) << 32) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[5]) << 40) |
-                         (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[6]) << 48) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[7]) << 56));
+    return big_endian ? (VT_CAST(BytePtr, ptr)[7] | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[6]) << 8) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[5]) << 16) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[4]) << 24) |
+                         (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[3]) << 32) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[2]) << 40) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[1]) << 48) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[0]) << 56))
+                      : (VT_CAST(BytePtr, ptr)[0] | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[1]) << 8) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[2]) << 16) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[3]) << 24) |
+                         (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[4]) << 32) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[5]) << 40) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[6]) << 48) | (VT_CAST(UInt64, VT_CAST(BytePtr, ptr)[7]) << 56));
 }
-VT_INLINE UInt64 _hash_xx64_round(const UInt64 value, const UInt64 input) {
-    return (_hash_xx64_rotate(value + (input * XXHASH64_PRIME2), 31) * XXHASH64_PRIME1);
-}
-UInt64 _hash_xx64_avalance(const UInt64 hash) {
+VT_INLINE UInt64 _hash_xx64_round(const UInt64 value, const UInt64 input) { return (_hash_xx64_rotate(value + (input * XXHASH64_PRIME2), 31) * XXHASH64_PRIME1); }
+UInt64           _hash_xx64_avalance(const UInt64 hash) {
     UInt64 hash_ = hash;
 
     hash_ ^= hash_ >> 33;
@@ -182,8 +174,7 @@ UInt64 _hash_xx64_finalize(void) {
     BytePtr pend_   = pbegin_ + state._mem_size;
 
     if (state._total_length >= 32)
-        hash_ = _hash_xx64_rotate(state._vec[0], 1) + _hash_xx64_rotate(state._vec[1], 7) +
-                _hash_xx64_rotate(state._vec[2], 12) + _hash_xx64_rotate(state._vec[3], 18);
+        hash_ = _hash_xx64_rotate(state._vec[0], 1) + _hash_xx64_rotate(state._vec[1], 7) + _hash_xx64_rotate(state._vec[2], 12) + _hash_xx64_rotate(state._vec[3], 18);
     else
         hash_ = state._vec[2] + XXHASH64_PRIME5;
 

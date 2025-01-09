@@ -142,8 +142,7 @@ Bool input_module_process_key_pressed(const InputKeyCode code, const Bool presse
 
         // immediately invoke the key event
         {
-            InputKeyEventData data_ = {._event_code = pressed ? VT_EVENTCODE_KEY_PRESSED : VT_EVENTCODE_KEY_RELEASED,
-                                       ._key_code   = code};
+            InputKeyEventData data_ = {._event_code = pressed ? VT_EVENTCODE_KEY_PRESSED : VT_EVENTCODE_KEY_RELEASED, ._key_code = code};
 
             UnicastDelegate del_ = state->_event_delegates[data_._event_code];
             if (!del_)
@@ -171,8 +170,7 @@ Bool input_module_process_mouse_pressed(const InputMouseCode code, const Bool pr
 
         // immediately invoke the mouse event
         {
-            InputMouseEventData data_ = {._event_code = pressed ? VT_EVENTCODE_MOUSE_PRESSED : VT_EVENTCODE_MOUSE_RELEASED,
-                                         ._mouse_code = code};
+            InputMouseEventData data_ = {._event_code = pressed ? VT_EVENTCODE_MOUSE_PRESSED : VT_EVENTCODE_MOUSE_RELEASED, ._mouse_code = code};
 
             UnicastDelegate del_ = state->_event_delegates[data_._event_code];
             if (!del_)
@@ -251,6 +249,4 @@ Bool input_module_process_mouse_scrolled(const Int8 scroll_value) {
 
 VoidPtr input_module_get_state(void) { return state; }
 
-Bool input_module_set_state(VoidPtr new_state) {
-    return !state ? false : (hal_mem_memcpy(state, new_state, sizeof(InputModuleState)));
-}
+Bool input_module_set_state(VoidPtr new_state) { return !state ? false : (hal_mem_memcpy(state, new_state, sizeof(InputModuleState))); }

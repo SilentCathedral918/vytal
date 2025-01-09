@@ -7,9 +7,7 @@
 
 // --------------------------------- device --------------------------------- //
 
-AudioDevice audio_backend_al_open_device(ConstStr device_name) {
-    return VT_STRUCT(AudioDevice, ._handle = alcOpenDevice(device_name));
-}
+AudioDevice audio_backend_al_open_device(ConstStr device_name) { return VT_STRUCT(AudioDevice, ._handle = alcOpenDevice(device_name)); }
 
 Bool audio_backend_al_close_device(AudioDevice *device) {
     if (!device)
@@ -147,9 +145,7 @@ Bool audio_backend_al_get_source_position(const UInt32 source, Flt32 *out_positi
     return true;
 }
 
-void audio_backend_al_set_source_position(UInt32 source, const Flt32 x, const Flt32 y, const Flt32 z) {
-    alSource3f(source, AL_POSITION, x, y, z);
-}
+void audio_backend_al_set_source_position(UInt32 source, const Flt32 x, const Flt32 y, const Flt32 z) { alSource3f(source, AL_POSITION, x, y, z); }
 
 Bool audio_backend_al_get_source_velocity(const UInt32 source, Flt32 *out_velocity) {
     if (!out_velocity)
@@ -159,9 +155,7 @@ Bool audio_backend_al_get_source_velocity(const UInt32 source, Flt32 *out_veloci
     return true;
 }
 
-void audio_backend_al_set_source_velocity(UInt32 source, const Flt32 x, const Flt32 y, const Flt32 z) {
-    alSource3f(source, AL_VELOCITY, x, y, z);
-}
+void audio_backend_al_set_source_velocity(UInt32 source, const Flt32 x, const Flt32 y, const Flt32 z) { alSource3f(source, AL_VELOCITY, x, y, z); }
 
 Bool audio_backend_al_get_source_direction(const UInt32 source, Flt32 *out_direction) {
     if (!out_direction)
@@ -238,9 +232,7 @@ Flt32 audio_backend_al_get_source_attenuation(const UInt32 source) {
     return att_;
 }
 
-void audio_backend_al_set_source_attenuation(const UInt32 source, const Flt32 attenuation) {
-    alSourcef(source, AL_ROLLOFF_FACTOR, attenuation);
-}
+void audio_backend_al_set_source_attenuation(const UInt32 source, const Flt32 attenuation) { alSourcef(source, AL_ROLLOFF_FACTOR, attenuation); }
 
 Bool audio_backend_al_is_source_looping(const UInt32 source) {
     Int32 looping_ = 0;
@@ -248,9 +240,7 @@ Bool audio_backend_al_is_source_looping(const UInt32 source) {
     return looping_ == AL_TRUE;
 }
 
-void audio_backend_al_set_source_looping(const UInt32 source, const Bool loop) {
-    alSourcei(source, AL_LOOPING, loop ? AL_TRUE : AL_FALSE);
-}
+void audio_backend_al_set_source_looping(const UInt32 source, const Bool loop) { alSourcei(source, AL_LOOPING, loop ? AL_TRUE : AL_FALSE); }
 
 Bool audio_backend_al_is_source_omnidirectional(const UInt32 source) {
     Flt32 inner_angle_ = 0.0f;
@@ -310,8 +300,7 @@ Bool audio_backend_al_delete_buffers(UInt32 *buffers, const ByteSize count) {
     return true;
 }
 
-Bool audio_backend_al_buffer_fill_data(const UInt32 buffer, const AudioChannelFormat channel_format, const VoidPtr data,
-                                       const ByteSize size, const ByteSize sample_rate) {
+Bool audio_backend_al_buffer_fill_data(const UInt32 buffer, const AudioChannelFormat channel_format, const VoidPtr data, const ByteSize size, const ByteSize sample_rate) {
     if ((buffer == 0x00) || !data || (size == 0) || (sample_rate == 0))
         return false;
 

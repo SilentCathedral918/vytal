@@ -60,6 +60,5 @@ Bool audio_backend_al_generate_buffer(UInt32 *buffer);
 Bool audio_backend_al_generate_buffers(UInt32 *buffers, const ByteSize count);
 Bool audio_backend_al_delete_buffer(UInt32 *buffer);
 Bool audio_backend_al_delete_buffers(UInt32 *buffers, const ByteSize count);
-Bool audio_backend_al_buffer_fill_data(const UInt32 buffer, const AudioChannelFormat channel_format, const VoidPtr data,
-                                       const ByteSize size, const ByteSize sample_rate);
+Bool audio_backend_al_buffer_fill_data(const UInt32 buffer, const AudioChannelFormat channel_format, const VoidPtr data, const ByteSize size, const ByteSize sample_rate);
 Bool audio_backend_al_is_buffer_valid(const UInt32 buffer);

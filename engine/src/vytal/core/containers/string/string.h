@@ -31,48 +31,20 @@ VT_API Bool   container_string_lowercase(String str);
 VT_API Bool   container_string_uppercase(String str);
 VT_API Bool   container_string_trim(String str);
 
-VT_API VT_INLINE Bool container_string_append_int8(String str, Int8 input) {
-    return container_string_append_formatted(str, "%hhd", input);
-}
-VT_API VT_INLINE Bool container_string_append_int16(String str, Int16 input) {
-    return container_string_append_formatted(str, "%hd", input);
-}
-VT_API VT_INLINE Bool container_string_append_int32(String str, Int32 input) {
-    return container_string_append_formatted(str, "%d", input);
-}
-VT_API VT_INLINE Bool container_string_append_int64(String str, Int64 input) {
-    return container_string_append_formatted(str, "%lld", input);
-}
-VT_API VT_INLINE Bool container_string_append_uint8(String str, UInt8 input) {
-    return container_string_append_formatted(str, "%hhu", input);
-}
-VT_API VT_INLINE Bool container_string_append_uint16(String str, UInt16 input) {
-    return container_string_append_formatted(str, "%hu", input);
-}
-VT_API VT_INLINE Bool container_string_append_uint32(String str, UInt32 input) {
-    return container_string_append_formatted(str, "%u", input);
-}
-VT_API VT_INLINE Bool container_string_append_uint64(String str, UInt64 input) {
-    return container_string_append_formatted(str, "%llu", input);
-}
-VT_API VT_INLINE Bool container_string_append_float(String str, Flt32 input) {
-    return container_string_append_formatted(str, "%f", input);
-}
-VT_API VT_INLINE Bool container_string_append_double(String str, Flt64 input) {
-    return container_string_append_formatted(str, "%lf", input);
-}
-VT_API VT_INLINE Bool container_string_append_bool(String str, Bool input) {
-    return container_string_append(str, input ? "true" : "false");
-}
-VT_API VT_INLINE Bool container_string_append_boolnum(String str, Bool input) {
-    return container_string_append_char(str, input ? '1' : '0');
-}
-VT_API VT_INLINE Bool container_string_equals(String left, ConstStr right, Bool sensitive) {
-    return (container_string_compare(left, right, sensitive) == 0);
-}
-VT_API VT_INLINE Bool container_string_equals_string(String left, String right, Bool sensitive) {
-    return (container_string_compare_string(left, right, sensitive) == 0);
-}
+VT_API VT_INLINE Bool container_string_append_int8(String str, Int8 input) { return container_string_append_formatted(str, "%hhd", input); }
+VT_API VT_INLINE Bool container_string_append_int16(String str, Int16 input) { return container_string_append_formatted(str, "%hd", input); }
+VT_API VT_INLINE Bool container_string_append_int32(String str, Int32 input) { return container_string_append_formatted(str, "%d", input); }
+VT_API VT_INLINE Bool container_string_append_int64(String str, Int64 input) { return container_string_append_formatted(str, "%lld", input); }
+VT_API VT_INLINE Bool container_string_append_uint8(String str, UInt8 input) { return container_string_append_formatted(str, "%hhu", input); }
+VT_API VT_INLINE Bool container_string_append_uint16(String str, UInt16 input) { return container_string_append_formatted(str, "%hu", input); }
+VT_API VT_INLINE Bool container_string_append_uint32(String str, UInt32 input) { return container_string_append_formatted(str, "%u", input); }
+VT_API VT_INLINE Bool container_string_append_uint64(String str, UInt64 input) { return container_string_append_formatted(str, "%llu", input); }
+VT_API VT_INLINE Bool container_string_append_float(String str, Flt32 input) { return container_string_append_formatted(str, "%f", input); }
+VT_API VT_INLINE Bool container_string_append_double(String str, Flt64 input) { return container_string_append_formatted(str, "%lf", input); }
+VT_API VT_INLINE Bool container_string_append_bool(String str, Bool input) { return container_string_append(str, input ? "true" : "false"); }
+VT_API VT_INLINE Bool container_string_append_boolnum(String str, Bool input) { return container_string_append_char(str, input ? '1' : '0'); }
+VT_API VT_INLINE Bool container_string_equals(String left, ConstStr right, Bool sensitive) { return (container_string_compare(left, right, sensitive) == 0); }
+VT_API VT_INLINE Bool container_string_equals_string(String left, String right, Bool sensitive) { return (container_string_compare_string(left, right, sensitive) == 0); }
 
 VT_API Str      container_string_get(String str);
 VT_API ByteSize container_string_length(String str);

@@ -5,8 +5,7 @@
 #include "vytal/core/containers/array/array.h"
 #include "vytal/core/misc/console/console.h"
 
-void _audio_transition_set_volume_callback(AudioSource *source, AudioTransitionData current, AudioTransitionData target,
-                                           Flt32 progress) {
+void _audio_transition_set_volume_callback(AudioSource *source, AudioTransitionData current, AudioTransitionData target, Flt32 progress) {
     Flt32 vol_curr_   = current._value_flt32;
     Flt32 vol_target_ = target._value_flt32;
     Flt32 vol_new_    = vol_curr_ + ((vol_target_ - vol_curr_) * progress);
@@ -14,8 +13,7 @@ void _audio_transition_set_volume_callback(AudioSource *source, AudioTransitionD
     audio_utils_source_set_volume(source, vol_new_);
 }
 
-void _audio_transition_set_pitch_callback(AudioSource *source, AudioTransitionData current, AudioTransitionData target,
-                                          Flt32 progress) {
+void _audio_transition_set_pitch_callback(AudioSource *source, AudioTransitionData current, AudioTransitionData target, Flt32 progress) {
     Flt32 pit_curr_   = current._value_flt32;
     Flt32 pit_target_ = target._value_flt32;
     Flt32 pit_new_    = pit_curr_ + ((pit_target_ - pit_curr_) * progress);
@@ -67,6 +65,5 @@ Bool audio_transition_cross_set_volume(AudioSource *out_source, AudioSource *in_
     if (out_source->_volume == out_target_ && in_source->_volume == in_target_)
         return true; // targets already reached
 
-    return audio_transition_set_volume(out_source, out_target_, duration_ms) &&
-           audio_transition_set_volume(in_source, in_target_, duration_ms);
+    return audio_transition_set_volume(out_source, out_target_, duration_ms) && audio_transition_set_volume(in_source, in_target_, duration_ms);
 }

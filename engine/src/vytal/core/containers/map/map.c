@@ -25,13 +25,9 @@ typedef struct Container_Map_Data {
 
 static UInt32 vytal_container_map_probe_length = 0;
 
-VT_INLINE MapData *_container_map_get_internal_data(Map map) {
-    return (!map || !(map->_internal_data)) ? NULL : (map->_internal_data);
-}
-VT_INLINE Bool _container_map_empty(Map map) { return (_container_map_get_internal_data(map)->_length == 0); }
-VT_INLINE Bool _container_map_full(Map map) {
-    return (_container_map_get_internal_data(map)->_length == _container_map_get_internal_data(map)->_capacity);
-}
+VT_INLINE MapData *_container_map_get_internal_data(Map map) { return (!map || !(map->_internal_data)) ? NULL : (map->_internal_data); }
+VT_INLINE Bool     _container_map_empty(Map map) { return (_container_map_get_internal_data(map)->_length == 0); }
+VT_INLINE Bool     _container_map_full(Map map) { return (_container_map_get_internal_data(map)->_length == _container_map_get_internal_data(map)->_capacity); }
 
 Map container_map_construct(const ByteSize data_size) {
     if (data_size == 0)
