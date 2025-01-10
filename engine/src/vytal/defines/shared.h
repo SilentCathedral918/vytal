@@ -22,10 +22,15 @@
 
 #define VT_CAST(type, value) ((type)(value))
 
-// ------------------------- struct assignment ------------------------- //
+// ----------------------- struct/union assignment ----------------------- //
 
 #define VT_STRUCT(type, ...)                                                                                                                                                                                                                                   \
     (type) { __VA_ARGS__ }
+
+#define VT_UNION(type, ...)                                                                                                                                                                                                                                    \
+    (type) {                                                                                                                                                                                                                                                   \
+        ._elements = { __VA_ARGS__ }                                                                                                                                                                                                                           \
+    }
 
 // ------------------------- force-inlining ------------------------- //
 

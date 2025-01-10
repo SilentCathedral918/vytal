@@ -4,7 +4,7 @@
 
 // ------------------------------------- vectors ------------------------------------- //
 
-typedef union Math_Vector2_Float {
+typedef union Math_Vector2 {
     struct {
         // first component
         union {
@@ -18,9 +18,9 @@ typedef union Math_Vector2_Float {
     };
 
     Flt32 _elements[2];
-} Vec2f;
+} Vec2;
 
-typedef union Math_Vector3_Float {
+typedef union Math_Vector3 {
     struct {
         // first component
         union {
@@ -39,9 +39,9 @@ typedef union Math_Vector3_Float {
     };
 
     Flt32 _elements[3];
-} Vec3f;
+} Vec3;
 
-typedef union Math_Vector4_Float {
+typedef union Math_Vector4 {
     struct {
         // first component
         union {
@@ -65,74 +65,11 @@ typedef union Math_Vector4_Float {
     };
 
     Flt32 _elements[4];
-} Vec4f;
-
-typedef union Math_Vector2_Integer {
-    struct {
-        // first component
-        union {
-            Int32 _x, _w, _u;
-        };
-
-        // second component
-        union {
-            Int32 _y, _h, _v;
-        };
-    };
-
-    Int32 _elements[2];
-} Vec2i;
-
-typedef union Math_Vector3_Integer {
-    struct {
-        // first component
-        union {
-            Int32 _x, _r;
-        };
-
-        // second component
-        union {
-            Int32 _y, _g;
-        };
-
-        // third component
-        union {
-            Int32 _z, _b;
-        };
-    };
-
-    Int32 _elements[3];
-} Vec3i;
-
-typedef union Math_Vector4_Integer {
-    struct {
-        // first component
-        union {
-            Int32 _x, _r;
-        };
-
-        // second component
-        union {
-            Int32 _y, _g;
-        };
-
-        // third component
-        union {
-            Int32 _z, _b;
-        };
-
-        // fourth component
-        union {
-            Int32 _w, _a;
-        };
-    };
-
-    Int32 _elements[4];
-} Vec4i;
+} Vec4;
 
 // ------------------------------------- matrices ------------------------------------- //
 
-typedef union Math_Matrix_2x2_Float {
+typedef union Math_Matrix_2x2 {
     struct {
         Flt32 _x1y1;
         Flt32 _x2y1;
@@ -142,9 +79,9 @@ typedef union Math_Matrix_2x2_Float {
     };
 
     Flt32 _elements[4];
-} Mat2f;
+} Mat2;
 
-typedef union Math_Matrix_3x3_Float {
+typedef union Math_Matrix_3x3 {
     struct {
         Flt32 _x1y1;
         Flt32 _x2y1;
@@ -160,9 +97,9 @@ typedef union Math_Matrix_3x3_Float {
     };
 
     Flt32 _elements[9];
-} Mat3f;
+} Mat3;
 
-typedef union Math_Matrix_4x4_Float {
+typedef union Math_Matrix_4x4 {
     struct {
         Flt32 _x1y1;
         Flt32 _x2y1;
@@ -186,68 +123,11 @@ typedef union Math_Matrix_4x4_Float {
     };
 
     Flt32 _elements[16];
-} Mat4f;
-
-typedef union Math_Matrix_2x2_Integer {
-    struct {
-        Int32 _x1y1;
-        Int32 _x2y1;
-
-        Int32 _x1y2;
-        Int32 _x2y2;
-    };
-
-    Int32 _elements[4];
-} Mat2i;
-
-typedef union Math_Matrix_3x3_Integer {
-    struct {
-        Int32 _x1y1;
-        Int32 _x2y1;
-        Int32 _x3y1;
-
-        Int32 _x1y2;
-        Int32 _x2y2;
-        Int32 _x3y2;
-
-        Int32 _x1y3;
-        Int32 _x2y3;
-        Int32 _x3y3;
-    };
-
-    Int32 _elements[9];
-} Mat3i;
-
-typedef union Math_Matrix_4x4_Integer {
-    struct {
-        Int32 _x1y1;
-        Int32 _x2y1;
-        Int32 _x3y1;
-        Int32 _x4y1;
-
-        Int32 _x1y2;
-        Int32 _x2y2;
-        Int32 _x3y2;
-        Int32 _x4y2;
-
-        Int32 _x1y3;
-        Int32 _x2y3;
-        Int32 _x3y3;
-        Int32 _x4y3;
-
-        Int32 _x1y4;
-        Int32 _x2y4;
-        Int32 _x3y4;
-        Int32 _x4y4;
-    };
-
-    Int32 _elements[16];
-} Mat4i;
+} Mat4;
 
 // ------------------------------------- quaternion ------------------------------------- //
 
-typedef Vec4f Quat4f;
-typedef Vec4i Quat4i;
+typedef Vec4 Quat4;
 
 // --------------------------------- macro utilities --------------------------------- //
 

@@ -149,40 +149,6 @@ Bool application_construct(void) {
 
     // handle startups here...
     {
-        audio_load("test", "test.wav");
-        audio_load("report", "bugreporter_succeeded.wav");
-        audio_load("indoor", "chatter_ambience.wav");
-        audio_load("outdoor", "crickets.wav");
-        audio_load("knocking_on_gate", "knocking_on_gate.wav");
-        audio_load("gate_latch", "gate_latch.wav");
-        audio_load("car_engine_start", "car_engine_start.wav");
-        audio_load("car_passing_by", "car_passing_by.wav");
-        audio_load("stop_on_gravel", "abrupt_stop_on_gravel.wav");
-
-        audio_create_source("gate_latch", "gate_latch");
-        audio_create_source("knocking_on_gate", "knocking_on_gate");
-        audio_create_source("car_passing_by", "car_passing_by");
-        audio_create_source("car_engine_start", "car_engine_start");
-
-        audio_play("indoor", true);
-        audio_play("outdoor", true);
-        audio_mute("indoor");
-        audio_mute("outdoor");
-
-        audio_create_sequence("background", false);
-        audio_create_sequence("car", true);
-
-        audio_create_sequence_task_play("background", "task_play_latch", "gate_latch", 0, 1.0f);
-        audio_create_sequence_task_play("background", "task_play_knocking", "knocking_on_gate", 2000, 1.0f);
-        audio_create_sequence_task_fade("background", "task_fade_in_indoor_ambience", "indoor", 4000, 5500, audio_get_source("indoor")->_volume, 1.0f);
-        audio_create_sequence_task_crossfade("background", "task_crossfade_out_ambient_in_outdoor", "indoor", "outdoor", 9500, 2000, 1.0f, 0.0f);
-
-        audio_create_sequence_task_play("car", "task_car_engine_start", "car_engine_start", 12000, 1.0f);
-        audio_create_sequence_task_fade("car", "task_car_engine_fade_out", "car_engine_start", 13000, 1000, audio_get_source("car_engine_start")->_volume, 0.0f);
-        audio_create_sequence_task_play("car", "task_play_car_passing_by", "car_passing_by", 15000, 0.0f);
-        audio_create_sequence_task_fade("car", "task_fade_in_car_pasing_by", "car_passing_by", 15000, 1500, 0.0f, 1.0f);
-        audio_create_sequence_task_fade("car", "task_fade_out_car_pasing_by", "car_passing_by", 16500, 2000, 1.0f, 0.0f);
-        audio_create_sequence_task_stop("car", "task_stop_car_pasing_by", "car_passing_by", 18500);
     }
 
     _application_report_status("construct state completed, proceeding to game loop...");
@@ -222,19 +188,6 @@ Bool application_update(void) {
 
             // handle updates here...
             {
-                if (hal_input_is_key_pressed(VT_KEYCODE_T))
-                    audio_play("test", false);
-
-                if (hal_input_is_key_pressed(VT_KEYCODE_R))
-                    audio_play("report", false);
-
-                if (hal_input_is_key_pressed(VT_KEYCODE_S)) {
-                    AudioSequence *sequence_ = audio_get_sequence("car");
-                    audio_create_sequence_task_play("car", "task_play_car_passing_by", "car_passing_by", sequence_->_elapsed_ms, 0.0f);
-                    audio_create_sequence_task_fade("car", "task_fade_in_car_pasing_by", "car_passing_by", sequence_->_elapsed_ms, 1500, 0.0f, 1.0f);
-                    audio_create_sequence_task_fade("car", "task_fade_out_car_pasing_by", "car_passing_by", sequence_->_elapsed_ms + 1500, 2000, 1.0f, 0.0f);
-                    audio_create_sequence_task_stop("car", "task_stop_car_pasing_by", "car_passing_by", sequence_->_elapsed_ms + 3500);
-                }
             }
 
             // update modules

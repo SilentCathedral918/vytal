@@ -5,10 +5,8 @@
 
 // ------------------------------ transition data ------------------------------ //
 
-typedef union Audio_Transition_Data {
-    Flt32  _value_flt32;
-    Int32  _value_int32;
-    UInt32 _value_uint32;
+typedef struct Audio_Transition_Data {
+    Flt32 _value_flt32;
 } AudioTransitionData;
 
 // ----------------------------------- task ----------------------------------- //
