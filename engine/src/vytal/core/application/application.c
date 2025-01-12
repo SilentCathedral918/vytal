@@ -3,9 +3,11 @@
 #include "vytal/audio/audio.h"
 #include "vytal/audio/module/audio.h"
 #include "vytal/core/containers/map/map.h"
+#include "vytal/core/hal/clock/wallclock.h"
 #include "vytal/core/hal/input/input.h"
 #include "vytal/core/hal/memory/vtmem.h"
 #include "vytal/core/logger/logger.h"
+#include "vytal/core/math/rng/rng.h"
 #include "vytal/core/misc/console/console.h"
 #include "vytal/core/misc/string/vtstr.h"
 #include "vytal/core/modules/input/input.h"
@@ -41,6 +43,10 @@ Bool _application_core_startup(void) {
 
     // logger startup
     if (!logger_startup())
+        return false;
+
+    // initialize RNG
+    if (!math_rng_initialize(hal_wallclock_now()._timestamp))
         return false;
 
     return true;
