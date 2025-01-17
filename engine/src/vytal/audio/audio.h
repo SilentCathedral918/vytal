@@ -28,6 +28,7 @@ VT_API Bool           audio_set_pitch(ConstStr id, const Flt32 pitch);
 VT_API Bool           audio_interpolate_volume(ConstStr id, const Flt32 target, const UInt32 duration_ms);
 VT_API Bool           audio_interpolate_pitch(ConstStr id, const Flt32 target, const UInt32 duration_ms);
 VT_API Bool           audio_mute(ConstStr id);
+VT_API Bool           audio_set_looping(ConstStr id, const Bool loop);
 VT_API Bool           audio_cross_interpolate_volume(ConstStr out_audio, ConstStr in_audio, const UInt32 duration_ms);
 VT_API AudioSequence *audio_create_sequence(ConstStr id, const Bool retain);
 VT_API Bool           audio_remove_sequence(ConstStr id);

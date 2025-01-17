@@ -36,7 +36,8 @@
     "variant": "c",
     "compare": "c",
     "map": "c",
-    "limits": "c"
+    "limits": "c",
+    "shared_mutex": "c"
   },
 
   // editor styling
