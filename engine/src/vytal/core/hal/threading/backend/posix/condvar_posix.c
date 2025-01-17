@@ -7,12 +7,10 @@
 
 typedef struct CondVar_Handle {
     pthread_cond_t _handle;
-    ByteSize       _size;
 } CondVarHandle;
 
 typedef struct Mutex_Handle {
     pthread_mutex_t _handle;
-    ByteSize        _size;
 } MutexHandle;
 
 VT_INLINE CondVarHandle *_hal_condvar_posix_get_handle(CondVar *cv) { return VT_CAST(CondVarHandle *, cv->_handle); }
@@ -24,8 +22,6 @@ CondVar *hal_condvar_posix_construct(void) {
 
     CondVar       *state_  = VT_CAST(CondVar *, chunk_);
     CondVarHandle *handle_ = VT_CAST(CondVarHandle *, state_ + 1);
-    handle_->_size         = sizeof(pthread_cond_t);
-
     if (pthread_cond_init(&(handle_->_handle), NULL) != 0) {
         memory_manager_deallocate(state_, MEMORY_TAG_THREADING);
         return NULL;
@@ -51,7 +47,7 @@ Bool hal_condvar_posix_wait_timed(CondVar *cv, Mutex *mutex, const UInt32 timeou
     HiResClock    clock_;
     HiResTimeSpec spec_;
     hal_hiresclock_init(&clock_);
-    Flt64 elapsed_ns_ = hal_hiresclock_getelapsed_nanosec(&clock);
+    Flt64 elapsed_ns_ = hal_hiresclock_getelapsed_nanosec(&clock_);
     spec_.tv_sec      = elapsed_ns_ / 1000000000.0;
     spec_.tv_nsec     = VT_CAST(UInt64, elapsed_ns_) % 1000000000;
 
