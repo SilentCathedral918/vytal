@@ -1,5 +1,6 @@
 #pragma once
 
+#include "container.h"
 #include "types.h"
 
 // ------------------------------- backends ------------------------------- //
@@ -34,3 +35,17 @@ typedef struct Thread_Conditional_Variable {
 typedef struct Thread_RWLock {
     VoidPtr _handle;
 } RWLock;
+
+// ----------------------------- task queue ----------------------------- //
+
+typedef struct Thread_Task {
+    UInt64 _id;
+    void (*_func)(void *);
+    VoidPtr _arg;
+} Task;
+
+typedef struct Thread_Task_Queue {
+    Queue    _tasks;
+    Mutex   *_mutex;
+    CondVar *_cond_var;
+} TaskQueue;

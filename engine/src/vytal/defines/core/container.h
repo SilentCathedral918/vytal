@@ -25,3 +25,10 @@ typedef struct Container_Array {
     VoidPtr _internal_data;
 } Container_Array;
 typedef Container_Array *Array;
+
+// ------------------------------ queue ------------------------------ //
+
+typedef struct Container_Queue {
+    VoidPtr _internal_data;
+} Container_Queue;
+typedef Container_Queue *Queue;

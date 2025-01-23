@@ -6,8 +6,7 @@
 #include "vytal/core/hal/clock/wallclock.h"
 #include "vytal/core/hal/input/input.h"
 #include "vytal/core/hal/memory/vtmem.h"
-#include "vytal/core/hal/threading/sync.h"
-#include "vytal/core/hal/threading/thread.h"
+#include "vytal/core/hal/threading/module/thread.h"
 #include "vytal/core/logger/logger.h"
 #include "vytal/core/math/rng/rng.h"
 #include "vytal/core/misc/console/console.h"
@@ -151,48 +150,12 @@ Bool application_preconstruct(void) {
     return true;
 }
 
-void _application_test_thread_func(VoidPtr arg) {
-    Int32 *counter = VT_CAST(Int32 *, arg);
-    for (ByteSize i = 0; i < 1000; ++i) {
-        (*counter)++;
-    }
-}
-
 Bool application_construct(void) {
     if (!state)
         return false;
 
     // handle startups here...
     {
-        // Testing threading primitives
-        VT_LOG_INFO("Engine", "Testing threading system...");
-
-        // Test thread creation
-        Int32   counter = 0;
-        Thread *thread  = hal_thread_construct(VT_CAST(VoidPtr, _application_test_thread_func), &counter);
-        if (!thread) {
-            VT_LOG_INFO("Engine", "Thread creation failed.");
-            return false;
-        }
-
-        // Wait for thread to complete and check results
-        if (!hal_thread_join(thread) || counter != 1000) {
-            VT_LOG_INFO("Engine", "Thread join failed or incorrect counter value.");
-            hal_thread_destruct(thread);
-            return false;
-        }
-        hal_thread_destruct(thread);
-
-        // Test mutex functionality
-        Mutex *mutex = hal_mutex_construct();
-        if (!mutex || !hal_mutex_lock(mutex)) {
-            VT_LOG_INFO("Engine", "Mutex test failed.");
-            return false;
-        }
-        hal_mutex_unlock(mutex);
-        hal_mutex_destruct(mutex);
-
-        VT_LOG_INFO("Engine", "Threading system tests passed.");
     }
 
     _application_report_status("construct state completed, proceeding to game loop...");
