@@ -5,4 +5,4 @@
 
 VT_API Thread *hal_thread_posix_construct(VoidPtr func, VoidPtr args);
 VT_API Bool    hal_thread_posix_join(Thread *thread);
-VT_API Bool    hal_thread_posix_destroy(Thread *thread);
+VT_API Bool    hal_thread_posix_destruct(Thread *thread);

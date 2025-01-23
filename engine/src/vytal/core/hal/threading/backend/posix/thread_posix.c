@@ -33,4 +33,4 @@ Bool hal_thread_posix_join(Thread *thread) {
     thread->_state = THREAD_STATE_TERMINATED;
     return true;
 }
-Bool hal_thread_posix_destroy(Thread *thread) { return (!thread || (thread->_state != THREAD_STATE_TERMINATED)) ? false : memory_manager_deallocate(thread, MEMORY_TAG_THREADING); }
+Bool hal_thread_posix_destruct(Thread *thread) { return (!thread || (thread->_state != THREAD_STATE_TERMINATED)) ? false : (pthread_detach(*VT_CAST(pthread_t *, thread->_handle)) == 0) && memory_manager_deallocate(thread, MEMORY_TAG_THREADING); }

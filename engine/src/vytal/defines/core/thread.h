@@ -2,6 +2,10 @@
 
 #include "types.h"
 
+// ------------------------------- backends ------------------------------- //
+
+typedef enum Thread_Backend { THREAD_BACKEND_POSIX, THREAD_BACKEND_WIN32 } ThreadBackend;
+
 // -------------------------------- thread -------------------------------- //
 
 typedef enum Thread_State { THREAD_STATE_CREATED, THREAD_STATE_RUNNING, THREAD_STATE_TERMINATED } ThreadState;

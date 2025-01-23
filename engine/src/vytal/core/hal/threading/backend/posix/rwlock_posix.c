@@ -4,7 +4,7 @@
 
 #include <pthread.h>
 
-RWLock *hal_rwlock_construct(void) {
+RWLock *hal_rwlock_posix_construct(void) {
     VoidPtr chunk_ = memory_manager_allocate(0, MEMORY_TAG_THREADING);
     if (!chunk_)
         return NULL;
@@ -19,7 +19,7 @@ RWLock *hal_rwlock_construct(void) {
     state_->_handle = handle_;
     return state_;
 }
-Bool hal_rwlock_destruct(RWLock *rwlock) {
+Bool hal_rwlock_posix_destruct(RWLock *rwlock) {
     if (!rwlock)
         return false;
 
@@ -28,6 +28,6 @@ Bool hal_rwlock_destruct(RWLock *rwlock) {
 
     return memory_manager_deallocate(rwlock, MEMORY_TAG_THREADING);
 }
-Bool hal_rwlock_readlock(RWLock *rwlock) { return !rwlock ? false : (pthread_rwlock_rdlock(rwlock->_handle) == 0); }
-Bool hal_rwlock_writelock(RWLock *rwlock) { return !rwlock ? false : (pthread_rwlock_wrlock(rwlock->_handle) == 0); }
-Bool hal_rwlock_unlock(RWLock *rwlock) { return !rwlock ? false : (pthread_rwlock_unlock(rwlock->_handle) == 0); }
+Bool hal_rwlock_posix_readlock(RWLock *rwlock) { return !rwlock ? false : (pthread_rwlock_rdlock(rwlock->_handle) == 0); }
+Bool hal_rwlock_posix_writelock(RWLock *rwlock) { return !rwlock ? false : (pthread_rwlock_wrlock(rwlock->_handle) == 0); }
+Bool hal_rwlock_posix_unlock(RWLock *rwlock) { return !rwlock ? false : (pthread_rwlock_unlock(rwlock->_handle) == 0); }
