@@ -14,6 +14,7 @@
 #include "vytal/core/modules/input/input.h"
 #include "vytal/core/modules/window/window.h"
 #include "vytal/core/platform/window/window.h"
+#include "vytal/managers/asset/astmgr.h"
 #include "vytal/managers/memory/memmgr.h"
 #include "vytal/managers/module/modmgr.h"
 
@@ -50,10 +51,16 @@ Bool _application_core_startup(void) {
     if (!math_rng_initialize(hal_wallclock_now()._timestamp))
         return false;
 
+    // asset manager startup
+    asset_manager_startup();
+
     return true;
 }
 
 Bool _application_core_shutdown(void) {
+    // asset manager shutdown
+    asset_manager_shutdown();
+
     // logger startup
     if (!logger_shutdown())
         return false;
