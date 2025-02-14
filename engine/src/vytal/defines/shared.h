@@ -1,77 +1,52 @@
 #pragma once
 
-// ------------------------- import/export DLL ------------------------- //
+// import/export dll ------------------------------------------------- //
 
-#if defined(VT_EXPORT_DLL)
+#if defined(VYTAL_EXPORT_DLL)
 #    if defined(_MSC_VER)
-#        define VT_API __declspec(dllexport)
+#        define VYTAL_API __declspec(dllexport)
 #    else
-#        define VT_API __attribute__((visibility("default")))
+#        define VYTAL_API __attribute__((visibility("default")))
 #    endif
 
 #else
 #    if defined(_MSC_VER)
-#        define VT_API __declspec(dllimport)
+#        define VYTAL_API __declspec(dllimport)
 #    else
-#        define VT_API
+#        define VYTAL_API
 #    endif
 
 #endif
 
-// ------------------------- explicit casting ------------------------- //
-
-#define VT_CAST(type, value) ((type)(value))
-
-// ----------------------- struct/union assignment ----------------------- //
-
-#define VT_STRUCT(type, ...)                                                                                                                                                                                                                                   \
-    (type) { __VA_ARGS__ }
-
-#define VT_UNION(type, ...)                                                                                                                                                                                                                                    \
-    (type) {                                                                                                                                                                                                                                                   \
-        ._elements = { __VA_ARGS__ }                                                                                                                                                                                                                           \
-    }
-
-// ------------------------- force-inlining ------------------------- //
+// force-inlining ---------------------------------------------------- //
 
 #if defined(_MSC_VER)
-#    define VT_INLINE __forceinline
-#    define VT_NOINLINE __declspec(noinline)
+#    define VYTAL_INLINE __forceinline
+#    define VYTAL_NOINLINE __declspec(noinline)
 
 #elif defined(__clang__) || defined(__GNUC__)
-#    define VT_INLINE __attribute__((always_inline)) inline
-#    define VT_NOINLINE __attribute__((noinline))
+#    define VYTAL_INLINE __attribute__((always_inline)) inline
+#    define VYTAL_NOINLINE __attribute__((noinline))
 
 #else
-#    define VT_INLINE static inline
-#    define VT_NOINLINE
+#    define VYTAL_INLINE static inline
+#    define VYTAL_NOINLINE
 
 #endif
 
-// ------------------------- static array size ------------------------- //
+// platform detection ------------------------------------------------ //
 
-#define VT_STATIC_ARRAY_SIZE(array) (sizeof(array) / sizeof(*(array)))
-
-// ------------------------- platform detection  ------------------------- //
-
-// --- Windows
-#if defined(_WIN32) || defined(__MINGW32__)
-#    if !defined(_WIN64) || !defined(__MINGW64__)
+#if defined(_MSC_VER)  // MSVC
+#    if !defined(_WIN64)
 #        error "64-bit is required."
 #    else
-#        define VT_PLATFORM_WINDOWS 1
+#        define VYTAL_PLATFORM_WINDOWS 1
 #    endif
 
-// --- Linux
-#elif defined(__linux__)
-#    define VT_PLATFORM_LINUX 1
-
-#endif
-
-// ------------------------- disable warnings  ------------------------- //
-
-#if defined(__GNUC__)
-#    define VT_VAR_NOT_USED __attribute__((unused))
-#else
-#    define VT_VAR_NOT_USED
+#elif defined(__MINGW32__)  // MinGW
+#    if !defined(__MINGW64__)
+#        error "64-bit is required."
+#    else
+#        define VYTAL_PLATFORM_WINDOWS 1
+#    endif
 #endif

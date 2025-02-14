@@ -1,59 +1,64 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "type": "shell",
-      "label": "Build Engine",
-      "windows": {
-        "command": "${workspaceFolder}/engine/build.bat"
-      },
-      "linux": {
-        "command": "${workspaceFolder}/engine/build.sh"
-      },
-      "options": {
-        "cwd": "${workspaceFolder}/engine"
-      },
-      "problemMatcher": ["$gcc"],
-      "group": {
-        "kind": "build",
-        "isDefault": false
-      }
-    },
-    {
-      "type": "shell",
-      "label": "Build Sandbox",
-      "windows": {
-        "command": "${workspaceFolder}/sandbox/build.bat"
-      },
-      "linux": {
-        "command": "${workspaceFolder}/sandbox/build.sh"
-      },
-      "options": {
-        "cwd": "${workspaceFolder}/sandbox"
-      },
-      "problemMatcher": ["$gcc"],
-      "group": {
-        "kind": "build",
-        "isDefault": false
-      }
-    },
-    {
-      "type": "shell",
-      "label": "Build All",
-      "windows": {
-        "command": "${workspaceFolder}/build_all.bat"
-      },
-      "linux": {
-        "command": "${workspaceFolder}/build_all.sh"
-      },
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": ["$gcc"],
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      }
-    }
-  ]
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Build Engine",
+
+            "windows": {
+                "command": "${workspaceFolder}/engine/build.bat"
+            },
+
+            "options": {
+                "cwd": "${workspaceFolder}/engine",
+            },
+            "problemMatcher": ["$gcc"],
+
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+
+        {
+            "type": "shell",
+            "label": "Build Sandbox",
+
+            "windows": {
+                "command": "${workspaceFolder}/sandbox/build.bat"
+            },
+
+            "options": {
+                "cwd": "${workspaceFolder}/sandbox"
+            },
+            "problemMatcher": ["$gcc"],
+
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+
+        {
+            "type": "shell",
+            "label": "Build All",
+
+            "windows": {
+                "command": "${workspaceFolder}/build.bat"
+            },
+            "linux": {
+                "command": "${workspaceFolder}/build.sh"
+            },
+
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": ["$gcc"],
+
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
 }

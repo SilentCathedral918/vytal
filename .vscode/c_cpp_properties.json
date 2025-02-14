@@ -1,42 +1,24 @@
 {
-    "version": 4,
     "configurations": [
         {
-            "name": "Win32",
-            "includePath": [
-                "${workspaceFolder}/engine/src/**",
-                "${VULKAN_SDK}/Include",
-                "${GLFW_PATH}/include",
-                "${OPENAL_SOFT_PATH}/include"
-            ],
-            "defines": [
-                "VT_DEBUG",
-                "VT_EXPORT_DLL",
-                "VT_ENABLE_ASSERTIONS"
-            ],
-            "windowsSdkVersion": "10.0.26100.0",
+            "name": "Windows",
+            "intelliSenseMode": "gcc-x64",
             "compilerPath": "C:\\mingw64\\bin\\gcc.exe",
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "gcc-x64"
-        },
-        {
-            "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/engine/src/**",
-                "${VULKAN_SDK}/include",
-                "${GLFW_PATH}/include",
-                "${OPENAL_SOFT_PATH}/include"
+                "${workspaceFolder}/engine/src/**"
             ],
             "defines": [
-                "VT_DEBUG",
-                "VT_EXPORT_DLL",
-                "VT_ENABLE_ASSERTIONS"
+                "VYTAL_DEBUG",
+                "VYTAL_EXPORT_DLL",
+                "VYTAL_ENABLE_ASSERTIONS",
+                "_CRT_SECURE_NO_WARNINGS"
             ],
-            "compilerPath": "/usr/bin/gcc",
-            "cStandard": "c17",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "gcc-x64"
+            "compilerArgs": [
+                "-mavx"
+            ]
         }
-    ]
+    ],
+    "version": 4
 }

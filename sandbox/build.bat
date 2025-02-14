@@ -19,11 +19,13 @@ rem --- linker flags
 set "linker_flags=-L../bin/ -lengine"
 
 rem --- defines
-set "defines=-DVT_DEBUG -DVT_IMPORT_DLL"
+set "defines=-DVYTAL_DEBUG -DVYTAL_IMPORT_DLL"
 
 rem --- build command
-echo "Building %codebase%..."
+echo Building '%codebase%'...
 gcc %c_filenames% %compiler_flags% %include_flags% %defines% %linker_flags% -o ../bin/%codebase%.exe
 
-echo "%codebase% built..."
+echo '%codebase%' build completed.
 endlocal
+
+

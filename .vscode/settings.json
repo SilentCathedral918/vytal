@@ -1,55 +1,13 @@
 {
-  // C/C++
-  "C_Cpp.vcFormat.space.pointerReferenceAlignment": "right",
-  "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: LLVM, AlignConsecutiveDeclarations: true, AlignConsecutiveAssignments: true, IndentWidth: 4, IndentPPDirectives: AfterHash, BreakBeforeBraces: Attach, ColumnLimit: 256 }",
-  "C_Cpp.default.compilerPath": "C:\\mingw64\\bin\\gcc.exe",
+  "C_Cpp.default.includePath": [
+    "${workspaceFolder}/**"
+  ],
+  
+  "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, AlignConsecutiveDeclarations: true, AlignConsecutiveAssignments: true, IndentWidth: 4, ColumnLimit: 0, IndentPPDirectives: AfterHash}",
 
-  // file associations
-  "files.associations": {
-    "*.h": "c",
-    "charconv": "c",
-    "optional": "c",
-    "format": "c",
-    "array": "c",
-    "tuple": "c",
-    "type_traits": "c",
-    "random": "c",
-    "string": "c",
-    "string_view": "c",
-    "span": "c",
-    "ratio": "c",
-    "system_error": "c",
-    "functional": "c",
-    "utility": "c",
-    "sstream": "c",
-    "thread": "c",
-    "vector": "c",
-    "deque": "c",
-    "list": "c",
-    "unordered_map": "c",
-    "unordered_set": "c",
-    "initializer_list": "c",
-    "text_encoding": "c",
-    "cstdint": "c",
-    "memory": "c",
-    "typeindex": "c",
-    "variant": "c",
-    "compare": "c",
-    "map": "c",
-    "limits": "c",
-    "shared_mutex": "c"
-  },
-
-  // editor styling
   "editor.cursorStyle": "block",
-  "editor.cursorBlinking": "blink",
-  "editor.cursorSmoothCaretAnimation": "on",
-  "editor.formatOnSave": true,
+
   "editor.tabSize": 4,
   "editor.indentSize": "tabSize",
-  "editor.smoothScrolling": true,
-  "workbench.colorCustomizations": {
-    "editorCursor.foreground": "#ffff00",
-    "terminalCursor.foreground": "#ffff00"
-}
+  "editor.formatOnSave": true,
 }

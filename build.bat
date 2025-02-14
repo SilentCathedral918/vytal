@@ -1,6 +1,6 @@
 @echo off
 
-echo "Building All..."
+echo Building all codebases (engine + sandbox)...
 
 rem --- generates a directory to store binaries if yet to exist
 set "bin_dir=./bin"
@@ -18,4 +18,4 @@ call build.bat
 popd
 if %ERRORLEVEL% neq 0 (echo Error:%ERRORLEVEL% && exit)
 
-echo "All built successfully."
+echo All codebases (engine + sandbox) build completed.
