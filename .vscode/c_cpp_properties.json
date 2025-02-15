@@ -13,10 +13,14 @@
                 "VYTAL_DEBUG",
                 "VYTAL_EXPORT_DLL",
                 "VYTAL_ENABLE_ASSERTIONS",
-                "_CRT_SECURE_NO_WARNINGS"
+                "_CRT_SECURE_NO_WARNINGS",
+                
+                "LINE_BUFFER_MAX_SIZE = 8192",
+                "CVAR_HASHMAP_SIZE = 1024"
             ],
             "compilerArgs": [
-                "-mavx"
+                "-mavx2",
+                "-mfma"
             ]
         }
     ],

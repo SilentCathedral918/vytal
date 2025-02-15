@@ -10,7 +10,7 @@ for /r %%f in (*.c) do (
 set "codebase=engine"
 
 rem --- compiler flags
-set "compiler_flags=-g -mavx -shared -Wall -Werror -Wvarargs -Wno-unused-function"
+set "compiler_flags=-g -mavx2 -mfma -shared -Wall -Werror -Wvarargs -Wno-unused-function -Wno-discarded-qualifiers"
 
 rem --- include flags
 set "include_flags=-Isrc"
@@ -19,7 +19,7 @@ rem --- linker flags
 set "linker_flags=-luser32 -lgdi32 -lopengl32"
 
 rem --- defines
-set "defines=-DVYTAL_DEBUG -DVYTAL_ENABLE_ASSERTIONS -DVYTAL_EXPORT_DLL -D_CRT_SECURE_NO_WARNINGS"
+set "defines=-DVYTAL_DEBUG -DVYTAL_ENABLE_ASSERTIONS -DVYTAL_EXPORT_DLL -D_CRT_SECURE_NO_WARNINGS -DLINE_BUFFER_MAX_SIZE=8192 -DCVAR_HASHMAP_SIZE=1024 "
 
 rem --- build command
 echo Building '%codebase%'...

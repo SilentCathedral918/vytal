@@ -10,4 +10,8 @@
   "editor.tabSize": 4,
   "editor.indentSize": "tabSize",
   "editor.formatOnSave": true,
+  "files.associations": {
+    "*.h": "c",
+    "type_traits": "c"
+  },
 }

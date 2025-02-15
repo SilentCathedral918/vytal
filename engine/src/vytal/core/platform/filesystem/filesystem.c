@@ -2,13 +2,11 @@
 
 #include <string.h>
 
-#define LINE_BUFFER_MAX_SIZE 8192
-
 VYTAL_INLINE ConstStr _platform_filesystem_lookup_file_mode(const FileIOMode io_mode,
                                                             const FileMode   file_mode) {
     switch (io_mode) {
         case FILE_IO_MODE_READ_WRITE:
-            return (file_mode == FILE_MODE_BINARY) ? "r+b" : "r+";
+            return (file_mode == FILE_MODE_BINARY) ? "rb+" : "r+";
 
         case FILE_IO_MODE_READ:
             return (file_mode == FILE_MODE_BINARY) ? "rb" : "r";
