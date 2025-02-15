@@ -7,13 +7,19 @@
 // return codes  -------------------------------------------------------- //
 
 typedef enum File_Result {
-    FILE_SUCCESS            = 0,
-    FILE_ERROR_NULL_PTR     = -1,
-    FILE_ERROR_INVALID_MODE = -2,
-    FILE_ERROR_OPEN_FAILED  = -3,
-    FILE_ERROR_ALREADY_OPEN = -4,
-    FILE_ERROR_NOT_OPEN     = -5,
-    FILE_ERROR_CLOSE_FAILED = -6
+    FILE_SUCCESS                   = 0,
+    FILE_ERROR_NULL_PTR            = -1,
+    FILE_ERROR_INVALID_MODE        = -2,
+    FILE_ERROR_OPEN_FAILED         = -3,
+    FILE_ERROR_ALREADY_OPEN        = -4,
+    FILE_ERROR_NOT_OPEN            = -5,
+    FILE_ERROR_CLOSE_FAILED        = -6,
+    FILE_ERROR_READ_FAILED         = -7,
+    FILE_ERROR_WRITE_FAILED        = -8,
+    FILE_ERROR_INVALID_PARAM       = -8,
+    FILE_ERROR_IO                  = -9,
+    FILE_ERROR_EOF                 = -10,
+    FILE_ERROR_INSUFFICIENT_BUFFER = -11,
 } FileResult;
 
 // modes ---------------------------------------------------------------- //

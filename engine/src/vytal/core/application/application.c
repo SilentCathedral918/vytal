@@ -1,6 +1,7 @@
 #include "application.h"
 
 #include "vytal/core/exception/exception.h"
+#include "vytal/core/platform/filesystem/filesystem.h"
 
 AppResult application_preconstruct(void) {
     exception_startup();
