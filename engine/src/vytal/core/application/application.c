@@ -1,12 +1,10 @@
 #include "application.h"
 
-#include <assert.h>
+#include <stdio.h>
 
 #include "vytal/core/configuration/cvar/cvar.h"
 #include "vytal/core/hal/exception/exception.h"
 #include "vytal/core/memory/manager/memory_manager.h"
-#include "vytal/core/memory/zone/memory_zone.h"
-#include "vytal/core/platform/filesystem/filesystem.h"
 
 AppResult application_preconstruct(void) {
     exception_startup();

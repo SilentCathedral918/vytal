@@ -1,20 +1,20 @@
 #pragma once
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #if defined(_MSC_VER)
 #    include <windows.h>
 #elif defined(__GNUC__) || defined(__clang__)
 #    include <pthread.h>
 #endif
 
-#if !defined(LINE_BUFFER_MAX_SIZE)
-#    define LINE_BUFFER_MAX_SIZE 8192
-#endif
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "vytal/defines/core/exception.h"
 #include "vytal/defines/shared.h"
+
+#if !defined(LINE_BUFFER_MAX_SIZE)
+#    define LINE_BUFFER_MAX_SIZE 8192
+#endif
 
 #if defined(_MSC_VER)
 static DWORD exception_stack_key;

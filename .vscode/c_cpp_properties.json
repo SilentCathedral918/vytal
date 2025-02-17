@@ -17,7 +17,8 @@
                 
                 "LINE_BUFFER_MAX_SIZE = 8192",
                 "CVAR_HASHMAP_SIZE = 1024",
-                "MAX_EXCEPTION_DEPTH = 10"
+                "MAX_EXCEPTION_DEPTH = 10",
+                "MEMORY_ALIGNMENT_SIZE = 16"
             ],
             "compilerArgs": [
                 "-mavx2",
