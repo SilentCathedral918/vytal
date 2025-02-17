@@ -36,7 +36,7 @@ VYTAL_INLINE UInt64 _hash_xx64_read(const VoidPtr ptr) {
     memcpy(&value, ptr, sizeof(value));
 
 #if IS_BIG_ENDIAN
-    return BSWAP64(value);
+    return VYTAL_BSWAP64(value);
 #else
     return value;
 #endif

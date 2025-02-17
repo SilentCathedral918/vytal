@@ -1,5 +1,5 @@
 #include "vytal/core/application/application.h"
-#include "vytal/core/exception/exception.h"
+#include "vytal/core/hal/exception/exception.h"
 
 Int32 main(Int32 argc, Str *argv) {
     AppResult app_result_;

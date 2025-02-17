@@ -19,7 +19,7 @@ rem --- linker flags
 set "linker_flags=-L../bin/ -lengine"
 
 rem --- defines
-set "defines=-DVYTAL_DEBUG -DVYTAL_IMPORT_DLL"
+set "defines=-DVYTAL_DEBUG -DVYTAL_IMPORT_DLL -DLINE_BUFFER_MAX_SIZE=8192 "
 
 rem --- build command
 echo Building '%codebase%'...

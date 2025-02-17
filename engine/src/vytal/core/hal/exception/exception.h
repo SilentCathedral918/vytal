@@ -9,11 +9,12 @@
 #    include <pthread.h>
 #endif
 
+#if !defined(LINE_BUFFER_MAX_SIZE)
+#    define LINE_BUFFER_MAX_SIZE 8192
+#endif
+
 #include "vytal/defines/core/exception.h"
 #include "vytal/defines/shared.h"
-
-#define MAX_EXCEPTION_DEPTH 10
-#define MAX_MESSAGE_LENGTH 8192
 
 #if defined(_MSC_VER)
 static DWORD exception_stack_key;
@@ -70,7 +71,7 @@ VYTAL_API Int32          *exception_get_stack_top(void);
 
 #define throw_exception(type, error_message, ...)                                \
     {                                                                            \
-        Char formatted_message[MAX_MESSAGE_LENGTH];                              \
+        Char formatted_message[LINE_BUFFER_MAX_SIZE];                            \
         snprintf(formatted_message, sizeof(formatted_message), error_message,    \
                  ##__VA_ARGS__);                                                 \
         fprintf(stderr, "Exception Thrown (%s) in %s:%d: %s\n",                  \

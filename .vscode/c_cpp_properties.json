@@ -16,7 +16,8 @@
                 "_CRT_SECURE_NO_WARNINGS",
                 
                 "LINE_BUFFER_MAX_SIZE = 8192",
-                "CVAR_HASHMAP_SIZE = 1024"
+                "CVAR_HASHMAP_SIZE = 1024",
+                "MAX_EXCEPTION_DEPTH = 10"
             ],
             "compilerArgs": [
                 "-mavx2",
