@@ -11,7 +11,7 @@ typedef enum Container_Result {
     CONTAINER_ERROR_ALLOCATION_FAILED   = -3,
     CONTAINER_ERROR_DEALLOCATION_FAILED = -4,
     CONTAINER_ERROR_EMPTY_DATA          = -5,
-    CONTAINER_ERROR_MISMATCHED_SIZES    = -6,
+    CONTAINER_ERROR_SIZES_MISMATCHED    = -6,
 } ContainerResult;
 
 // types ---------------------------------------------------------------- //
