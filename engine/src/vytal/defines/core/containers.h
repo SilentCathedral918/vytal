@@ -9,7 +9,9 @@ typedef enum Container_Result {
     CONTAINER_ERROR_INVALID_PARAM       = -1,
     CONTAINER_ERROR_NOT_ALLOCATED       = -2,
     CONTAINER_ERROR_ALLOCATION_FAILED   = -3,
-    CONTAINER_ERROR_DEALLOCATION_FAILED = -4
+    CONTAINER_ERROR_DEALLOCATION_FAILED = -4,
+    CONTAINER_ERROR_EMPTY_DATA          = -5,
+    CONTAINER_ERROR_MISMATCHED_SIZES    = -6,
 } ContainerResult;
 
 // types ---------------------------------------------------------------- //
