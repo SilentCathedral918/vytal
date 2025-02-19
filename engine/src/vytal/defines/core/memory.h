@@ -103,3 +103,7 @@ VT_INLINE Int32 check_endianness(void) {
 #define VYTAL_BITFLAG_IF_SET(flags, bitmask) (flags & (bitmask))
 #define VYTAL_BITFLAG_IF_ALL_SET(flags, bitmask) ((flags & (bitmask)) == (bitmask))
 #define VYTAL_BITFLAG_IF_NOT_SET(flags, bitmask) (!bitflag_if_set(flags, bitmask))
+
+// memory alignment ----------------------------------------------------- //
+
+#define VYTAL_APPLY_ALIGNMENT(size, alignment) (((size + (alignment - 1)) / alignment) * alignment)

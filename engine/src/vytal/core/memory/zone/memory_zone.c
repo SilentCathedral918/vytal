@@ -7,10 +7,6 @@
 
 #define MEMORY_ZONE_SIZE_CLASSES_DEFAULT_CAPACITY 10
 
-VYTAL_INLINE ByteSize _memory_zone_apply_alignment(const ByteSize size, const ByteSize alignment) {
-    return ((size + (alignment - 1)) / alignment) * alignment;
-}
-
 void _memory_zone_compute_size_classes(ByteSize *out_num_classes, MemoryZoneSizeClass **out_size_classes, const ByteSize capacity) {
     if (!out_num_classes || !capacity) return;
 
@@ -21,7 +17,7 @@ void _memory_zone_compute_size_classes(ByteSize *out_num_classes, MemoryZoneSize
 
     for (; current_size_ <= capacity; ++index_) {
         if (out_size_classes)
-            (*out_size_classes)[index_]._size = _memory_zone_apply_alignment(current_size_, MEMORY_ALIGNMENT_SIZE);
+            (*out_size_classes)[index_]._size = VYTAL_APPLY_ALIGNMENT(current_size_, MEMORY_ALIGNMENT_SIZE);
 
         current_size_ = (ByteSize)((Flt32)current_size_ * ratio_);
     }
@@ -69,7 +65,7 @@ VYTAL_INLINE ByteSize _memory_zone_log2_size(ByteSize size) {
 ByteSize _memory_zone_get_size_class_index(MemoryZone *zone, const ByteSize size) {
     const Flt32 log2_ratio_ = 0.694f;
 
-    ByteSize aligned_size_ = _memory_zone_apply_alignment(size, MEMORY_ALIGNMENT_SIZE);
+    ByteSize aligned_size_ = VYTAL_APPLY_ALIGNMENT(size, MEMORY_ALIGNMENT_SIZE);
     ByteSize log2_size_    = _memory_zone_log2_size(aligned_size_);
 
     ByteSize index_ = (ByteSize)((Flt32)log2_size_ / log2_ratio_);

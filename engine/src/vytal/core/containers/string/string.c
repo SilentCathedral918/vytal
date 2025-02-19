@@ -24,10 +24,6 @@ struct Container_String {
     ByteSize _memory_size;
 };
 
-VYTAL_INLINE ByteSize _container_string_apply_alignment(const ByteSize size, const ByteSize alignment) {
-    return ((size + (alignment - 1)) / alignment) * alignment;
-}
-
 VYTAL_INLINE ContainerResult _container_string_resize(String *str, const ByteSize new_capacity) {
     ByteSize new_alloc_size_ = sizeof(struct Container_String) + new_capacity;
 
@@ -77,7 +73,7 @@ ContainerResult container_string_construct(ConstStr content, String *out_new_str
 
     ByteSize content_length_ = strlen(content);
     // multiply by CONTAINER_RESIZE_FACTOR to prevent frequent re-allocations early on
-    ByteSize capacity_   = _container_string_apply_alignment(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
+    ByteSize capacity_   = VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
     ByteSize alloc_size_ = sizeof(struct Container_String) + capacity_;
 
     if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)out_new_str) != MEMORY_ZONE_SUCCESS)
@@ -97,7 +93,7 @@ ContainerResult container_string_construct(ConstStr content, String *out_new_str
 ContainerResult container_string_construct_char(const Char chr, String *out_new_str) {
     if (!chr) return CONTAINER_ERROR_INVALID_PARAM;
 
-    ByteSize capacity_   = _container_string_apply_alignment(sizeof(Char) + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
+    ByteSize capacity_   = VYTAL_APPLY_ALIGNMENT(sizeof(Char) + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
     ByteSize alloc_size_ = sizeof(struct Container_String) + capacity_;
 
     if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)out_new_str) != MEMORY_ZONE_SUCCESS)
@@ -118,7 +114,7 @@ ContainerResult container_string_construct_chars(const Char chr, const ByteSize 
     if (!chr || !count) return CONTAINER_ERROR_INVALID_PARAM;
 
     ByteSize content_length_ = sizeof(Char) * count;
-    ByteSize capacity_       = _container_string_apply_alignment(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
+    ByteSize capacity_       = VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
     ByteSize alloc_size_     = sizeof(struct Container_String) + capacity_;
 
     if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)out_new_str) != MEMORY_ZONE_SUCCESS)
@@ -145,7 +141,7 @@ ContainerResult container_string_construct_formatted(String *out_new_str, ConstS
         content_length_ = vsnprintf(NULL, 0, format, va_list_);
         va_end(va_list_);
     }
-    ByteSize capacity_   = _container_string_apply_alignment(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
+    ByteSize capacity_   = VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
     ByteSize alloc_size_ = sizeof(struct Container_String) + capacity_;
 
     if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)out_new_str) != MEMORY_ZONE_SUCCESS)
@@ -185,7 +181,7 @@ ContainerResult container_string_append(String *str, ConstStr content) {
     // handle container resizing
     ByteSize content_length_ = strlen(content);
     if ((*str)->_size + (content_length_ + 1) >= (*str)->_capacity) {
-        ByteSize new_capacity_ = (*str)->_capacity + (_container_string_apply_alignment(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
+        ByteSize new_capacity_ = (*str)->_capacity + (VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
 
         ContainerResult resize_ = _container_string_resize(str, new_capacity_);
         if (resize_ != CONTAINER_SUCCESS)
@@ -205,7 +201,7 @@ ContainerResult container_string_append_char(String *str, const Char chr) {
 
     // handle container resizing
     if ((*str)->_size + (sizeof(Char) + 1) >= (*str)->_capacity) {
-        ByteSize new_capacity_ = (*str)->_capacity + (_container_string_apply_alignment(sizeof(Char) + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
+        ByteSize new_capacity_ = (*str)->_capacity + (VYTAL_APPLY_ALIGNMENT(sizeof(Char) + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
 
         ContainerResult resize_ = _container_string_resize(str, new_capacity_);
         if (resize_ != CONTAINER_SUCCESS)
@@ -225,7 +221,7 @@ ContainerResult container_string_append_chars(String *str, const Char chr, const
     // handle container resizing
     ByteSize content_length_ = sizeof(Char) * count;
     if ((*str)->_size + (content_length_ + 1) >= (*str)->_capacity) {
-        ByteSize new_capacity_ = (*str)->_capacity + (_container_string_apply_alignment(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
+        ByteSize new_capacity_ = (*str)->_capacity + (VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
 
         ContainerResult resize_ = _container_string_resize(str, new_capacity_);
         if (resize_ != CONTAINER_SUCCESS)
@@ -251,7 +247,7 @@ ContainerResult container_string_append_formatted(String *str, ConstStr format, 
     }
 
     if (!(*str)) {
-        ByteSize capacity_   = _container_string_apply_alignment(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
+        ByteSize capacity_   = VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
         ByteSize alloc_size_ = sizeof(struct Container_String) + capacity_;
 
         if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)str) != MEMORY_ZONE_SUCCESS)
@@ -264,7 +260,7 @@ ContainerResult container_string_append_formatted(String *str, ConstStr format, 
     } else {
         // handle container resizing
         if ((*str)->_size + (content_length_ + 1) >= (*str)->_capacity) {
-            ByteSize new_capacity_ = (*str)->_capacity + (_container_string_apply_alignment(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
+            ByteSize new_capacity_ = (*str)->_capacity + (VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
 
             ContainerResult resize_ = _container_string_resize(str, new_capacity_);
             if (resize_ != CONTAINER_SUCCESS)
@@ -658,7 +654,7 @@ ContainerResult container_string_insert(String *str, const ByteSize index, Const
 
     // handle container resizing
     if ((*str)->_size + (content_length_ + 1) >= (*str)->_capacity) {
-        ByteSize new_capacity_ = (*str)->_capacity + (_container_string_apply_alignment(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
+        ByteSize new_capacity_ = (*str)->_capacity + (VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
 
         ContainerResult resize_ = _container_string_resize(str, new_capacity_);
         if (resize_ != CONTAINER_SUCCESS)
@@ -690,7 +686,7 @@ ContainerResult container_string_insert_char(String *str, const ByteSize index, 
 
     // handle container resizing
     if ((*str)->_size + (content_length_ + 1) >= (*str)->_capacity) {
-        ByteSize new_capacity_ = (*str)->_capacity + (_container_string_apply_alignment(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
+        ByteSize new_capacity_ = (*str)->_capacity + (VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
 
         ContainerResult resize_ = _container_string_resize(str, new_capacity_);
         if (resize_ != CONTAINER_SUCCESS)
@@ -722,7 +718,7 @@ ContainerResult container_string_insert_chars(String *str, const ByteSize index,
 
     // handle container resizing
     if ((*str)->_size + (content_length_ + 1) >= (*str)->_capacity) {
-        ByteSize new_capacity_ = (*str)->_capacity + (_container_string_apply_alignment(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
+        ByteSize new_capacity_ = (*str)->_capacity + (VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
 
         ContainerResult resize_ = _container_string_resize(str, new_capacity_);
         if (resize_ != CONTAINER_SUCCESS)
@@ -759,7 +755,7 @@ ContainerResult container_string_insert_formatted(String *str, const ByteSize in
     if (content_length_ <= 0) return CONTAINER_ERROR_INVALID_PARAM;
 
     if (!(*str)) {
-        ByteSize capacity_   = _container_string_apply_alignment(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
+        ByteSize capacity_   = VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
         ByteSize alloc_size_ = sizeof(struct Container_String) + capacity_;
 
         if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)str) != MEMORY_ZONE_SUCCESS)
@@ -771,7 +767,7 @@ ContainerResult container_string_insert_formatted(String *str, const ByteSize in
     } else {
         // handle container resizing
         if ((*str)->_size + (content_length_ + 1) >= (*str)->_capacity) {
-            ByteSize new_capacity_ = (*str)->_capacity + (_container_string_apply_alignment(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
+            ByteSize new_capacity_ = (*str)->_capacity + (VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
 
             ContainerResult resize_ = _container_string_resize(str, new_capacity_);
             if (resize_ != CONTAINER_SUCCESS)
@@ -1226,7 +1222,7 @@ ContainerResult container_string_replace(String *str, ConstStr old_substr, Const
     // handle container resizing
     ByteSize new_size_ = (*str)->_size + (new_length_ - old_length_) * count_;
     if (new_size_ >= (*str)->_capacity) {
-        ByteSize        new_capacity_ = (*str)->_capacity + (_container_string_apply_alignment(new_size_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
+        ByteSize        new_capacity_ = (*str)->_capacity + (VYTAL_APPLY_ALIGNMENT(new_size_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR);
         ContainerResult resize_       = _container_string_resize(str, new_capacity_);
         if (resize_ != CONTAINER_SUCCESS) return resize_;
     }
