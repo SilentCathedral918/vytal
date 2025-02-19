@@ -23,7 +23,7 @@ void _memory_zone_compute_size_classes(ByteSize *out_num_classes, MemoryZoneSize
         if (out_size_classes)
             (*out_size_classes)[index_]._size = _memory_zone_apply_alignment(current_size_, MEMORY_ALIGNMENT_SIZE);
 
-        current_size_          = (ByteSize)((Flt32)current_size_ * ratio_);
+        current_size_ = (ByteSize)((Flt32)current_size_ * ratio_);
     }
 
     if (out_size_classes)
@@ -99,7 +99,7 @@ MemoryZoneResult memory_zone_clear(ConstStr zone_name) {
     if (get_zone_ != MEMORY_ZONE_SUCCESS) return get_zone_;
 
     for (size_t i = 0; i < zone_->_num_classes; ++i)
-        zone_->_size_classes[i]._num_blocks = 0;
+        memset(&zone_->_size_classes[i], 0, sizeof(MemoryZoneSizeClass));
 
     memset((VoidPtr)zone_->_start_addr, 0, zone_->_capacity);
     zone_->_used_memory = 0;
