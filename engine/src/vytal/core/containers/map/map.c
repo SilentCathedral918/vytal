@@ -8,7 +8,7 @@
 #include "vytal/core/memory/zone/memory_zone.h"
 
 #define TOMBSTONE_HASHED_KEY ((HashedInt)(-1))
-#define MAX_PROBE_LENGTH(capacity) ((capacity * 3) / 4)
+#define MAX_PROBE_LENGTH(capacity) ((capacity * 3) / 4)  // 75% of map capacity
 
 typedef struct Container_Map_Data_Item {
     HashedInt _hashed_key;
@@ -40,7 +40,7 @@ ContainerResult _container_map_insert(Map *map, HashedInt hashed_key, const Void
     MapDataItem *check_slot_   = (MapDataItem *)((BytePtr)((*map)->_pool) + check_offset_);
 
     // handle container resizing (when map pool is 75% full)
-    if ((*map)->_size >= (*map)->_capacity * 4 / 5) {
+    if ((*map)->_size >= (*map)->_capacity * 3 / 4) {
         ByteSize new_capacity_ = (*map)->_capacity * CONTAINER_RESIZE_FACTOR;
 
         ContainerResult resize_ = _container_map_resize(map, new_capacity_);
@@ -73,10 +73,7 @@ ContainerResult _container_map_insert(Map *map, HashedInt hashed_key, const Void
         check_slot_->_pdata      = (UIntPtr)((BytePtr)check_slot_ + sizeof(MapDataItem));
         memcpy((VoidPtr)check_slot_->_pdata, data, (*map)->_data_size);
 
-        if (is_tombstone_)
-            memset(check_slot_, 0, sizeof(MapDataItem));
-        else
-            ++(*map)->_size;
+        if (!is_tombstone_) ++(*map)->_size;
     }
 
     return CONTAINER_SUCCESS;
