@@ -101,7 +101,7 @@ MemoryManagerResult memory_manager_startup(void) {
             if (end_ == value_ || *end_ != '\0') return MEMORY_MANAGER_ERROR_INVALID_FORMAT;
 
             zone_->_size_classes = (MemoryZoneSizeClass *)(start_addr_ + capacity_);
-            memory_zone_compute_size_classes(&zone_->_num_classes, zone_->_size_classes, capacity_);
+            memory_zone_compute_size_classes(&zone_->_num_classes, &zone_->_size_classes, capacity_);
             zone_->_capacity = (ByteSize)capacity_;
             start_addr_ += (capacity_ + sizeof(MemoryZoneSizeClass) * zone_->_num_classes);
         }
@@ -122,7 +122,7 @@ MemoryManagerResult memory_manager_shutdown(void) {
         MemoryZone *zone_ = &manager->_zones[i];
 
         for (size_t j = 0; j < zone_->_num_classes; ++j) {
-            MemoryZoneSizeClass *class_ = &zone_->_size_classes[i];
+            MemoryZoneSizeClass *class_ = &zone_->_size_classes[j];
 
             if ((class_->_blocks) && (class_->_capacity > 0))
                 free(class_->_blocks);

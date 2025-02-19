@@ -1,10 +1,6 @@
 #include "application.h"
 
-#include <stdio.h>
-#include <string.h>
-
 #include "vytal/core/configuration/cvar/cvar.h"
-#include "vytal/core/containers/string/string.h"
 #include "vytal/core/hal/exception/exception.h"
 #include "vytal/core/memory/manager/memory_manager.h"
 

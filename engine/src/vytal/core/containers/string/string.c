@@ -19,6 +19,9 @@ struct Container_String {
     Str      _data;
     ByteSize _size;
     ByteSize _capacity;
+
+    // used for allocations/deallocations
+    ByteSize _memory_size;
 };
 
 VYTAL_INLINE ByteSize _container_string_apply_alignment(const ByteSize size, const ByteSize alignment) {
@@ -33,13 +36,14 @@ VYTAL_INLINE ContainerResult _container_string_resize(String *str, const ByteSiz
     if (memory_zone_allocate("Strings", new_alloc_size_, (VoidPtr *)&new_str_) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_ALLOCATION_FAILED;
 
-    new_str_->_size     = (*str)->_size;
-    new_str_->_capacity = new_capacity;
-    new_str_->_data     = (Str)((UIntPtr)new_str_ + sizeof(struct Container_String));
+    new_str_->_size        = (*str)->_size;
+    new_str_->_capacity    = new_capacity;
+    new_str_->_memory_size = new_alloc_size_;
+    new_str_->_data        = (Str)((UIntPtr)new_str_ + sizeof(struct Container_String));
 
     memcpy(new_str_->_data, (*str)->_data, (*str)->_size);
 
-    if (memory_zone_deallocate("Strings", old_str_, old_str_->_capacity) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_deallocate("Strings", old_str_, old_str_->_memory_size) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_DEALLOCATION_FAILED;
 
     *str = new_str_;
@@ -79,9 +83,10 @@ ContainerResult container_string_construct(ConstStr content, String *out_new_str
     if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)out_new_str) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_ALLOCATION_FAILED;
 
-    (*out_new_str)->_size     = content_length_;
-    (*out_new_str)->_capacity = capacity_;
-    (*out_new_str)->_data     = (Str)((UIntPtr)(*out_new_str) + sizeof(struct Container_String));
+    (*out_new_str)->_size        = content_length_;
+    (*out_new_str)->_capacity    = capacity_;
+    (*out_new_str)->_memory_size = alloc_size_;
+    (*out_new_str)->_data        = (Str)((UIntPtr)(*out_new_str) + sizeof(struct Container_String));
 
     memcpy((*out_new_str)->_data, content, content_length_ + 1);
     (*out_new_str)->_data[content_length_] = '\0';
@@ -98,9 +103,10 @@ ContainerResult container_string_construct_char(const Char chr, String *out_new_
     if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)out_new_str) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_ALLOCATION_FAILED;
 
-    (*out_new_str)->_size     = 0;
-    (*out_new_str)->_capacity = capacity_;
-    (*out_new_str)->_data     = (Str)((UIntPtr)(*out_new_str) + sizeof(struct Container_String));
+    (*out_new_str)->_size        = 0;
+    (*out_new_str)->_capacity    = capacity_;
+    (*out_new_str)->_memory_size = alloc_size_;
+    (*out_new_str)->_data        = (Str)((UIntPtr)(*out_new_str) + sizeof(struct Container_String));
 
     (*out_new_str)->_data[(*out_new_str)->_size++] = chr;
     (*out_new_str)->_data[(*out_new_str)->_size++] = '\0';
@@ -118,9 +124,10 @@ ContainerResult container_string_construct_chars(const Char chr, const ByteSize 
     if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)out_new_str) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_ALLOCATION_FAILED;
 
-    (*out_new_str)->_size     = content_length_;
-    (*out_new_str)->_capacity = capacity_;
-    (*out_new_str)->_data     = (Str)((UIntPtr)(*out_new_str) + sizeof(struct Container_String));
+    (*out_new_str)->_size        = content_length_;
+    (*out_new_str)->_capacity    = capacity_;
+    (*out_new_str)->_memory_size = alloc_size_;
+    (*out_new_str)->_data        = (Str)((UIntPtr)(*out_new_str) + sizeof(struct Container_String));
 
     memset((*out_new_str)->_data, chr, content_length_);
     (*out_new_str)->_data[content_length_] = '\0';
@@ -144,9 +151,10 @@ ContainerResult container_string_construct_formatted(String *out_new_str, ConstS
     if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)out_new_str) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_ALLOCATION_FAILED;
 
-    (*out_new_str)->_size     = content_length_;
-    (*out_new_str)->_capacity = capacity_;
-    (*out_new_str)->_data     = (Str)((UIntPtr)(*out_new_str) + sizeof(struct Container_String));
+    (*out_new_str)->_size        = content_length_;
+    (*out_new_str)->_capacity    = capacity_;
+    (*out_new_str)->_memory_size = alloc_size_;
+    (*out_new_str)->_data        = (Str)((UIntPtr)(*out_new_str) + sizeof(struct Container_String));
 
     {
         VaList va_list_;
@@ -161,9 +169,9 @@ ContainerResult container_string_construct_formatted(String *out_new_str, ConstS
 
 ContainerResult container_string_destruct(String str) {
     if (!str) return CONTAINER_ERROR_INVALID_PARAM;
-    if (!str->_data || !str->_capacity) return CONTAINER_ERROR_NOT_ALLOCATED;
+    if (!str->_data || !str->_memory_size) return CONTAINER_ERROR_NOT_ALLOCATED;
 
-    if (memory_zone_deallocate("Strings", str, str->_capacity) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_deallocate("Strings", str, str->_memory_size) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_DEALLOCATION_FAILED;
 
     memset(str, 0, sizeof(struct Container_String));

@@ -11,7 +11,7 @@ VYTAL_INLINE ByteSize _memory_zone_apply_alignment(const ByteSize size, const By
     return ((size + (alignment - 1)) / alignment) * alignment;
 }
 
-void _memory_zone_compute_size_classes(ByteSize *out_num_classes, MemoryZoneSizeClass *out_size_classes, const ByteSize capacity) {
+void _memory_zone_compute_size_classes(ByteSize *out_num_classes, MemoryZoneSizeClass **out_size_classes, const ByteSize capacity) {
     if (!out_num_classes || !capacity) return;
 
     const Flt32 ratio_ = 1.618f;
@@ -21,13 +21,13 @@ void _memory_zone_compute_size_classes(ByteSize *out_num_classes, MemoryZoneSize
 
     for (; current_size_ <= capacity; ++index_) {
         if (out_size_classes)
-            out_size_classes[index_]._size = _memory_zone_apply_alignment(current_size_, MEMORY_ALIGNMENT_SIZE);
+            (*out_size_classes)[index_]._size = _memory_zone_apply_alignment(current_size_, MEMORY_ALIGNMENT_SIZE);
 
-        current_size_ = (ByteSize)((Flt32)current_size_ * ratio_);
+        current_size_          = (ByteSize)((Flt32)current_size_ * ratio_);
     }
 
     if (out_size_classes)
-        out_size_classes[index_]._size = capacity;
+        (*out_size_classes)[index_]._size = capacity;
 
     *out_num_classes = ++index_;
 }
@@ -164,6 +164,6 @@ MemoryZoneResult memory_zone_deallocate(ConstStr zone_name, const VoidPtr ptr, c
     return MEMORY_ZONE_SUCCESS;
 }
 
-void memory_zone_compute_size_classes(ByteSize *out_num_classes, MemoryZoneSizeClass *out_size_classes, const ByteSize capacity) {
+void memory_zone_compute_size_classes(ByteSize *out_num_classes, MemoryZoneSizeClass **out_size_classes, const ByteSize capacity) {
     _memory_zone_compute_size_classes(out_num_classes, out_size_classes, capacity);
 }
