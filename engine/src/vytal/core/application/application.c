@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "vytal/core/configuration/cvar/cvar.h"
+#include "vytal/core/containers/map/map.h"
 #include "vytal/core/hal/delay/delay.h"
 #include "vytal/core/hal/exception/exception.h"
 #include "vytal/core/memory/manager/memory_manager.h"
@@ -47,7 +48,7 @@ AppResult application_preconstruct(void) {
 }
 
 AppResult application_construct(void) {
-        return APP_SUCCESS;
+    return APP_SUCCESS;
 }
 
 AppResult application_update(void) {

@@ -1,5 +1,6 @@
 #include "memory_zone.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -103,7 +104,7 @@ MemoryZoneResult memory_zone_clear(ConstStr zone_name) {
     return MEMORY_ZONE_SUCCESS;
 }
 
-MemoryZoneResult memory_zone_allocate(ConstStr zone_name, const ByteSize size, VoidPtr *out_ptr) {
+MemoryZoneResult memory_zone_allocate(ConstStr zone_name, const ByteSize size, VoidPtr *out_ptr, ByteSize *out_alloc_size) {
     if (!zone_name || !size || !out_ptr) return MEMORY_ZONE_ERROR_INVALID_PARAM;
 
     MemoryZone      *zone_;
@@ -118,15 +119,25 @@ MemoryZoneResult memory_zone_allocate(ConstStr zone_name, const ByteSize size, V
 
     // if free block of fitting size is found
     if ((size_class_->_capacity > 0) && (size_class_->_num_blocks > 0)) {
-        zone_->_used_memory += size_class_->_size;
         *out_ptr = size_class_->_blocks[--size_class_->_num_blocks];
+
+        if (out_alloc_size)
+            *out_alloc_size = size_class_->_size;
+
+        zone_->_used_memory += size_class_->_size;
 
         return MEMORY_ZONE_SUCCESS;
     }
 
     // otherwise, allocate from zone memory
-    *out_ptr = (VoidPtr)((UIntPtr)zone_->_start_addr + zone_->_used_memory);
-    zone_->_used_memory += size;
+    {
+        *out_ptr = (VoidPtr)((UIntPtr)zone_->_start_addr + zone_->_used_memory);
+
+        if (out_alloc_size)
+            *out_alloc_size = size_class_->_size;
+
+        zone_->_used_memory += size_class_->_size;
+    }
 
     return MEMORY_ZONE_SUCCESS;
 }
