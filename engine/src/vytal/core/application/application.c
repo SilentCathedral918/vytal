@@ -6,6 +6,7 @@
 #include "vytal/core/containers/map/map.h"
 #include "vytal/core/hal/delay/delay.h"
 #include "vytal/core/hal/exception/exception.h"
+#include "vytal/core/logger/logger.h"
 #include "vytal/core/memory/manager/memory_manager.h"
 #include "vytal/core/misc/console/console.h"
 
@@ -21,10 +22,16 @@ AppResult _application_core_startup(void) {
     if (misc_console_startup() != CONSOLE_SUCCESS)
         return APP_ERROR_PRECONSTRUCT_LOGIC;
 
+    if (logger_startup() != LOGGER_SUCCESS)
+        return APP_ERROR_PRECONSTRUCT_LOGIC;
+
     return APP_SUCCESS;
 }
 
 AppResult _application_core_shutdown(void) {
+    if (logger_shutdown() != LOGGER_SUCCESS)
+        return APP_ERROR_DESTRUCT_LOGIC;
+
     if (misc_console_shutdown() != CONSOLE_SUCCESS)
         return APP_ERROR_DESTRUCT_LOGIC;
 

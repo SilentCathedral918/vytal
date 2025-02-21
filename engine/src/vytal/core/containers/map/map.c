@@ -361,3 +361,14 @@ ByteSize container_map_capacity(Map map) {
 ByteSize container_map_data_size(Map map) {
     return (!map ? 0 : map->_data_size);
 }
+
+VoidPtr container_map_at_index(Map map, const ByteSize index) {
+    if (!map) return NULL;
+    if (!map->_memory_size || !map->_pool) return NULL;
+    if ((index < 0) || (index > map->_capacity)) return NULL;
+
+    ByteSize     check_offset_ = (sizeof(MapDataItem) + map->_data_size) * index;
+    MapDataItem *check_slot_   = (MapDataItem *)((BytePtr)(map->_pool) + check_offset_);
+
+    return (VoidPtr)((BytePtr)check_slot_ + sizeof(MapDataItem));
+}

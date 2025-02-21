@@ -18,3 +18,4 @@ VYTAL_API Bool     container_map_full(Map map);
 VYTAL_API ByteSize container_map_size(Map map);
 VYTAL_API ByteSize container_map_capacity(Map map);
 VYTAL_API ByteSize container_map_data_size(Map map);
+VYTAL_API VoidPtr  container_map_at_index(Map map, const ByteSize index);

@@ -46,7 +46,7 @@ MemoryManagerResult memory_manager_startup(void) {
         Str value_ = _memory_manager_trim_whitespace(strchr(trimmed_, '=') + 1);
         Str end_;
 
-        Int64 capacity_ = strtol(value_, &end_, 0);
+        Int64 capacity_ = strtol(value_, &end_, 10);
         if (end_ == value_ || *end_ != '\0') return MEMORY_MANAGER_ERROR_INVALID_FORMAT;
 
         ByteSize num_sizeclasses_ = 0;
@@ -97,7 +97,7 @@ MemoryManagerResult memory_manager_startup(void) {
             zone_->_name       = strdup(name_);
             zone_->_start_addr = (VoidPtr)start_addr_;
 
-            Int64 capacity_ = strtol(value_, &end_, 0);
+            Int64 capacity_ = strtol(value_, &end_, 10);
             if (end_ == value_ || *end_ != '\0') return MEMORY_MANAGER_ERROR_INVALID_FORMAT;
 
             zone_->_size_classes = (MemoryZoneSizeClass *)(start_addr_ + capacity_);
