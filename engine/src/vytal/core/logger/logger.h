@@ -30,3 +30,18 @@ VYTAL_API LoggerResult logger_print(
 
 #define VYTAL_LOG_VERBOSE(message, ...) \
     logger_print("VYTAL", LOG_VERBOSITY_VERBOSE, __FILE__, __LINE__, __func__, message, ##__VA_ARGS__)
+
+#define LOGGER_LOG_FATAL(logger_id, message, ...) \
+    logger_print(logger_id, LOG_VERBOSITY_FATAL, __FILE__, __LINE__, __func__, message, ##__VA_ARGS__)
+
+#define LOGGER_LOG_ERROR(logger_id, message, ...) \
+    logger_print(logger_id, LOG_VERBOSITY_ERROR, __FILE__, __LINE__, __func__, message, ##__VA_ARGS__)
+
+#define LOGGER_LOG_WARNING(logger_id, message, ...) \
+    logger_print(logger_id, LOG_VERBOSITY_WARNING, __FILE__, __LINE__, __func__, message, ##__VA_ARGS__)
+
+#define LOGGER_LOG_INFO(logger_id, message, ...) \
+    logger_print(logger_id, LOG_VERBOSITY_INFO, __FILE__, __LINE__, __func__, message, ##__VA_ARGS__)
+
+#define LOGGER_LOG_VERBOSE(logger_id, message, ...) \
+    logger_print(logger_id, LOG_VERBOSITY_VERBOSE, __FILE__, __LINE__, __func__, message, ##__VA_ARGS__)

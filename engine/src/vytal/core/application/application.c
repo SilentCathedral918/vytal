@@ -55,7 +55,7 @@ AppResult application_preconstruct(void) {
 }
 
 AppResult application_construct(void) {
-        return APP_SUCCESS;
+    return APP_SUCCESS;
 }
 
 AppResult application_update(void) {

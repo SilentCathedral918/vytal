@@ -12,10 +12,6 @@
 #include "vytal/core/hal/clock/wall/wall.h"
 #include "vytal/core/misc/console/console.h"
 
-#define LOG_MESSAGE_WIDTH 70  // max width for messages
-#define FILE_NAME_MAX 16      // max width for filename
-#define FUNC_NAME_MAX 16      // max width for function name
-
 #define EXTRACT_FILENAME(filepath) ({                                  \
     ConstStr _backslash = strrchr((filepath), '\\');                   \
     ConstStr _slash     = strrchr((filepath), '/');                    \
@@ -68,28 +64,24 @@ VYTAL_INLINE Str _logger_trim_whitespace(Str str) {
 static void _logger_set_log_level_color(LoggerVerbosity verbosity) {
     switch (verbosity) {
         case LOG_VERBOSITY_FATAL:
-            console_set_foreground_rgb(255, 255, 255);  // white text
-            console_set_background_rgb(255, 0, 0);      // red background
+            console_set_foreground_rgb(255, 85, 85);
+            console_set_background_rgb(51, 0, 0);
             break;
-
         case LOG_VERBOSITY_ERROR:
-            console_set_foreground_rgb(255, 255, 255);
-            console_set_background_rgb(255, 100, 0);  // orange background
+            console_set_foreground_rgb(255, 110, 110);
+            console_set_background_rgb(68, 0, 0);
             break;
-
         case LOG_VERBOSITY_WARNING:
-            console_set_foreground_rgb(0, 0, 0);
-            console_set_background_rgb(255, 255, 0);  // yellow background
+            console_set_foreground_rgb(241, 250, 140);
+            console_set_background_rgb(51, 51, 0);
             break;
-
         case LOG_VERBOSITY_INFO:
-            console_set_foreground_rgb(255, 255, 255);
-            console_set_background_rgb(0, 0, 255);  // blue background
+            console_set_foreground_rgb(0, 255, 255);
+            console_set_background_rgb(11, 123, 176);
             break;
-
         case LOG_VERBOSITY_VERBOSE:
-            console_set_foreground_rgb(255, 255, 255);
-            console_set_background_rgb(128, 0, 128);  // purple background
+            console_set_foreground_rgb(98, 114, 164);
+            console_set_background_rgb(34, 34, 68);
             break;
     }
 }
@@ -240,12 +232,15 @@ LoggerResult logger_print(
     vsnprintf(log_content_, sizeof(log_content_), message, va_list_);
     va_end(va_list_);
 
-    Int32 total_width       = 120;
-    Int32 logger_name_width = (Int32)(total_width * 0.20);
-    Int32 timestamp_width   = (Int32)(total_width * 0.20);
-    Int32 verbosity_width   = (Int32)(total_width * 0.15);
-    Int32 filename_width    = (Int32)(total_width * 0.20);
-    Int32 funcname_width    = (Int32)(total_width * 0.25);
+    // ideal total width for most modern terminals = 120
+
+    Int32 padding_           = 4;
+    Int32 logger_name_width_ = (container_string_size(logger_->_name) * 2) + padding_;
+    Int32 timestamp_width_   = strlen(log_time_) + padding_;
+    Int32 verbosity_width_   = (strlen(verbosity_) * 2) + padding_;
+    Int32 file_line_width_   = 20 + padding_;
+    Int32 func_name_width_   = 25 + padding_;
+    Int32 total_width_       = logger_name_width_ + timestamp_width_ + verbosity_width_ + file_line_width_ + func_name_width_;
 
     Char file_display_[FILENAME_BUFFER_MAX_SIZE];
     Char func_display_[FILENAME_BUFFER_MAX_SIZE];
@@ -253,14 +248,19 @@ LoggerResult logger_print(
     // format file and func display
     // add "..." if truncated (some filenames or function names may be too long)
     {
-        strncpy(file_display_, filename_, filename_width);
-        strncpy(func_display_, at_function, funcname_width);
+        if (VYTAL_BITFLAG_IF_SET(logger_->_flags, LOG_FLAG_FILE_LINE)) {
+            if (strlen(filename_) > file_line_width_ - padding_)
+                strcpy(file_display_ + (file_line_width_ - padding_) - 3, "...");
 
-        if (strlen(filename_) > filename_width)
-            strcpy(file_display_ + filename_width - 3, "...");
+            sprintf(file_display_, "%s (%d)", filename_, at_line);
+        }
 
-        if (strlen(at_function) > funcname_width)
-            strcpy(func_display_ + funcname_width - 3, "...");
+        if (VYTAL_BITFLAG_IF_SET(logger_->_flags, LOG_FLAG_FUNC_NAME)) {
+            strncpy(func_display_, at_function, func_name_width_ - padding_);
+
+            if (strlen(at_function) > func_name_width_ - padding_)
+                strcpy(func_display_ + (func_name_width_ - padding_) - 3, "...");
+        }
     }
 
     // print log metadata
@@ -269,31 +269,40 @@ LoggerResult logger_print(
         console_write("\n");
 
         // Logger name
-        console_set_foreground_rgb(102, 255, 51);  // green
-        console_set_background_rgb(0, 0, 153);     // dark blue
-        console_write(" %*s ", logger_name_width, container_string_get(logger_->_name));
+        console_set_foreground_rgb(234, 202, 45);  // gold
+        console_set_background_rgb(220, 20, 60);   // crimson red
+        console_write("  %*s  ", logger_name_width_ - padding_, container_string_get(logger_->_name));
         console_reset();
 
         // timestamp
-        console_set_foreground_rgb(255, 255, 255);  // white
-        console_set_background_rgb(0, 0, 0);        // black
-        console_write(" %-*s ", timestamp_width, log_time_);
-        console_reset();
+        if (VYTAL_BITFLAG_IF_SET(logger_->_flags, LOG_FLAG_TIMESTAMP)) {
+            console_set_foreground_rgb(139, 233, 253);
+            console_set_background_rgb(30, 30, 63);
+            console_write("  %*s  ", timestamp_width_ - padding_, log_time_);
+            console_reset();
+        }
+
+        // filename & line
+        if (VYTAL_BITFLAG_IF_SET(logger_->_flags, LOG_FLAG_FILE_LINE)) {
+            console_set_foreground_rgb(45, 255, 246);
+            console_set_background_rgb(42, 30, 64);
+            console_write("  %*s  ", file_line_width_ - padding_, file_display_);
+            console_reset();
+        }
+
+        // function name
+        if (VYTAL_BITFLAG_IF_SET(logger_->_flags, LOG_FLAG_FUNC_NAME)) {
+            console_set_foreground_rgb(61, 255, 43);
+            console_set_background_rgb(28, 15, 44);
+            console_write("  %*s  ", func_name_width_ - padding_, func_display_);
+            console_reset();
+        }
 
         // verbosity
         _logger_set_log_level_color(verbosity);  // set background for verbosity
-        console_write(" %*s ", verbosity_width, verbosity_);
+        console_write("  %*s  ", verbosity_width_ - padding_, verbosity_);
         console_reset();
 
-        // filename & line
-        console_set_foreground_rgb(255, 255, 255);  // white
-        console_write(" %*s:%d ", filename_width, file_display_, at_line);
-        console_reset();
-
-        // function name
-        console_set_foreground_rgb(0, 255, 0);  // function name (green)
-        console_write(" %-*s ", funcname_width, func_display_);
-        console_reset();
         console_write("\n");
     }
 
@@ -304,25 +313,32 @@ LoggerResult logger_print(
 
         while (line_start_ < msg_length_) {
             // determine end index (wrap at word boundaries)
-            Int32 line_end_ = line_start_ + total_width;
+            Int32 line_end_ = line_start_ + (total_width_ - padding_);
+
+            // make sure we do not exceed message length
             if (line_end_ > msg_length_) line_end_ = msg_length_;
 
-            if ((line_end_ < msg_length_) && (log_content_[line_end_] != ' '))
-                while ((line_end_ > line_start_) && (log_content_[line_end_]) != ' ') --line_end_;
+            if ((line_end_ < msg_length_) && (log_content_[line_end_] != ' ')) {
+                Int32 search_pos_ = line_end_;
+                while ((search_pos_ > line_start_) && (log_content_[search_pos_] != ' ')) --search_pos_;
 
-            if (line_end_ == line_start_) line_end_ = line_start_ + total_width;  // force wrap around if there is no space
+                if (search_pos_ > line_start_) line_end_ = search_pos_;
+            }
+
+            // force wrap around if there is no space
+            if (line_end_ == line_start_) line_end_ = line_start_ + (total_width_ - padding_);
 
             // print message block
             {
-                console_set_foreground_rgb(255, 255, 255);  // white text
-                console_write(" %-*s", total_width, &log_content_[line_start_]);
+                _logger_set_log_level_color(verbosity);
+                console_write("  %-*.*s  ", total_width_ - padding_, line_end_ - line_start_, &log_content_[line_start_]);
                 console_reset();
                 console_write("\n");
             }
 
             // move to next line
             line_start_ = line_end_;
-            while (log_content_[line_start_] == ' ') ++line_start_;  // skip extra spaces
+            while ((line_start_ < msg_length_) && (log_content_[line_start_] == ' ')) ++line_start_;  // skip extra spaces
         }
     }
 
