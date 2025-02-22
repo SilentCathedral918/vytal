@@ -16,6 +16,7 @@
                 "_CRT_SECURE_NO_WARNINGS",
                 
                 "LINE_BUFFER_MAX_SIZE = 8192",
+                "FILENAME_BUFFER_MAX_SIZE = 64",
                 "CVAR_HASHMAP_SIZE = 1024",
                 "MAX_EXCEPTION_DEPTH = 10",
                 "MEMORY_ALIGNMENT_SIZE = 16",

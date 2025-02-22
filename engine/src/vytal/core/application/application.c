@@ -19,7 +19,7 @@ AppResult _application_core_startup(void) {
     if (memory_manager_startup() != MEMORY_MANAGER_SUCCESS)
         return APP_ERROR_PRECONSTRUCT_LOGIC;
 
-    if (misc_console_startup() != CONSOLE_SUCCESS)
+    if (console_startup() != CONSOLE_SUCCESS)
         return APP_ERROR_PRECONSTRUCT_LOGIC;
 
     if (logger_startup() != LOGGER_SUCCESS)
@@ -32,7 +32,7 @@ AppResult _application_core_shutdown(void) {
     if (logger_shutdown() != LOGGER_SUCCESS)
         return APP_ERROR_DESTRUCT_LOGIC;
 
-    if (misc_console_shutdown() != CONSOLE_SUCCESS)
+    if (console_shutdown() != CONSOLE_SUCCESS)
         return APP_ERROR_DESTRUCT_LOGIC;
 
     if (memory_manager_shutdown() != MEMORY_MANAGER_SUCCESS)
@@ -55,7 +55,7 @@ AppResult application_preconstruct(void) {
 }
 
 AppResult application_construct(void) {
-    return APP_SUCCESS;
+        return APP_SUCCESS;
 }
 
 AppResult application_update(void) {

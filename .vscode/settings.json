@@ -19,6 +19,7 @@
     "string_view": "c",
     "span": "c",
     "charconv": "c",
-    "cstdlib": "c"
+    "cstdlib": "c",
+    "system_error": "c"
   },
 }
