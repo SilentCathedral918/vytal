@@ -28,8 +28,6 @@ struct Container_Map {
     ByteSize _memory_size;
 };
 
-ContainerResult _container_map_resize(Map *map, const ByteSize new_capacity);
-
 ContainerResult _container_map_rehash_insert(Map *map, MapDataItem *old_slot) {
     if (!map) return CONTAINER_ERROR_INVALID_PARAM;
     if (!(*map)->_memory_size) return CONTAINER_ERROR_NOT_ALLOCATED;

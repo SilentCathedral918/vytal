@@ -23,3 +23,4 @@ typedef enum Container_Result {
 
 typedef struct Container_String *String;
 typedef struct Container_Map    *Map;
+typedef struct Container_Array  *Array;
