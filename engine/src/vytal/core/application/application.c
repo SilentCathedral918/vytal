@@ -4,6 +4,8 @@
 #include <string.h>
 
 #include "vytal/core/configuration/cvar/cvar.h"
+#include "vytal/core/delegates/multicast/multicast.h"
+#include "vytal/core/delegates/unicast/unicast.h"
 #include "vytal/core/hal/exception/exception.h"
 #include "vytal/core/logger/logger.h"
 #include "vytal/core/memory/manager/memory_manager.h"
@@ -45,13 +47,26 @@ AppResult _application_core_startup(void) {
         app_state->_window_backend = WINDOW_BACKEND_GLFW;
     }
 
-    if (window_startup(app_state->_window_backend) != WINDOW_SUCCESS) return APP_ERROR_PRECONSTRUCT_LOGIC;
+    if (delegate_unicast_startup() != DELEGATE_SUCCESS)
+        return APP_ERROR_PRECONSTRUCT_LOGIC;
+
+    if (delegate_multicast_startup() != DELEGATE_SUCCESS)
+        return APP_ERROR_PRECONSTRUCT_LOGIC;
+
+    if (window_startup(app_state->_window_backend) != WINDOW_SUCCESS)
+        return APP_ERROR_PRECONSTRUCT_LOGIC;
 
     return APP_SUCCESS;
 }
 
 AppResult _application_core_shutdown(void) {
     if (window_shutdown() != WINDOW_SUCCESS)
+        return APP_ERROR_DESTRUCT_LOGIC;
+
+    if (delegate_multicast_shutdown() != DELEGATE_SUCCESS)
+        return APP_ERROR_DESTRUCT_LOGIC;
+
+    if (delegate_unicast_shutdown() != DELEGATE_SUCCESS)
         return APP_ERROR_DESTRUCT_LOGIC;
 
     // deallocate application state

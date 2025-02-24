@@ -327,7 +327,8 @@ ContainerResult container_map_search(Map map, ConstStr key, VoidPtr *out_data) {
         }
     }
 
-    return CONTAINER_ERROR_MAP_KEY_NOT_FOUND;
+    *out_data = NULL;
+    return CONTAINER_SUCCESS;
 }
 
 Bool container_map_contains(Map map, ConstStr key) {

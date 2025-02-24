@@ -69,7 +69,7 @@ ContainerResult container_array_destruct(Array array) {
     if (memory_zone_deallocate("Containers", array, array->_memory_size) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_DEALLOCATION_FAILED;
 
-    memset(array, 0, array->_memory_size);
+    array = NULL;
     return CONTAINER_SUCCESS;
 }
 
