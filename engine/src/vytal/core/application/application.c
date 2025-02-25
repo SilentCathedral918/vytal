@@ -11,6 +11,7 @@
 #include "vytal/core/memory/manager/memory_manager.h"
 #include "vytal/core/memory/zone/memory_zone.h"
 #include "vytal/core/misc/console/console.h"
+#include "vytal/core/modules/input/input.h"
 #include "vytal/core/platform/window/window.h"
 
 typedef struct Application_State {
@@ -47,11 +48,22 @@ AppResult _application_core_startup(void) {
         app_state->_window_backend = WINDOW_BACKEND_GLFW;
     }
 
-    if (delegate_unicast_startup() != DELEGATE_SUCCESS)
-        return APP_ERROR_PRECONSTRUCT_LOGIC;
+    // delegate systems
+    {
+        if (delegate_unicast_startup() != DELEGATE_SUCCESS)
+            return APP_ERROR_PRECONSTRUCT_LOGIC;
 
-    if (delegate_multicast_startup() != DELEGATE_SUCCESS)
-        return APP_ERROR_PRECONSTRUCT_LOGIC;
+        if (delegate_multicast_startup() != DELEGATE_SUCCESS)
+            return APP_ERROR_PRECONSTRUCT_LOGIC;
+    }
+
+    // modules
+    {
+        if (input_module_startup() != INPUT_MODULE_SUCCESS)
+            return APP_ERROR_PRECONSTRUCT_LOGIC;
+
+        // TODO: window module
+    }
 
     if (window_startup(app_state->_window_backend) != WINDOW_SUCCESS)
         return APP_ERROR_PRECONSTRUCT_LOGIC;
@@ -61,6 +73,9 @@ AppResult _application_core_startup(void) {
 
 AppResult _application_core_shutdown(void) {
     if (window_shutdown() != WINDOW_SUCCESS)
+        return APP_ERROR_DESTRUCT_LOGIC;
+
+    if (input_module_shutdown() != INPUT_MODULE_SUCCESS)
         return APP_ERROR_DESTRUCT_LOGIC;
 
     if (delegate_multicast_shutdown() != DELEGATE_SUCCESS)
