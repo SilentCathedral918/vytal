@@ -21,6 +21,7 @@
     "charconv": "c",
     "cstdlib": "c",
     "system_error": "c",
-    "variant": "c"
+    "variant": "c",
+    "format": "c"
   },
 }

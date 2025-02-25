@@ -18,6 +18,7 @@ VYTAL_API ContainerResult container_string_detach(String *str);
 VYTAL_API ContainerResult container_string_detach_ranged(String *str, const ByteSize range);
 
 VYTAL_API ContainerResult container_string_filter_char(String *str, const Char chr);
+VYTAL_API ContainerResult container_string_clear(String *str);
 
 VYTAL_API ContainerResult container_string_equals(String left, ConstStr right, const Bool case_sentitive, Bool *out_result);
 VYTAL_API ContainerResult container_string_equals_string(String left, String right, const Bool case_sensitive, Bool *out_result);

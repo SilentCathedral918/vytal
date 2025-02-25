@@ -376,6 +376,16 @@ ContainerResult container_string_filter_char(String *str, const Char chr) {
     return CONTAINER_SUCCESS;
 }
 
+ContainerResult container_string_clear(String *str) {
+    if (!(*str)) return CONTAINER_ERROR_NOT_ALLOCATED;
+    if (!(*str)->_size) return CONTAINER_ERROR_EMPTY_DATA;
+
+    memset((*str)->_data, 0, (*str)->_size);
+    (*str)->_size = 0;
+
+    return CONTAINER_SUCCESS;
+}
+
 ContainerResult container_string_equals(String left, ConstStr right, const Bool case_sentitive, Bool *out_result) {
     if (!left) return CONTAINER_ERROR_NOT_ALLOCATED;
     if (!right || !out_result) return CONTAINER_ERROR_INVALID_PARAM;
@@ -611,16 +621,6 @@ ContainerResult container_string_ends_with(String str, ConstStr substr, const Bo
     *out_result   = (case_sensitive)
                         ? (strncmp(end_, substr, substr_length_) == 0)
                         : (strncasecmp(end_, substr, substr_length_) == 0);
-
-    return CONTAINER_SUCCESS;
-}
-
-ContainerResult container_string_clear(String *str) {
-    if (!(*str)) return CONTAINER_ERROR_NOT_ALLOCATED;
-    if (!(*str)->_size) return CONTAINER_ERROR_EMPTY_DATA;
-
-    memset((*str)->_data, 0, (*str)->_size);
-    (*str)->_size = 0;
 
     return CONTAINER_SUCCESS;
 }

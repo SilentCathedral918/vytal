@@ -4,7 +4,6 @@
 
 #include "vytal/core/delegates/unicast/unicast.h"
 #include "vytal/core/memory/zone/memory_zone.h"
-#include "vytal/core/misc/console/console.h"
 
 typedef struct Input_Keyboard_State {
     Bool     _keys[VYTAL_KEYCODES_TOTAL];

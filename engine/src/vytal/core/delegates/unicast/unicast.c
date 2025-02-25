@@ -55,7 +55,7 @@ DelegateResult delegate_unicast_shutdown(void) {
 DelegateResult delegate_unicast_bind(ConstStr delegate_id, VoidPtr listener, DelegateFunction callback) {
     if (!state) return DELEGATE_ERROR_NOT_INITIALIZED;
     if (!state->_initialized) return DELEGATE_ERROR_NOT_INITIALIZED;
-    if (!delegate_id || !listener || !callback) return DELEGATE_ERROR_INVALID_PARAM;
+    if (!delegate_id || !callback) return DELEGATE_ERROR_INVALID_PARAM;
 
     UnicastDelegate del_ = NULL;
 
