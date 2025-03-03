@@ -6,10 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "vytal/core/configuration/cvar/cvar.h"
 #include "vytal/core/containers/map/map.h"
 #include "vytal/core/containers/string/string.h"
 #include "vytal/core/hal/clock/wall/wall.h"
+#include "vytal/core/helpers/parse/parse.h"
 #include "vytal/core/misc/console/console.h"
 
 #define EXTRACT_FILENAME(filepath) ({                                  \
@@ -30,8 +30,7 @@ struct Logger_Handle {
     File       _file;
 };
 
-static Logger_State *state                 = NULL;
-static ConstStr      loggers_cvar_filepath = "loggers.cfg";
+static Logger_State *state = NULL;
 
 LoggerResult _logger_write_to_file(File *file, ConstStr message) {
     if (file->_stream && file->_active) {
@@ -42,23 +41,6 @@ LoggerResult _logger_write_to_file(File *file, ConstStr message) {
     }
 
     return LOGGER_SUCCESS;
-}
-
-VYTAL_INLINE Str _logger_trim_whitespace(Str str) {
-    // trim leading space
-    {
-        while (isspace((Int8)*str)) ++str;
-        if (*str == '\0') return str;
-    }
-
-    // trim trailing space
-    {
-        Str end_ = str + strlen(str) - 1;
-        while (end_ > str && isspace((unsigned char)*end_)) --end_;
-        *(end_ + 1) = '\0';
-    }
-
-    return str;
 }
 
 static void _logger_set_log_level_color(LoggerVerbosity verbosity) {
@@ -86,12 +68,11 @@ static void _logger_set_log_level_color(LoggerVerbosity verbosity) {
     }
 }
 
-LoggerResult logger_startup(void) {
+LoggerResult logger_startup(File *file) {
     if (state) return LOGGER_ERROR_STATE_ALREADY_INITIALIZED;
 
     // allocate and configure the state
-    state = malloc(sizeof(Logger_State));
-    memset(state, 0, sizeof(Logger_State));
+    state = calloc(1, sizeof(Logger_State));
 
     // construct the logger map
     if (container_map_construct(sizeof(struct Logger_Handle), &state->_logger_map) != CONTAINER_SUCCESS) {
@@ -99,41 +80,49 @@ LoggerResult logger_startup(void) {
         return LOGGER_ERROR_MAP_CONSTRUCTION_FAILED;
     }
 
-    File   cvar_file_      = {0};
-    Str    cvar_line_      = calloc(1, LINE_BUFFER_MAX_SIZE);
+    Str    line_           = calloc(1, LINE_BUFFER_MAX_SIZE);
     Logger staging_logger_ = calloc(1, sizeof(struct Logger_Handle));
 
-    FileResult open_file_ = platform_filesystem_open_file(&cvar_file_, loggers_cvar_filepath, FILE_IO_MODE_READ, FILE_MODE_TEXT);
-    if (open_file_ != FILE_SUCCESS) return MEMORY_MANAGER_ERROR_FILE_OPEN_FAILED;
-
-    // first scan for loggers required
-    while (platform_filesystem_read_line(&cvar_file_, NULL, &cvar_line_) == FILE_SUCCESS) {
+    ByteSize seek_length_ = 0;
+    while (platform_filesystem_read_line(file, &seek_length_, &line_) == FILE_SUCCESS) {
         memset(staging_logger_, 0, sizeof(struct Logger_Handle));
 
-        Str trimmed_ = _logger_trim_whitespace(cvar_line_);
+        Str trimmed_ = line_;
+
+        if (parse_trim_whitespace(&trimmed_) != PARSE_SUCCESS)
+            return MEMORY_MANAGER_ERROR_PARSE_FAILED;
+
         if (*trimmed_ == '#' || *trimmed_ == '\0') continue;
+        if (*trimmed_ == '[') {
+            platform_filesystem_seek_from_current(file, -seek_length_);
+            break;
+        }
 
-        Str pequal_ = strchr(trimmed_, '=');
-        if (!pequal_) continue;
+        Char key_[LINE_BUFFER_MAX_SIZE]   = {0};
+        Char value_[LINE_BUFFER_MAX_SIZE] = {0};
+        if (!parse_key_value(trimmed_, key_, value_)) continue;
 
-        *pequal_ = '\0';
-
-        Str key_   = trimmed_;
-        Str psep_  = strchr(key_, '.');
-        Str name_  = _logger_trim_whitespace(psep_ + 1);
-        Str value_ = _logger_trim_whitespace(pequal_ + 1);
-        Str end_;
         Str psep_output_ = strstr(value_, "->");
         Str filepath_    = NULL;
-        if (psep_output_) {
-            *psep_output_ = '\0';
-            filepath_     = _logger_trim_whitespace(psep_output_ + 2);
+
+        // extract output log filepath
+        {
+            if (psep_output_) {
+                *psep_output_ = '\0';
+                filepath_     = psep_output_ + 2;
+
+                if (parse_clean_filepath(&filepath_) != PARSE_SUCCESS)
+                    continue;
+            }
         }
+
+        // extract log flags
+        Str   end_;
         Int64 logger_flags_ = strtol(value_, &end_, 2);
 
         // prepare logger data
         {
-            if (container_string_construct(name_, &staging_logger_->_name) != CONTAINER_SUCCESS)
+            if (container_string_construct(key_, &staging_logger_->_name) != CONTAINER_SUCCESS)
                 return LOGGER_ERROR_MAP_ITEM_ALLOCATION_FAILED;
 
             staging_logger_->_flags = logger_flags_;
@@ -146,15 +135,12 @@ LoggerResult logger_startup(void) {
         }
 
         // insert to map
-        if (container_map_insert(&state->_logger_map, name_, staging_logger_) != CONTAINER_SUCCESS)
+        if (container_map_insert(&state->_logger_map, key_, staging_logger_) != CONTAINER_SUCCESS)
             return LOGGER_ERROR_MAP_ITEM_ALLOCATION_FAILED;
     }
 
     free(staging_logger_);
-    free(cvar_line_);
-
-    FileResult close_file_ = platform_filesystem_close_file(&cvar_file_);
-    if (close_file_ != FILE_SUCCESS) return MEMORY_MANAGER_ERROR_FILE_CLOSE_FAILED;
+    free(line_);
 
     state->_initialized = true;
     return LOGGER_SUCCESS;

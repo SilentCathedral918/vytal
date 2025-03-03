@@ -6,21 +6,21 @@
 typedef void (*Delegate_Function)(VoidPtr sender, VoidPtr listener, VoidPtr data);
 typedef Delegate_Function DelegateFunction;
 
-// uni-cast ------------------------------------------------------------------ //
+// uni-cast ------------------------------------------------------------- //
 
 typedef struct Delegate_Unicast_Handle {
     VoidPtr          _listener;
     DelegateFunction _callback;
 } *UnicastDelegate;
 
-// multi-cast ---------------------------------------------------------------- //
+// multi-cast ----------------------------------------------------------- //
 
 typedef struct Delegate_Multicast_Handle {
     VoidPtr _listener;
     Array   _callbacks;
 } *MulticastDelegate;
 
-// return codes -------------------------------------------------------------- //
+// return codes --------------------------------------------------------- //
 
 typedef enum Delegate_Result {
     DELEGATE_SUCCESS                   = 0,

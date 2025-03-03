@@ -33,13 +33,15 @@ typedef struct Memory_Manager {
 // return codes --------------------------------------------------------- //
 
 typedef enum Memory_Manager_Result {
-    MEMORY_MANAGER_SUCCESS                   = 0,
-    MEMORY_MANAGER_ERROR_NOT_INITIALIZED     = -1,
-    MEMORY_MANAGER_ERROR_ALREADY_INITIALIZED = -2,
-    MEMORY_MANAGER_ERROR_FILE_OPEN_FAILED    = -3,
-    MEMORY_MANAGER_ERROR_FILE_CLOSE_FAILED   = -4,
-    MEMORY_MANAGER_ERROR_OUT_OF_MEMORY       = -5,
-    MEMORY_MANAGER_ERROR_INVALID_FORMAT      = -6
+    MEMORY_MANAGER_SUCCESS                               = 0,
+    MEMORY_MANAGER_ERROR_NOT_INITIALIZED                 = -1,
+    MEMORY_MANAGER_ERROR_ALREADY_INITIALIZED             = -2,
+    MEMORY_MANAGER_ERROR_FILE_INACTIVE_OR_INVALID_STREAM = -3,
+    MEMORY_MANAGER_ERROR_ALLOCATION_FAILED               = -4,
+    MEMORY_MANAGER_ERROR_DEALLOCATION_FAILED             = -5,
+    MEMORY_MANAGER_ERROR_INVALID_FORMAT                  = -6,
+    MEMORY_MANAGER_ERROR_INVALID_PARAM                   = -7,
+    MEMORY_MANAGER_ERROR_PARSE_FAILED                    = -8
 } MemoryManagerResult;
 
 typedef enum Memory_Zone_Result {
@@ -107,3 +109,9 @@ VT_INLINE Int32 check_endianness(void) {
 // memory alignment ----------------------------------------------------- //
 
 #define VYTAL_APPLY_ALIGNMENT(size, alignment) (((size + (alignment - 1)) / alignment) * alignment)
+
+// conversion types ----------------------------------------------------- //
+
+#define KB_IN_BYTES(kb) ((kb) * 1024)
+#define MB_IN_BYTES(mb) ((mb) * 1024 * 1024)
+#define GB_IN_BYTES(gb) ((gb) * 1024 * 1024 * 1024)

@@ -14,9 +14,9 @@ typedef enum Container_Result {
     CONTAINER_ERROR_SIZES_MISMATCHED    = -6,
 
     // map container specifics
-    CONTAINER_ERROR_MAP_KEY_ALREADY_EXISTS     = -7,
-    CONTAINER_ERROR_MAP_KEY_NOT_FOUND          = -8,
-    CONTAINER_ERROR_MAP_REACHED_PROBING_LIMITS = -9,
+    CONTAINER_ERROR_MAP_KEY_ALREADY_EXISTS     = -100,
+    CONTAINER_ERROR_MAP_KEY_NOT_FOUND          = -101,
+    CONTAINER_ERROR_MAP_REACHED_PROBING_LIMITS = -102,
 } ContainerResult;
 
 // types ---------------------------------------------------------------- //

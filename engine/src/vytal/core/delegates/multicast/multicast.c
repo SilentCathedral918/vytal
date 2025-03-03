@@ -19,14 +19,14 @@ DelegateResult delegate_multicast_startup(void) {
     if (state) return DELEGATE_ERROR_ALREADY_INITIALIZED;
 
     ByteSize state_memory_size_ = 0;
-    if (memory_zone_allocate("Delegates", sizeof(MulticastDelegateState), (VoidPtr *)&state, &state_memory_size_) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_allocate("delegates", sizeof(MulticastDelegateState), (VoidPtr *)&state, &state_memory_size_) != MEMORY_ZONE_SUCCESS)
         return DELEGATE_ERROR_ALLOCATION_FAILED;
     memset(state, 0, sizeof(MulticastDelegateState));
 
     // configure state members
     {
         if (container_map_construct(sizeof(struct Delegate_Multicast_Handle), &state->_delegate_map) != CONTAINER_SUCCESS) {
-            if (memory_zone_deallocate("Delegates", state, state->_memory_size) != MEMORY_ZONE_SUCCESS)
+            if (memory_zone_deallocate("delegates", state, state->_memory_size) != MEMORY_ZONE_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
             return DELEGATE_ERROR_ALLOCATION_FAILED;
@@ -36,7 +36,7 @@ DelegateResult delegate_multicast_startup(void) {
             if (container_map_destruct(state->_delegate_map) != CONTAINER_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
-            if (memory_zone_deallocate("Delegates", state, state->_memory_size) != MEMORY_ZONE_SUCCESS)
+            if (memory_zone_deallocate("delegates", state, state->_memory_size) != MEMORY_ZONE_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
             return DELEGATE_ERROR_ALLOCATION_FAILED;
@@ -60,7 +60,7 @@ DelegateResult delegate_multicast_shutdown(void) {
             if (container_array_destruct(del_->_callbacks) != CONTAINER_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
-            if (memory_zone_deallocate("Delegates", del_, sizeof(struct Delegate_Multicast_Handle)) != MEMORY_ZONE_SUCCESS)
+            if (memory_zone_deallocate("delegates", del_, sizeof(struct Delegate_Multicast_Handle)) != MEMORY_ZONE_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
         }
     }
@@ -71,7 +71,7 @@ DelegateResult delegate_multicast_shutdown(void) {
     if (container_map_destruct(state->_delegate_map) != CONTAINER_SUCCESS)
         return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
-    if (memory_zone_deallocate("Delegates", state, state->_memory_size) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_deallocate("delegates", state, state->_memory_size) != MEMORY_ZONE_SUCCESS)
         return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
     state = NULL;
@@ -81,7 +81,7 @@ DelegateResult delegate_multicast_shutdown(void) {
 DelegateResult delegate_multicast_add(ConstStr delegate_id, VoidPtr listener, DelegateFunction callback) {
     if (!state) return DELEGATE_ERROR_NOT_INITIALIZED;
     if (!state->_initialized) return DELEGATE_ERROR_NOT_INITIALIZED;
-    if (!delegate_id || !listener || !callback) return DELEGATE_ERROR_INVALID_PARAM;
+    if (!delegate_id || !callback) return DELEGATE_ERROR_INVALID_PARAM;
 
     MulticastDelegate del_ = NULL;
     if (container_map_search(state->_delegate_map, delegate_id, (VoidPtr *)&del_) == CONTAINER_SUCCESS && del_) {
@@ -92,7 +92,7 @@ DelegateResult delegate_multicast_add(ConstStr delegate_id, VoidPtr listener, De
     // otherwise
     {
         // allocate the delegate
-        if (memory_zone_allocate("Delegates", sizeof(struct Delegate_Multicast_Handle), (VoidPtr)&del_, NULL) != MEMORY_ZONE_SUCCESS)
+        if (memory_zone_allocate("delegates", sizeof(struct Delegate_Multicast_Handle), (VoidPtr)&del_, NULL) != MEMORY_ZONE_SUCCESS)
             return DELEGATE_ERROR_ALLOCATION_FAILED;
 
         // bind the listener
@@ -100,7 +100,7 @@ DelegateResult delegate_multicast_add(ConstStr delegate_id, VoidPtr listener, De
 
         // construct a list of callbacks
         if (container_array_construct(sizeof(DelegateFunction), &del_->_callbacks) != CONTAINER_SUCCESS) {
-            if (memory_zone_deallocate("Delegates", del_, sizeof(struct Delegate_Multicast_Handle)) != MEMORY_ZONE_SUCCESS)
+            if (memory_zone_deallocate("delegates", del_, sizeof(struct Delegate_Multicast_Handle)) != MEMORY_ZONE_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
             return DELEGATE_ERROR_ALLOCATION_FAILED;
@@ -111,7 +111,7 @@ DelegateResult delegate_multicast_add(ConstStr delegate_id, VoidPtr listener, De
             if (container_array_destruct(del_->_callbacks) != CONTAINER_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
-            if (memory_zone_deallocate("Delegates", del_, sizeof(struct Delegate_Multicast_Handle)) != MEMORY_ZONE_SUCCESS)
+            if (memory_zone_deallocate("delegates", del_, sizeof(struct Delegate_Multicast_Handle)) != MEMORY_ZONE_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
             return DELEGATE_ERROR_DATA_INSERT_FAILED;
@@ -122,7 +122,7 @@ DelegateResult delegate_multicast_add(ConstStr delegate_id, VoidPtr listener, De
             if (container_array_destruct(del_->_callbacks) != CONTAINER_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
-            if (memory_zone_deallocate("Delegates", del_, sizeof(struct Delegate_Multicast_Handle)) != MEMORY_ZONE_SUCCESS)
+            if (memory_zone_deallocate("delegates", del_, sizeof(struct Delegate_Multicast_Handle)) != MEMORY_ZONE_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
             return DELEGATE_ERROR_DATA_INSERT_FAILED;
@@ -172,7 +172,7 @@ DelegateResult delegate_multicast_remove(ConstStr delegate_id, DelegateFunction 
         if (container_array_remove(&state->_active_delegates, del_, false) != CONTAINER_SUCCESS)
             return DELEGATE_ERROR_DATA_REMOVE_FAILED;
 
-        if (memory_zone_deallocate("Delegates", del_, sizeof(struct Delegate_Multicast_Handle)) != MEMORY_ZONE_SUCCESS)
+        if (memory_zone_deallocate("delegates", del_, sizeof(struct Delegate_Multicast_Handle)) != MEMORY_ZONE_SUCCESS)
             return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
         del_ = NULL;

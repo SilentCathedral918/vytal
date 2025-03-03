@@ -6,9 +6,7 @@
 
 #include "vytal/core/memory/manager/memory_manager.h"
 
-#define MEMORY_ZONE_SIZE_CLASSES_DEFAULT_CAPACITY 10
-
-void _memory_zone_compute_size_classes(ByteSize *out_num_classes, MemoryZoneSizeClass **out_size_classes, const ByteSize capacity) {
+VYTAL_INLINE void _memory_zone_compute_size_classes(ByteSize *out_num_classes, MemoryZoneSizeClass **out_size_classes, const ByteSize capacity) {
     if (!out_num_classes || !capacity) return;
 
     const Flt32 ratio_ = 1.618f;
@@ -155,7 +153,7 @@ MemoryZoneResult memory_zone_deallocate(ConstStr zone_name, const VoidPtr ptr, c
     MemoryZoneSizeClass *size_class_ = &zone_->_size_classes[index_];
 
     if (size_class_->_num_blocks == size_class_->_capacity) {
-        ByteSize new_capacity_ = !size_class_->_capacity ? MEMORY_ZONE_SIZE_CLASSES_DEFAULT_CAPACITY : (ByteSize)((Flt32)size_class_->_capacity * ratio_);
+        ByteSize new_capacity_ = !size_class_->_capacity ? CONTAINER_DEFAULT_CAPACITY : (ByteSize)((Flt32)size_class_->_capacity * ratio_);
 
         VoidPtr *new_blocks_ = realloc(size_class_->_blocks, sizeof(VoidPtr) * new_capacity_);
         if (!new_blocks_)

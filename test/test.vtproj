@@ -1,0 +1,13 @@
+# Project information 
+project_name = "test" 
+version = "1.0" 
+modules = [] 
+ 
+# Paths 
+base_path = "D:\Dev\Projects\GameDev\vytal\test" 
+ 
+[paths] 
+source = "src" 
+assets = "assets" 
+config = "configs" 
+ 

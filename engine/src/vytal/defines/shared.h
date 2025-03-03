@@ -33,20 +33,3 @@
 #    define VYTAL_NOINLINE
 
 #endif
-
-// platform detection --------------------------------------------------- //
-
-#if defined(_MSC_VER)  // MSVC
-#    if !defined(_WIN64)
-#        error "64-bit is required."
-#    else
-#        define VYTAL_PLATFORM_WINDOWS 1
-#    endif
-
-#elif defined(__MINGW32__)  // MinGW
-#    if !defined(__MINGW64__)
-#        error "64-bit is required."
-#    else
-#        define VYTAL_PLATFORM_WINDOWS 1
-#    endif
-#endif

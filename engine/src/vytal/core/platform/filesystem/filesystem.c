@@ -27,7 +27,7 @@ FileResult platform_filesystem_open_file(
     ConstStr         filepath,
     const FileIOMode io_mode,
     const FileMode   file_mode) {
-    if (!file || !filepath) return FILE_ERROR_NULL_PTR;
+    if (!file || !filepath) return FILE_ERROR_INVALID_PARAM;
     if (file->_active) return FILE_ERROR_ALREADY_OPEN;
 
     // configure stream file mode
@@ -43,7 +43,7 @@ FileResult platform_filesystem_open_file(
 }
 
 FileResult platform_filesystem_close_file(File *file) {
-    if (!file) return FILE_ERROR_NULL_PTR;
+    if (!file) return FILE_ERROR_INVALID_PARAM;
     if (!file->_active || !file->_stream) return FILE_ERROR_NOT_OPEN;
 
     if (fclose(file->_stream) != 0)
@@ -88,7 +88,7 @@ FileResult platform_filesystem_read_line(
     File     *file,
     ByteSize *out_read_size,
     Str      *out_read_data) {
-    if (!file) return FILE_ERROR_NULL_PTR;
+    if (!file) return FILE_ERROR_INVALID_PARAM;
     if (!file->_active || !file->_stream) return FILE_ERROR_NOT_OPEN;
 
     if (out_read_data) {
@@ -107,7 +107,7 @@ FileResult platform_filesystem_read_data(
     File          *file,
     const ByteSize data_size,
     VoidPtr        out_read_data) {
-    if (!file) return FILE_ERROR_NULL_PTR;
+    if (!file) return FILE_ERROR_INVALID_PARAM;
     if (!file->_active || !file->_stream) return FILE_ERROR_NOT_OPEN;
     if (!data_size || !out_read_data) return FILE_ERROR_INVALID_PARAM;
 
@@ -121,7 +121,7 @@ FileResult platform_filesystem_read_data(
 }
 
 FileResult platform_filesystem_read_all(File *file, ByteSize *out_read_size, Str out_read_data) {
-    if (!file) return FILE_ERROR_NULL_PTR;
+    if (!file) return FILE_ERROR_INVALID_PARAM;
     if (!file->_active || !file->_stream) return FILE_ERROR_NOT_OPEN;
     if (!out_read_data) return FILE_ERROR_INVALID_PARAM;
 
@@ -140,7 +140,7 @@ FileResult platform_filesystem_read_all(File *file, ByteSize *out_read_size, Str
 }
 
 FileResult platform_filesystem_write_line(File *file, ConstStr content) {
-    if (!file) return FILE_ERROR_NULL_PTR;
+    if (!file) return FILE_ERROR_INVALID_PARAM;
     if (!file->_active || !file->_stream) return FILE_ERROR_NOT_OPEN;
     if (!content) return FILE_ERROR_INVALID_PARAM;
 
@@ -155,7 +155,7 @@ FileResult platform_filesystem_write_line(File *file, ConstStr content) {
 }
 
 FileResult platform_filesystem_write_data(File *file, VoidPtr data, const ByteSize data_size) {
-    if (!file) return FILE_ERROR_NULL_PTR;
+    if (!file) return FILE_ERROR_INVALID_PARAM;
     if (!file->_active || !file->_stream) return FILE_ERROR_NOT_OPEN;
     if (!data || !data_size) return FILE_ERROR_INVALID_PARAM;
 
@@ -196,7 +196,7 @@ FileResult platform_filesystem_extract_filename_from_filepath(ConstStr filepath,
 }
 
 FileResult platform_filesystem_seek_to_position(File *file, const Int64 target) {
-    if (!file) return FILE_ERROR_NULL_PTR;
+    if (!file) return FILE_ERROR_INVALID_PARAM;
     if (!file->_active || !file->_stream) return FILE_ERROR_NOT_OPEN;
     if (target < 0) return FILE_ERROR_INVALID_PARAM;
 
@@ -205,25 +205,28 @@ FileResult platform_filesystem_seek_to_position(File *file, const Int64 target) 
 }
 
 FileResult platform_filesystem_seek_from_current(File *file, const Int64 distance) {
-    if (!file) return FILE_ERROR_NULL_PTR;
+    if (!file) return FILE_ERROR_INVALID_PARAM;
     if (!file->_active || !file->_stream) return FILE_ERROR_NOT_OPEN;
     if (distance == 0) return FILE_ERROR_INVALID_PARAM;
 
-    // prevent seeking beyond end-of-file
+    Int64 position_ = ftell(file->_stream);
+
+    // prevent seeking beyond file boundaries
     {
-        Int64 position_ = ftell(file->_stream);
         if (position_ == -1) return FILE_ERROR_IO;
 
         ByteSize file_size_ = platform_filesystem_file_size(file);
         if (position_ + distance > file_size_) return FILE_ERROR_EOF;
     }
 
-    if (fseek(file->_stream, distance, SEEK_CUR) != 0) return FILE_ERROR_IO;
+    if (fseek(file->_stream, position_ + distance, SEEK_SET) != 0)
+        return FILE_ERROR_IO;
+
     return FILE_SUCCESS;
 }
 
 Int64 platform_filesystem_get_seek_position(File *file) {
-    if (!file) return FILE_ERROR_NULL_PTR;
+    if (!file) return FILE_ERROR_INVALID_PARAM;
     if (!file->_active || !file->_stream) return FILE_ERROR_NOT_OPEN;
 
     return ftell(file->_stream);

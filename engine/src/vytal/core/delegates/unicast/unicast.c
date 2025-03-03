@@ -18,14 +18,14 @@ DelegateResult delegate_unicast_startup(void) {
     if (state) return DELEGATE_ERROR_ALREADY_INITIALIZED;
 
     ByteSize state_memory_size_ = 0;
-    if (memory_zone_allocate("Delegates", sizeof(UnicastDelegateState), (VoidPtr)&state, &state_memory_size_) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_allocate("delegates", sizeof(UnicastDelegateState), (VoidPtr)&state, &state_memory_size_) != MEMORY_ZONE_SUCCESS)
         return DELEGATE_ERROR_ALLOCATION_FAILED;
     memset(state, 0, sizeof(UnicastDelegateState));
 
     // configure state members
     {
         if (container_map_construct(sizeof(struct Delegate_Unicast_Handle), &state->_delegate_map) != CONTAINER_SUCCESS) {
-            if (memory_zone_deallocate("Delegates", state, state->_memory_size) != MEMORY_ZONE_SUCCESS)
+            if (memory_zone_deallocate("delegates", state, state->_memory_size) != MEMORY_ZONE_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
             return DELEGATE_ERROR_ALLOCATION_FAILED;
@@ -45,7 +45,7 @@ DelegateResult delegate_unicast_shutdown(void) {
     if (container_map_destruct(state->_delegate_map) != CONTAINER_SUCCESS)
         return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
-    if (memory_zone_deallocate("Delegates", state, state->_memory_size) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_deallocate("delegates", state, state->_memory_size) != MEMORY_ZONE_SUCCESS)
         return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
     state = NULL;
@@ -68,7 +68,7 @@ DelegateResult delegate_unicast_bind(ConstStr delegate_id, VoidPtr listener, Del
         return DELEGATE_SUCCESS;
 
     // allocate delegate
-    if (memory_zone_allocate("Delegates", sizeof(struct Delegate_Unicast_Handle), (VoidPtr *)&del_, NULL) != MEMORY_ZONE_SUCCESS) return DELEGATE_ERROR_ALLOCATION_FAILED;
+    if (memory_zone_allocate("delegates", sizeof(struct Delegate_Unicast_Handle), (VoidPtr *)&del_, NULL) != MEMORY_ZONE_SUCCESS) return DELEGATE_ERROR_ALLOCATION_FAILED;
 
     // configure delegate
     {
@@ -78,7 +78,7 @@ DelegateResult delegate_unicast_bind(ConstStr delegate_id, VoidPtr listener, Del
 
     // register delegate
     if (container_map_insert(&state->_delegate_map, delegate_id, del_) != CONTAINER_SUCCESS) {
-        if (memory_zone_deallocate("Delegates", del_, sizeof(struct Delegate_Unicast_Handle)) != MEMORY_ZONE_SUCCESS)
+        if (memory_zone_deallocate("delegates", del_, sizeof(struct Delegate_Unicast_Handle)) != MEMORY_ZONE_SUCCESS)
             return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
         return DELEGATE_ERROR_DATA_INSERT_FAILED;
@@ -99,7 +99,7 @@ DelegateResult delegate_unicast_unbind(ConstStr delegate_id) {
             return DELEGATE_ERROR_DATA_SEARCH_FAILED;
         if (!del_) return DELEGATE_ERROR_DATA_NOT_EXIST;
 
-        if (memory_zone_deallocate("Delegates", del_, sizeof(struct Delegate_Unicast_Handle)) != MEMORY_ZONE_SUCCESS)
+        if (memory_zone_deallocate("delegates", del_, sizeof(struct Delegate_Unicast_Handle)) != MEMORY_ZONE_SUCCESS)
             return DELEGATE_ERROR_DEALLOCATION_FAILED;
     }
 

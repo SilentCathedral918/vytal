@@ -29,7 +29,7 @@ VYTAL_INLINE ContainerResult _container_string_resize(String *str, const ByteSiz
 
     String old_str_ = *str;
     String new_str_ = NULL;
-    if (memory_zone_allocate("Strings", new_alloc_size_, (VoidPtr *)&new_str_, NULL) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_allocate("strings", new_alloc_size_, (VoidPtr *)&new_str_, NULL) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_ALLOCATION_FAILED;
 
     new_str_->_size        = (*str)->_size;
@@ -39,7 +39,7 @@ VYTAL_INLINE ContainerResult _container_string_resize(String *str, const ByteSiz
 
     memcpy(new_str_->_data, (*str)->_data, (*str)->_size);
 
-    if (memory_zone_deallocate("Strings", old_str_, old_str_->_memory_size) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_deallocate("strings", old_str_, old_str_->_memory_size) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_DEALLOCATION_FAILED;
 
     *str = new_str_;
@@ -76,7 +76,7 @@ ContainerResult container_string_construct(ConstStr content, String *out_new_str
     ByteSize capacity_   = VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
     ByteSize alloc_size_ = sizeof(struct Container_String) + capacity_;
 
-    if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)out_new_str, NULL) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_allocate("strings", alloc_size_, (VoidPtr *)out_new_str, NULL) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_ALLOCATION_FAILED;
 
     (*out_new_str)->_size        = content_length_;
@@ -96,7 +96,7 @@ ContainerResult container_string_construct_char(const Char chr, String *out_new_
     ByteSize capacity_   = VYTAL_APPLY_ALIGNMENT(sizeof(Char) + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
     ByteSize alloc_size_ = sizeof(struct Container_String) + capacity_;
 
-    if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)out_new_str, NULL) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_allocate("strings", alloc_size_, (VoidPtr *)out_new_str, NULL) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_ALLOCATION_FAILED;
 
     (*out_new_str)->_size        = 0;
@@ -117,7 +117,7 @@ ContainerResult container_string_construct_chars(const Char chr, const ByteSize 
     ByteSize capacity_       = VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
     ByteSize alloc_size_     = sizeof(struct Container_String) + capacity_;
 
-    if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)out_new_str, NULL) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_allocate("strings", alloc_size_, (VoidPtr *)out_new_str, NULL) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_ALLOCATION_FAILED;
 
     (*out_new_str)->_size        = content_length_;
@@ -144,7 +144,7 @@ ContainerResult container_string_construct_formatted(String *out_new_str, ConstS
     ByteSize capacity_   = VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
     ByteSize alloc_size_ = sizeof(struct Container_String) + capacity_;
 
-    if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)out_new_str, NULL) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_allocate("strings", alloc_size_, (VoidPtr *)out_new_str, NULL) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_ALLOCATION_FAILED;
 
     (*out_new_str)->_size        = content_length_;
@@ -167,7 +167,7 @@ ContainerResult container_string_destruct(String str) {
     if (!str) return CONTAINER_ERROR_INVALID_PARAM;
     if (!str->_data || !str->_memory_size) return CONTAINER_ERROR_NOT_ALLOCATED;
 
-    if (memory_zone_deallocate("Strings", str, str->_memory_size) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_deallocate("strings", str, str->_memory_size) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_DEALLOCATION_FAILED;
 
     memset(str, 0, sizeof(struct Container_String));
@@ -250,7 +250,7 @@ ContainerResult container_string_append_formatted(String *str, ConstStr format, 
         ByteSize capacity_   = VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
         ByteSize alloc_size_ = sizeof(struct Container_String) + capacity_;
 
-        if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)str, NULL) != MEMORY_ZONE_SUCCESS)
+        if (memory_zone_allocate("strings", alloc_size_, (VoidPtr *)str, NULL) != MEMORY_ZONE_SUCCESS)
             return CONTAINER_ERROR_ALLOCATION_FAILED;
 
         (*str)->_size     = 0;
@@ -758,7 +758,7 @@ ContainerResult container_string_insert_formatted(String *str, const ByteSize in
         ByteSize capacity_   = VYTAL_APPLY_ALIGNMENT(content_length_ + 1, MEMORY_ALIGNMENT_SIZE) * CONTAINER_RESIZE_FACTOR;
         ByteSize alloc_size_ = sizeof(struct Container_String) + capacity_;
 
-        if (memory_zone_allocate("Strings", alloc_size_, (VoidPtr *)str, NULL) != MEMORY_ZONE_SUCCESS)
+        if (memory_zone_allocate("strings", alloc_size_, (VoidPtr *)str, NULL) != MEMORY_ZONE_SUCCESS)
             return CONTAINER_ERROR_ALLOCATION_FAILED;
 
         (*str)->_size     = 0;
@@ -821,7 +821,7 @@ ContainerResult container_string_remove(String *str, const ByteSize index, const
 
 ContainerResult container_string_to_lower(String *str) {
     if (!(*str)) return CONTAINER_ERROR_NOT_ALLOCATED;
-    if (!(*str) || !(*str)->_size) return CONTAINER_ERROR_INVALID_PARAM;
+    if (!(*str) || !(*str)->_size) return CONTAINER_ERROR_EMPTY_DATA;
 
     ByteSize idx_ = 0;
 

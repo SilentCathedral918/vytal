@@ -2,12 +2,13 @@
 
 #include <stdio.h>
 
-#if defined(VYTAL_PLATFORM_WINDOWS)
+#if defined(_WIN64) || defined(__MINGW64__)
 #    define threadsafe_localtime(time_info, timestamp) localtime_s(time_info, timestamp)
 #    define threadsafe_gmtime(time_info, timestamp) gmtime_s(time_info, timestamp)
 #    define threadsafe_asctime(buf, sz, time_info) asctime_s(buf, sz, time_info)
 
-#elif defined(VYTAL_PLATFORM_LINUX)
+#else
+
 #    define threadsafe_localtime(time_info, timestamp) localtime_r(time_info, timestamp)
 #    define threadsafe_gmtime(time_info, timestamp) gmtime_r(time_info, timestamp)
 #    define threadsafe_asctime(buf, sz, time_info) asctime_r(buf, sz, time_info)

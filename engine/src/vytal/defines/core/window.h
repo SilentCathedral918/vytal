@@ -23,6 +23,14 @@ typedef enum Window_Backend {
     WINDOW_BACKEND_GLFW
 } WindowBackend;
 
+// window modes --------------------------------------------------------- //
+
+typedef enum Window_Mode {
+    WINDOW_MODE_WINDOWED,
+    WINDOW_MODE_FULLSCREEN,
+    WINDOW_MODE_BORDERLESS
+} WindowMode;
+
 // callbacks ------------------------------------------------------------ //
 
 typedef struct Window_Callbacks {
@@ -45,9 +53,9 @@ typedef struct Window_Properties {
     Int32              _x, _y;
     Int32              _width, _height;
     WindowTitleBarFlag _title_bar_flags;
-    Bool               _fullscreen;
-    Bool               _resizable;
+    WindowMode         _mode;
     WindowBackend      _backend;
+    Bool               _enable_vsync;
     WindowCallbacks    _callbacks;
 } WindowProperties;
 
@@ -75,5 +83,6 @@ typedef enum Window_Module_Result {
     WINDOW_MODULE_ERROR_DEALLOCATION_FAILED  = -7,
     WINDOW_MODULE_ERROR_FILE_OPEN_FAILED     = -8,
     WINDOW_MODULE_ERROR_FILE_CLOSE_FAILED    = -9,
-    WINDOW_MODULE_ERROR_INVALID_CONFIG       = -10
+    WINDOW_MODULE_ERROR_INVALID_CONFIG       = -10,
+    WINDOW_MODULE_ERROR_PARSE_FAILED         = -11
 } WindowModuleResult;

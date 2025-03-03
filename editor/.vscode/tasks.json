@@ -1,0 +1,23 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Build Editor",
+
+            "windows": {
+                "command": "${workspaceFolder}\\scripts\\cli\\build_vytal_editor.bat"
+            },
+
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": ["$gcc"],
+
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

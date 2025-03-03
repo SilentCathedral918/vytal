@@ -4,7 +4,7 @@
 
 #include "vytal/core/hash/xxhash64/xxhash64.h"
 
-#define INVALID_HASH 0xffffffffu
+#define INVALID_HASH (0xffffffffu)
 
 HashedInt hash_buffer(const VoidPtr buffer, const ByteSize size, const HashMode mode) {
     if (!buffer || !size) return INVALID_HASH;

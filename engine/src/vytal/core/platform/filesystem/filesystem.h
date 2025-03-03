@@ -10,7 +10,7 @@ VYTAL_API FileResult platform_filesystem_open_file(
     const FileMode   file_mode);
 VYTAL_API FileResult platform_filesystem_close_file(File *file);
 
-VYTAL_API Bool     platform_filesystem_file_exists(const char *filepath);
+VYTAL_API Bool     platform_filesystem_file_exists(ConstStr filepath);
 VYTAL_API ByteSize platform_filesystem_file_size(File *file);
 
 VYTAL_API FileResult platform_filesystem_read_line(

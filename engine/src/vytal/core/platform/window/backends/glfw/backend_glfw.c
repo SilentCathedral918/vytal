@@ -89,15 +89,24 @@ WindowResult window_backend_glfw_construct_handle(
         return WINDOW_ERROR_NOT_INITIALIZED;
 
     ByteSize alloc_size_ = 0;
-    if (memory_zone_allocate("Application", sizeof(struct Window_Handle), (VoidPtr *)out_new_window, &alloc_size_) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_allocate("platform", sizeof(struct Window_Handle), (VoidPtr *)out_new_window, &alloc_size_) != MEMORY_ZONE_SUCCESS)
         return WINDOW_ERROR_ALLOCATION_FAILED;
     memset((*out_new_window), 0, sizeof(struct Window_Handle));
     (*out_new_window)->_memory_size = alloc_size_;
 
-    GLFWwindow *handle_ = glfwCreateWindow(props._width, props._height, container_string_get(props._title), props._fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
+    // since we are primarily using Vulkan
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+    // specify whether the window should be borderless
+    glfwWindowHint(GLFW_DECORATED, (props._mode != WINDOW_MODE_BORDERLESS) ? GLFW_TRUE : GLFW_FALSE);
+
+    GLFWwindow *handle_ = glfwCreateWindow(props._width, props._height, container_string_get(props._title), (props._mode == WINDOW_MODE_FULLSCREEN) ? glfwGetPrimaryMonitor() : NULL, NULL);
     if (!handle_)
         return WINDOW_ERROR_ALLOCATION_FAILED;
     (*out_new_window)->_handle = handle_;
+
+    // toggle vertical-sync
+    glfwSwapInterval(props._enable_vsync ? 1 : 0);
 
     // setup callbacks
     {
@@ -118,7 +127,7 @@ WindowResult window_backend_glfw_destruct_handle(Window window) {
     if (!backend_glfw_initialized) return WINDOW_ERROR_NOT_INITIALIZED;
 
     if (window->_handle) glfwDestroyWindow(window->_handle);
-    if (memory_zone_deallocate("Application", window, window->_memory_size) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_deallocate("platform", window, window->_memory_size) != MEMORY_ZONE_SUCCESS)
         return WINDOW_ERROR_ALLOCATION_FAILED;
 
     window = NULL;

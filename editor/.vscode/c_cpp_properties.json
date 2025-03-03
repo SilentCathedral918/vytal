@@ -1,0 +1,25 @@
+{
+  "configurations": 
+    [
+        {
+            "name": "Windows",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "C:/mingw64/bin/gcc.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "includePath": [
+                "${workspaceFolder}/src/**",
+                "${env:VYTAL_ENGINE_PATH}/src/*"
+            ],
+            "defines": [
+                "_CRT_SECURE_NO_WARNINGS",
+                
+                "LINE_BUFFER_MAX_SIZE = 512",
+                "KEY_MAX_SIZE = 64",
+                "VALUE_MAX_SIZE = 256",
+                "WINDOW_REPORT_INTERVAL_MS = 50"
+            ]
+        }
+    ],
+    "version": 4
+}

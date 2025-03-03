@@ -1,10 +1,11 @@
 #pragma once
 
 #include "vytal/defines/core/delegates.h"
+#include "vytal/defines/core/filesystem.h"
 #include "vytal/defines/core/input.h"
 #include "vytal/defines/shared.h"
 
-VYTAL_API InputModuleResult input_module_startup(void);
+VYTAL_API InputModuleResult input_module_startup(File *file);
 VYTAL_API InputModuleResult input_module_shutdown(void);
 VYTAL_API InputModuleResult input_module_update(void);
 VYTAL_API InputModuleResult input_module_register_event(const InputEventCode code, const VoidPtr listener, const DelegateFunction callback);

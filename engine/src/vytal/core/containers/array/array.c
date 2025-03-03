@@ -23,7 +23,7 @@ ContainerResult _container_array_resize(Array *array, const ByteSize new_capacit
     ByteSize base_new_alloc_size_ = old_array_->_memory_size * CONTAINER_RESIZE_FACTOR;
     ByteSize new_alloc_size_      = 0;
 
-    if (memory_zone_allocate("Containers", base_new_alloc_size_, (VoidPtr *)&new_array_, &new_alloc_size_) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_allocate("containers", base_new_alloc_size_, (VoidPtr *)&new_array_, &new_alloc_size_) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_ALLOCATION_FAILED;
     memset(new_array_, 0, new_alloc_size_);
 
@@ -35,7 +35,7 @@ ContainerResult _container_array_resize(Array *array, const ByteSize new_capacit
 
     memmove(new_array_->_pool, old_array_->_pool, old_array_->_data_size * old_array_->_size);
 
-    if (memory_zone_deallocate("Containers", old_array_, old_array_->_memory_size) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_deallocate("containers", old_array_, old_array_->_memory_size) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_DEALLOCATION_FAILED;
 
     *array = new_array_;
@@ -48,7 +48,7 @@ ContainerResult container_array_construct(const ByteSize data_size, Array *out_n
     ByteSize pool_size_  = data_size * CONTAINER_DEFAULT_CAPACITY;
     ByteSize alloc_size_ = VYTAL_APPLY_ALIGNMENT(sizeof(struct Container_Array) + pool_size_, MEMORY_ALIGNMENT_SIZE);
 
-    if (memory_zone_allocate("Containers", alloc_size_, (VoidPtr *)out_new_array, &alloc_size_) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_allocate("containers", alloc_size_, (VoidPtr *)out_new_array, &alloc_size_) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_ALLOCATION_FAILED;
     memset(*out_new_array, 0, alloc_size_);
 
@@ -66,7 +66,7 @@ ContainerResult container_array_destruct(Array array) {
     if (!array) return CONTAINER_ERROR_INVALID_PARAM;
     if (!array->_pool || !array->_memory_size) return CONTAINER_ERROR_NOT_ALLOCATED;
 
-    if (memory_zone_deallocate("Containers", array, array->_memory_size) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_deallocate("containers", array, array->_memory_size) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_DEALLOCATION_FAILED;
 
     array = NULL;

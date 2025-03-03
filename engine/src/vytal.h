@@ -1,1 +1,3 @@
-#include "vytal/core/entry/entry.h"
+#pragma once
+
+#include "vytal/core/engine/engine.h"

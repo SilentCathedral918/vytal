@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vytal/defines/core/types.h"
+#include "types.h"
 
 // input codes ---------------------------------------------------------- //
 
@@ -217,5 +217,8 @@ typedef enum Input_Module_Result {
     INPUT_MODULE_ERROR_DEALLOCATION_FAILED = -4,
     INPUT_MODULE_ERROR_EVENT_BIND_FAILED   = -5,
     INPUT_MODULE_ERROR_EVENT_UNBIND_FAILED = -6,
-    INPUT_MODULE_ERROR_EVENT_INVOKE_FAILED = -7
+    INPUT_MODULE_ERROR_EVENT_INVOKE_FAILED = -7,
+    INPUT_MODULE_ERROR_INVALID_PARAM       = -8,
+    INPUT_MODULE_ERROR_PARSE_FAILED        = -9,
+    INPUT_MODULE_ERROR_DATA_INSERT_FAILED  = -10,
 } InputModuleResult;

@@ -1,0 +1,36 @@
+{
+  "configurations": [
+      {
+          "name": "Windows",
+          "intelliSenseMode": "gcc-x64",
+          "compilerPath": "C:\\mingw64\\bin\\gcc.exe",
+          "cStandard": "c17",
+          "cppStandard": "c++17",
+          "includePath": [
+              "${workspaceFolder}/src/**",
+              "${env:VYTAL_EXTERNAL_GLFW}/include",
+              "${env:VYTAL_EXTERNAL_VULKAN}/Include"
+          ],
+          "defines": [
+              "VYTAL_DEBUG",
+              "VYTAL_EXPORT_DLL",
+              "VYTAL_ENABLE_ASSERTIONS",
+              "_CRT_SECURE_NO_WARNINGS",
+              
+              "LINE_BUFFER_MAX_SIZE = 512",
+              "STRING_BUFFER_MAX_SIZE = 8192",
+              "FILENAME_BUFFER_MAX_SIZE = 64",
+              "CVAR_HASHMAP_SIZE = 1024",
+              "MAX_EXCEPTION_DEPTH = 10",
+              "MEMORY_ALIGNMENT_SIZE = 16",
+              "CONTAINER_DEFAULT_CAPACITY = 10",
+              "CONTAINER_RESIZE_FACTOR = 2"
+          ],
+          "compilerArgs": [
+              "-mavx2",
+              "-mfma"
+          ]
+      }
+  ],
+  "version": 4
+}

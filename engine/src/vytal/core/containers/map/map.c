@@ -70,7 +70,7 @@ ContainerResult _container_map_resize(Map *map, const ByteSize new_capacity) {
     ByteSize base_new_alloc_size_ = old_map_->_memory_size * CONTAINER_RESIZE_FACTOR;
     ByteSize new_alloc_size_      = 0;
 
-    if (memory_zone_allocate("Containers", base_new_alloc_size_, (VoidPtr *)&new_map_, &new_alloc_size_) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_allocate("containers", base_new_alloc_size_, (VoidPtr *)&new_map_, &new_alloc_size_) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_ALLOCATION_FAILED;
     memset(new_map_, 0, new_alloc_size_);
 
@@ -92,7 +92,7 @@ ContainerResult _container_map_resize(Map *map, const ByteSize new_capacity) {
         }
     }
 
-    if (memory_zone_deallocate("Containers", old_map_, old_map_->_memory_size) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_deallocate("containers", old_map_, old_map_->_memory_size) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_DEALLOCATION_FAILED;
 
     *map = new_map_;
@@ -107,7 +107,7 @@ ContainerResult container_map_construct(const ByteSize data_size, Map *out_new_m
     ByteSize pool_size_  = item_size_ * CONTAINER_DEFAULT_CAPACITY;
     ByteSize alloc_size_ = VYTAL_APPLY_ALIGNMENT(sizeof(struct Container_Map) + pool_size_, MEMORY_ALIGNMENT_SIZE);
 
-    if (memory_zone_allocate("Containers", alloc_size_, (VoidPtr *)out_new_map, &alloc_size_) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_allocate("containers", alloc_size_, (VoidPtr *)out_new_map, &alloc_size_) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_ALLOCATION_FAILED;
     memset(*out_new_map, 0, alloc_size_);
 
@@ -133,7 +133,7 @@ ContainerResult container_map_destruct(Map map) {
         }
     }
 
-    if (memory_zone_deallocate("Containers", map, map->_memory_size) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_deallocate("containers", map, map->_memory_size) != MEMORY_ZONE_SUCCESS)
         return CONTAINER_ERROR_DEALLOCATION_FAILED;
 
     memset(map, 0, map->_memory_size);
