@@ -7,5 +7,9 @@
   "editor.cursorStyle": "block",
   "editor.tabSize": 4,
   "editor.indentSize": "tabSize",
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "files.associations": {
+    "*.h": "c",
+    "functional": "c"
+  }
 }

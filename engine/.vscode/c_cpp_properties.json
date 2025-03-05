@@ -8,6 +8,7 @@
           "cppStandard": "c++17",
           "includePath": [
               "${workspaceFolder}/src/**",
+              "${env:VYTAL_EXTERNAL_CGLTF}",
               "${env:VYTAL_EXTERNAL_GLFW}/include",
               "${env:VYTAL_EXTERNAL_VULKAN}/Include"
           ],

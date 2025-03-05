@@ -108,7 +108,7 @@ VT_INLINE Int32 check_endianness(void) {
 
 // memory alignment ----------------------------------------------------- //
 
-#define VYTAL_APPLY_ALIGNMENT(size, alignment) (((size + (alignment - 1)) / alignment) * alignment)
+#define VYTAL_APPLY_ALIGNMENT(size, alignment) (((size) + (alignment - 1)) & ~(alignment - 1))
 
 // conversion types ----------------------------------------------------- //
 

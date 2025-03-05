@@ -157,6 +157,7 @@ echo strings = "8MB" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 echo delegates = "8KB" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 echo input = "4KB" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 echo platform = "2KB" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
+echo assets = "256MB" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 echo. >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 
 echo # Loggers configuration >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
