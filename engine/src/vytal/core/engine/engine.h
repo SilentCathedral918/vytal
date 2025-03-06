@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vytal/assets/mesh/mesh.h"
 #include "vytal/core/containers/string/string.h"
 #include "vytal/core/delegates/unicast/unicast.h"
 #include "vytal/core/helpers/parse/parse.h"

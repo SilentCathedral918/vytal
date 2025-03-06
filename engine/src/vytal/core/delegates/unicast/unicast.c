@@ -24,7 +24,7 @@ DelegateResult delegate_unicast_startup(void) {
 
     // configure state members
     {
-        if (container_map_construct(sizeof(struct Delegate_Unicast_Handle), &state->_delegate_map) != CONTAINER_SUCCESS) {
+        if (container_map_construct(sizeof(UnicastDelegate), &state->_delegate_map) != CONTAINER_SUCCESS) {
             if (memory_zone_deallocate("delegates", state, state->_memory_size) != MEMORY_ZONE_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
@@ -77,7 +77,7 @@ DelegateResult delegate_unicast_bind(ConstStr delegate_id, VoidPtr listener, Del
     }
 
     // register delegate
-    if (container_map_insert(&state->_delegate_map, delegate_id, del_) != CONTAINER_SUCCESS) {
+    if (container_map_insert(&state->_delegate_map, delegate_id, (VoidPtr)&del_) != CONTAINER_SUCCESS) {
         if (memory_zone_deallocate("delegates", del_, sizeof(struct Delegate_Unicast_Handle)) != MEMORY_ZONE_SUCCESS)
             return DELEGATE_ERROR_DEALLOCATION_FAILED;
 

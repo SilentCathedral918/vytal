@@ -1,5 +1,7 @@
 #include "loader_gltf.h"
 
+#include <string.h>
+
 #define CGLTF_IMPLEMENTATION
 #include <cgltf.h>
 
@@ -46,6 +48,7 @@ MeshResult _mesh_loader_load_from_data(cgltf_data *data, Mesh *out_mesh) {
     ByteSize alloc_size_ = 0;
     if (memory_zone_allocate("assets", total_size_, (VoidPtr *)out_mesh, &alloc_size_) != MEMORY_ZONE_SUCCESS)
         return MESH_ERROR_ALLOCATION_FAILED;
+    memset((*out_mesh), 0, alloc_size_);
 
     // configure members
     {

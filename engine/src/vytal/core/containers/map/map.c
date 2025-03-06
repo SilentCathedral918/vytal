@@ -305,7 +305,7 @@ ContainerResult container_map_search(Map map, ConstStr key, VoidPtr *out_data) {
         if ((check_slot_->_hashed_key != TOMBSTONE_HASHED_KEY) &&
             (check_slot_->_hashed_key == hashed_) &&
             (!strcmp(container_string_get(check_slot_->_key), key))) {
-            *out_data = (VoidPtr)check_slot_->_pdata;
+            memcpy(out_data, (VoidPtr)check_slot_->_pdata, map->_data_size);
             return CONTAINER_SUCCESS;
         }
 
@@ -327,7 +327,6 @@ ContainerResult container_map_search(Map map, ConstStr key, VoidPtr *out_data) {
         }
     }
 
-    *out_data = NULL;
     return CONTAINER_SUCCESS;
 }
 

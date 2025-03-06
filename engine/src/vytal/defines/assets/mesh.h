@@ -22,8 +22,20 @@ typedef enum Mesh_Result {
     MESH_ERROR_LOAD_FAILED         = -5,
     MESH_ERROR_UNLOAD_FAILED       = -6,
     MESH_ERROR_ALLOCATION_FAILED   = -7,
-    MESH_ERROR_DEALLOCATION_FAILED = -8
+    MESH_ERROR_DEALLOCATION_FAILED = -8,
+    MESH_ERROR_ALREADY_LOADED      = -9
 } MeshResult;
+
+typedef enum Mesh_Module_Result {
+    MESH_MODULE_SUCCESS                   = 0,
+    MESH_MODULE_ERROR_ALREADY_INITIALIZED = -1,
+    MESH_MODULE_ERROR_NOT_INITIALIZED     = -2,
+    MESH_MODULE_ERROR_ALLOCATION_FAILED   = -3,
+    MESH_MODULE_ERROR_DEALLOCATION_FAILED = -4,
+    MESH_MODULE_ERROR_INVALID_PARAM       = -5,
+    MESH_MODULE_ERROR_REGISTER_FAILED     = -6,
+    MESH_MODULE_ERROR_UNREGISTER_FAILED   = -7
+} MeshModuleResult;
 
 // types ---------------------------------------------------------------- //
 

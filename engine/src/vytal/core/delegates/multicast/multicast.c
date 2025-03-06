@@ -25,14 +25,14 @@ DelegateResult delegate_multicast_startup(void) {
 
     // configure state members
     {
-        if (container_map_construct(sizeof(struct Delegate_Multicast_Handle), &state->_delegate_map) != CONTAINER_SUCCESS) {
+        if (container_map_construct(sizeof(MulticastDelegate), &state->_delegate_map) != CONTAINER_SUCCESS) {
             if (memory_zone_deallocate("delegates", state, state->_memory_size) != MEMORY_ZONE_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
             return DELEGATE_ERROR_ALLOCATION_FAILED;
         }
 
-        if (container_array_construct(sizeof(struct Delegate_Multicast_Handle), &state->_active_delegates) != CONTAINER_SUCCESS) {
+        if (container_array_construct(sizeof(MulticastDelegate), &state->_active_delegates) != CONTAINER_SUCCESS) {
             if (container_map_destruct(state->_delegate_map) != CONTAINER_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
 
@@ -118,7 +118,7 @@ DelegateResult delegate_multicast_add(ConstStr delegate_id, VoidPtr listener, De
         }
 
         // insert the delegate into the map
-        if (container_map_insert(&state->_delegate_map, delegate_id, (VoidPtr)del_) != CONTAINER_SUCCESS) {
+        if (container_map_insert(&state->_delegate_map, delegate_id, (VoidPtr)&del_) != CONTAINER_SUCCESS) {
             if (container_array_destruct(del_->_callbacks) != CONTAINER_SUCCESS)
                 return DELEGATE_ERROR_DEALLOCATION_FAILED;
 

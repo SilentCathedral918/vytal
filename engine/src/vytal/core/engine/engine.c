@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "vytal/assets/mesh/module/mesh_module.h"
 #include "vytal/core/delegates/multicast/multicast.h"
 #include "vytal/core/delegates/unicast/unicast.h"
 #include "vytal/core/memory/manager/memory_manager.h"
@@ -98,6 +99,12 @@ EngineResult _engine_core_startup(void) {
             return ENGINE_ERROR_PRECONSTRUCT_ALLOCATION_FAILED;
     }
 
+    // asset modules
+    {
+        if (mesh_module_startup() != MESH_MODULE_SUCCESS)
+            return ENGINE_ERROR_PRECONSTRUCT_ALLOCATION_FAILED;
+    }
+
     // allocate application state and configure its members
     {
         ByteSize         allocated_size_  = 0;
@@ -121,6 +128,12 @@ EngineResult _engine_core_shutdown(void) {
             return ENGINE_ERROR_DESTRUCT_DEALLOCATION_FAILED;
 
         state = NULL;
+    }
+
+    // asset modules
+    {
+        if (mesh_module_shutdown() != MESH_MODULE_SUCCESS)
+            return ENGINE_ERROR_DESTRUCT_DEALLOCATION_FAILED;
     }
 
     // delegate systems
