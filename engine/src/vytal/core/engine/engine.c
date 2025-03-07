@@ -13,6 +13,7 @@
 #include "vytal/core/misc/console/console.h"
 #include "vytal/core/modules/input/input.h"
 #include "vytal/core/modules/window/window.h"
+#include "vytal/renderer/module/renderer_module.h"
 
 typedef struct Engine_State {
     Bool     _initialized;
@@ -73,6 +74,12 @@ EngineResult _engine_parse_config(ConstStr config_filepath) {
             else if (!strcmp(section_, "window")) {
                 if (window_module_startup(&file_) != WINDOW_MODULE_SUCCESS)
                     return ENGINE_ERROR_PRECONSTRUCT_WINDOW_MODULE_STARTUP_FAILED;
+            }
+
+            // renderer section
+            else if (!strcmp(section_, "renderer")) {
+                if (renderer_module_startup(&file_) != RENDERER_MODULE_SUCCESS)
+                    return ENGINE_ERROR_PRECONSTRUCT_RENDERER_MODULE_STARTUP_FAILED;
             }
         }
 
@@ -148,6 +155,9 @@ EngineResult _engine_core_shutdown(void) {
     // modules
     {
         if (window_module_shutdown() != WINDOW_MODULE_SUCCESS)
+            return ENGINE_ERROR_DESTRUCT_DEALLOCATION_FAILED;
+
+        if (renderer_module_shutdown() != RENDERER_MODULE_SUCCESS)
             return ENGINE_ERROR_DESTRUCT_DEALLOCATION_FAILED;
 
         if (input_module_shutdown() != INPUT_MODULE_SUCCESS)

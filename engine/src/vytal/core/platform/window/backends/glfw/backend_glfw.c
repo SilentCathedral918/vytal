@@ -5,12 +5,22 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+// to access window-specific Vulkan objects (surface, swapchain, etc.)
+#include <vulkan/vulkan.h>
+
 #include "vytal/core/containers/string/string.h"
 #include "vytal/core/memory/zone/memory_zone.h"
 
 struct Window_Handle {
     GLFWwindow *_handle;
-    ByteSize    _memory_size;
+
+    VkSurfaceKHR   _surface;
+    VkSwapchainKHR _swapchain;
+    VkFramebuffer *_frame_buffers;
+    VkImageView   *_image_views;
+    VkExtent2D     _extent;
+
+    ByteSize _memory_size;
 };
 
 static Bool             backend_glfw_initialized = false;

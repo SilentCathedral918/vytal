@@ -158,6 +158,7 @@ echo delegates = "8KB" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 echo input = "4KB" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 echo platform = "2KB" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 echo assets = "256MB" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
+echo renderer = "64MB" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 echo. >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 
 echo # Loggers configuration >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
@@ -219,6 +220,17 @@ echo window_mode = "windowed" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.c
 echo title_bar_flags = 00000111 >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 echo vsync = on >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 echo backend = "glfw" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
+echo. >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
+
+echo # Renderer properties configuration >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
+echo # backend: selects renderer backend >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
+echo #   "vulkan": Vulkan backend (default, supported) >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
+echo #   "opengl": OpenGL backend (unsupported) >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
+echo #   "directx": DirectX backend (unsupported) >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
+echo [renderer] >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
+echo backend = "vulkan" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
+echo. >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
+
 
 if "%VERBOSE%"=="true" (
     echo Default engine configurations setup completed.

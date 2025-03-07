@@ -16,6 +16,7 @@
               "VYTAL_DEBUG",
               "VYTAL_EXPORT_DLL",
               "VYTAL_ENABLE_ASSERTIONS",
+              "VYTAL_VULKAN_VALIDATION_LAYERS_ENABLED",
               "_CRT_SECURE_NO_WARNINGS",
               
               "LINE_BUFFER_MAX_SIZE = 512",
