@@ -175,7 +175,7 @@ InputModuleResult input_module_startup(File *file) {
 
         // handle bindings
         else if (!strcmp(section_, "input.bindings")) {
-            ByteSize table_length_ = sizeof(key_binding_table) / sizeof(*key_binding_table);
+            ByteSize table_length_ = VYTAL_ARRAY_SIZE(key_binding_table);
             for (Int32 i = 0; i < table_length_; ++i) {
                 if (!strcmp(key_binding_table[i]._name, key_)) {
                     if (container_map_insert(&state->_key_bindings_map, key_, &key_binding_table[i]._code) != CONTAINER_SUCCESS)

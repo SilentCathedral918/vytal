@@ -33,3 +33,7 @@
 #    define VYTAL_NOINLINE
 
 #endif
+
+// stack array size ----------------------------------------------------- //
+
+#define VYTAL_ARRAY_SIZE(array) (sizeof(array) / sizeof(*array))

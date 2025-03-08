@@ -22,7 +22,7 @@ typedef struct Engine_State {
 
 static EngineState *state = NULL;
 
-EngineResult _engine_parse_config(ConstStr config_filepath) {
+EngineResult _engine_parse_config(ConstStr config_filepath, Window *out_first_window) {
     File file_ = {0};
     if (platform_filesystem_open_file(&file_, config_filepath, FILE_IO_MODE_READ_WRITE, FILE_MODE_BINARY) != FILE_SUCCESS)
         return ENGINE_ERROR_PRECONSTRUCT_FILE_OPEN_FAILED;
@@ -74,11 +74,15 @@ EngineResult _engine_parse_config(ConstStr config_filepath) {
             else if (!strcmp(section_, "window")) {
                 if (window_module_startup(&file_) != WINDOW_MODULE_SUCCESS)
                     return ENGINE_ERROR_PRECONSTRUCT_WINDOW_MODULE_STARTUP_FAILED;
+
+                // construct first window
+                if (window_module_construct_window(out_first_window) != WINDOW_MODULE_SUCCESS)
+                    return ENGINE_ERROR_UPDATE_WINDOW_MODULE_UPDATE_FAILED;
             }
 
             // renderer section
             else if (!strcmp(section_, "renderer")) {
-                if (renderer_module_startup(&file_) != RENDERER_MODULE_SUCCESS)
+                if (renderer_module_startup(&file_, out_first_window) != RENDERER_MODULE_SUCCESS)
                     return ENGINE_ERROR_PRECONSTRUCT_RENDERER_MODULE_STARTUP_FAILED;
             }
         }
@@ -176,11 +180,11 @@ EngineResult _engine_core_shutdown(void) {
     return ENGINE_SUCCESS;
 }
 
-VYTAL_API EngineResult engine_preconstruct(ConstStr config_filepath) {
+EngineResult engine_preconstruct(ConstStr config_filepath, Window *out_first_window) {
     if (state) return ENGINE_ERROR_ALREADY_INITIALIZED;
     if (!config_filepath) return ENGINE_ERROR_PRECONSTRUCT_INVALID_PARAM;
 
-    EngineResult parse_config_ = _engine_parse_config(config_filepath);
+    EngineResult parse_config_ = _engine_parse_config(config_filepath, out_first_window);
     if (parse_config_ != ENGINE_SUCCESS)
         return parse_config_;
 
@@ -191,11 +195,11 @@ VYTAL_API EngineResult engine_preconstruct(ConstStr config_filepath) {
     return ENGINE_SUCCESS;
 }
 
-VYTAL_API EngineResult engine_construct(void) {
+EngineResult engine_construct(void) {
     return ENGINE_SUCCESS;
 }
 
-VYTAL_API EngineResult engine_update(void) {
+EngineResult engine_update(void) {
     // modules
     {
         if (input_module_update() != INPUT_MODULE_SUCCESS)
@@ -208,7 +212,7 @@ VYTAL_API EngineResult engine_update(void) {
     return ENGINE_SUCCESS;
 }
 
-VYTAL_API EngineResult engine_destruct(void) {
+EngineResult engine_destruct(void) {
     if (!state || !state->_initialized) return ENGINE_ERROR_NOT_INITIALIZED;
 
     EngineResult core_shutdown_ = _engine_core_shutdown();

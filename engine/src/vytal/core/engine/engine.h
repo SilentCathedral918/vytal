@@ -10,6 +10,7 @@
 #include "vytal/core/platform/filesystem/filesystem.h"
 #include "vytal/core/platform/window/window.h"
 #include "vytal/defines/shared.h"
+#include "vytal/renderer/module/renderer_module.h"
 
 typedef enum Engine_Result {
     ENGINE_SUCCESS                   = 0,
@@ -40,7 +41,7 @@ typedef enum Engine_Result {
 
 } EngineResult;
 
-VYTAL_API EngineResult engine_preconstruct(ConstStr config_filepath);
+VYTAL_API EngineResult engine_preconstruct(ConstStr config_filepath, Window *out_first_window);
 VYTAL_API EngineResult engine_construct(void);
 VYTAL_API EngineResult engine_update(void);
 VYTAL_API EngineResult engine_destruct(void);

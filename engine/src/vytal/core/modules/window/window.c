@@ -233,33 +233,12 @@ WindowModuleResult window_module_construct_window(Window *out_new_window) {
             out_new_window) != WINDOW_SUCCESS)
         return WINDOW_MODULE_ERROR_ALLOCATION_FAILED;
 
-    RendererBackend backend_ = renderer_module_get_backend();
-    switch (backend_->_type) {
-        case RENDERER_BACKEND_VULKAN:
-            if (renderer_backend_vulkan_add_window(backend_, out_new_window) != RENDERER_BACKEND_SUCCESS)
-                return WINDOW_MODULE_ERROR_ALLOCATION_FAILED;
-
-            return WINDOW_MODULE_SUCCESS;
-
-        default:
-            return WINDOW_MODULE_ERROR_INVALID_BACKEND;
-    }
+    return WINDOW_MODULE_SUCCESS;
 }
 
 WindowModuleResult window_module_destruct_window(Window window) {
     if (!state || !state->_initialized)
         return WINDOW_MODULE_ERROR_NOT_INITIALIZED;
-
-    RendererBackend backend_ = renderer_module_get_backend();
-    switch (backend_->_type) {
-        case RENDERER_BACKEND_VULKAN:
-            if (renderer_backend_vulkan_remove_window(backend_, &window) != RENDERER_BACKEND_SUCCESS)
-                return WINDOW_MODULE_ERROR_ALLOCATION_FAILED;
-            break;
-
-        default:
-            return WINDOW_MODULE_ERROR_INVALID_BACKEND;
-    }
 
     if (platform_window_destruct_window(window) != WINDOW_SUCCESS)
         return WINDOW_MODULE_ERROR_ALLOCATION_FAILED;

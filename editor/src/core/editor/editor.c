@@ -143,7 +143,7 @@ EditorResult _editor_load_project(ConstStr project_filepath) {
                     // engine configurations
                     {
                         snprintf(engine_path_, sizeof(engine_path_), "%s/%s/engine.cfg", state->_base_path, value_);
-                        if (engine_preconstruct(engine_path_) != ENGINE_SUCCESS)
+                        if (engine_preconstruct(engine_path_, &state->_main_window) != ENGINE_SUCCESS)
                             return EDITOR_ERROR_ENGINE_PRECONSTRUCT_FAILED;
                     }
 
@@ -152,6 +152,10 @@ EditorResult _editor_load_project(ConstStr project_filepath) {
                         snprintf(editor_path_, sizeof(editor_path_), "%s/%s/editor.cfg", state->_base_path, value_);
                         if (_editor_parse_config(editor_path_) != EDITOR_SUCCESS)
                             return EDITOR_ERROR_PARSE_FAILED;
+
+                        // update the editor title
+                        if (platform_window_set_title(state->_main_window, container_string_get(state->_title)) != WINDOW_SUCCESS)
+                            return EDITOR_ERROR_WINDOW_OPERATION_FAILED;
                     }
                 }
             }
@@ -194,13 +198,6 @@ EditorResult editor_startup(ConstStr project_filepath) {
         input_module_register_event(VYTAL_EVENTCODE_MOUSE_RELEASED, NULL, _editor_on_mouse_pressed);
         input_module_register_event(VYTAL_EVENTCODE_MOUSE_MOVED, NULL, _editor_on_mouse_moved);
         input_module_register_event(VYTAL_EVENTCODE_MOUSE_SCROLLED, NULL, _editor_on_mouse_scrolled);
-    }
-
-    // open main window
-    {
-        EditorResult open_main_window_ = editor_open_window(container_string_get(state->_title), &state->_main_window);
-        if (open_main_window_ != EDITOR_SUCCESS)
-            return open_main_window_;
     }
 
     // handle engine construction
@@ -327,11 +324,17 @@ EditorResult editor_open_window(ConstStr title, Window *out_window) {
     if (platform_window_set_title(*out_window, title) != WINDOW_SUCCESS)
         return EDITOR_ERROR_WINDOW_OPERATION_FAILED;
 
+    if (renderer_module_register_window(out_window) != RENDERER_MODULE_SUCCESS)
+        return EDITOR_ERROR_WINDOW_OPERATION_FAILED;
+
     return EDITOR_SUCCESS;
 }
 
 EditorResult editor_close_window(Window window) {
     if (!window) return EDITOR_ERROR_INVALID_PARAM;
+
+    if (renderer_module_unregister_window(&window) != RENDERER_MODULE_SUCCESS)
+        return EDITOR_ERROR_WINDOW_OPERATION_FAILED;
 
     if (platform_window_get_handle(window) == platform_window_get_handle(state->_main_window))
         state->_active = false;

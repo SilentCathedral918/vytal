@@ -18,7 +18,7 @@ typedef struct Renderer_Module_State {
 
 static RendererModuleState *state = NULL;
 
-RendererModuleResult renderer_module_startup(File *file) {
+RendererModuleResult renderer_module_startup(File *file, Window *out_first_window) {
     if (!file) return RENDERER_MODULE_ERROR_INVALID_PARAM;
     if (state) return RENDERER_MODULE_ERROR_ALREADY_INITIALIZED;
 
@@ -58,7 +58,7 @@ RendererModuleResult renderer_module_startup(File *file) {
     }
     free(line_);
 
-    if (renderer_backend_startup(backend_type_, &state->_backend) != RENDERER_BACKEND_SUCCESS) {
+    if (renderer_backend_startup(backend_type_, out_first_window, &state->_backend) != RENDERER_BACKEND_SUCCESS) {
         if (memory_zone_deallocate("modules", state, alloc_size_) != MEMORY_ZONE_SUCCESS)
             return RENDERER_MODULE_ERROR_DEALLOCATION_FAILED;
 
@@ -83,6 +83,16 @@ RendererModuleResult renderer_module_shutdown(void) {
     state = NULL;
 
     return RENDERER_MODULE_SUCCESS;
+}
+
+RendererModuleResult renderer_module_register_window(Window *out_window) {
+    if (!state || !state->_initialized) return RENDERER_MODULE_ERROR_NOT_INITIALIZED;
+    return renderer_backend_register_window(state->_backend, out_window);
+}
+
+RendererModuleResult renderer_module_unregister_window(Window *out_window) {
+    if (!state || !state->_initialized) return RENDERER_MODULE_ERROR_NOT_INITIALIZED;
+    return renderer_backend_unregister_window(state->_backend, out_window);
 }
 
 RendererBackend renderer_module_get_backend(void) {
