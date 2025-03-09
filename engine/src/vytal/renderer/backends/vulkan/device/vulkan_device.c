@@ -10,14 +10,66 @@
 struct Window_Handle {
     GLFWwindow *_handle;
 
-    VkSurfaceKHR   _surface;
-    VkSwapchainKHR _swapchain;
+    VkSurfaceKHR _surface;
+
+    VkSwapchainKHR     _curr_swapchain;
+    VkSwapchainKHR     _prev_swapchain;
+    VkSurfaceFormatKHR _swapchain_surface_format;
+    VkPresentModeKHR   _swapchain_present_mode;
+    UInt32             _swapchain_image_count;
+    VkImage           *_swapchain_images;
+    VkImageView       *_swapchain_image_views;
+    VkExtent2D         _swapchain_extent;
+
     VkFramebuffer *_frame_buffers;
-    VkImageView   *_image_views;
-    VkExtent2D     _extent;
+
+    GraphicsPipelineType _active_pipeline;
+    UInt32               _frame_index;
 
     ByteSize _memory_size;
 };
+
+static RendererBackendResult _renderer_backend_vulkan_device_search_queue_families(const VoidPtr context, VoidPtr out_queue_families) {
+    if (!context || !out_queue_families) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
+    RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
+
+    UInt32 queue_family_count_ = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(context_->_gpu, &queue_family_count_, NULL);
+    VkQueueFamilyProperties *queue_families_ = calloc(queue_family_count_, sizeof(VkQueueFamilyProperties));
+    vkGetPhysicalDeviceQueueFamilyProperties(context_->_gpu, &queue_family_count_, queue_families_);
+
+    QueueFamilies families_ = {
+        ._graphics_index = -1,
+        ._compute_index  = -1,
+        ._present_index  = -1,
+    };
+
+    for (ByteSize i = 0; i < queue_family_count_; ++i) {
+        VkBool32 present_supported_ = VK_FALSE;
+        vkGetPhysicalDeviceSurfaceSupportKHR(context_->_gpu, i, context_->_first_window->_surface, &present_supported_);
+
+        if ((queue_families_[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) && (families_._graphics_index == -1))
+            families_._graphics_index = i;
+
+        else if ((queue_families_[i].queueFlags & VK_QUEUE_COMPUTE_BIT) && (families_._compute_index == -1) && (i != families_._graphics_index))
+            families_._compute_index = i;
+
+        else if ((present_supported_ == VK_TRUE) && (families_._present_index == -1) && (i != families_._graphics_index))
+            families_._present_index = i;
+    }
+
+    // fallback: in case of no separate compute/present queue -> re-use graphics queue
+    {
+        if (families_._compute_index == -1)
+            families_._compute_index = families_._graphics_index;
+
+        if (families_._present_index == -1)
+            families_._present_index = families_._graphics_index;
+    }
+
+    memcpy(out_queue_families, &families_, sizeof(QueueFamilies));
+    return RENDERER_BACKEND_SUCCESS;
+}
 
 RendererBackendResult renderer_backend_vulkan_device_select_gpu(VoidPtr *out_context) {
     if (!out_context) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
@@ -147,54 +199,12 @@ RendererBackendResult renderer_backend_vulkan_device_select_gpu(VoidPtr *out_con
     return RENDERER_BACKEND_SUCCESS;
 }
 
-RendererBackendResult renderer_backend_vulkan_queue_search_families(const VoidPtr context, VoidPtr out_queue_families) {
-    if (!context || !out_queue_families) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
-    RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
-
-    UInt32 queue_family_count_ = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(context_->_gpu, &queue_family_count_, NULL);
-    VkQueueFamilyProperties *queue_families_ = calloc(queue_family_count_, sizeof(VkQueueFamilyProperties));
-    vkGetPhysicalDeviceQueueFamilyProperties(context_->_gpu, &queue_family_count_, queue_families_);
-
-    QueueFamilies families_ = {
-        ._graphics_index = -1,
-        ._compute_index  = -1,
-        ._present_index  = -1,
-    };
-
-    for (ByteSize i = 0; i < queue_family_count_; ++i) {
-        VkBool32 present_supported_ = VK_FALSE;
-        vkGetPhysicalDeviceSurfaceSupportKHR(context_->_gpu, i, context_->_first_window->_surface, &present_supported_);
-
-        if ((queue_families_[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) && (families_._graphics_index == -1))
-            families_._graphics_index = i;
-
-        else if ((queue_families_[i].queueFlags & VK_QUEUE_COMPUTE_BIT) && (families_._compute_index == -1) && (i != families_._graphics_index))
-            families_._compute_index = i;
-
-        else if ((present_supported_ == VK_TRUE) && (families_._present_index == -1) && (i != families_._graphics_index))
-            families_._present_index = i;
-    }
-
-    // fallback: in case of no separate compute/present queue -> re-use graphics queue
-    {
-        if (families_._compute_index == -1)
-            families_._compute_index = families_._graphics_index;
-
-        if (families_._present_index == -1)
-            families_._present_index = families_._graphics_index;
-    }
-
-    memcpy(out_queue_families, &families_, sizeof(QueueFamilies));
-    return RENDERER_BACKEND_SUCCESS;
-}
-
 RendererBackendResult renderer_backend_vulkan_device_construct(VoidPtr *out_context) {
     if (!out_context) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
     RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)(*out_context);
 
     QueueFamilies families_;
-    if (renderer_backend_vulkan_queue_search_families(context_, &families_) != RENDERER_BACKEND_SUCCESS)
+    if (_renderer_backend_vulkan_device_search_queue_families(context_, &families_) != RENDERER_BACKEND_SUCCESS)
         return RENDERER_BACKEND_ERROR_VULKAN_QUEUE_FAMILIES_SEARCH_FAILED;
 
     UInt32 family_indices_[] = {

@@ -5,20 +5,28 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-// to access window-specific Vulkan objects (surface, swapchain, etc.)
-#include <vulkan/vulkan.h>
-
 #include "vytal/core/containers/string/string.h"
 #include "vytal/core/memory/zone/memory_zone.h"
+#include "vytal/defines/renderer/backends/backend_vulkan.h"
 
 struct Window_Handle {
     GLFWwindow *_handle;
 
-    VkSurfaceKHR   _surface;
-    VkSwapchainKHR _swapchain;
+    VkSurfaceKHR _surface;
+
+    VkSwapchainKHR     _curr_swapchain;
+    VkSwapchainKHR     _prev_swapchain;
+    VkSurfaceFormatKHR _swapchain_surface_format;
+    VkPresentModeKHR   _swapchain_present_mode;
+    UInt32             _swapchain_image_count;
+    VkImage           *_swapchain_images;
+    VkImageView       *_swapchain_image_views;
+    VkExtent2D         _swapchain_extent;
+
     VkFramebuffer *_frame_buffers;
-    VkImageView   *_image_views;
-    VkExtent2D     _extent;
+
+    GraphicsPipelineType _active_pipeline;
+    UInt32               _frame_index;
 
     ByteSize _memory_size;
 };

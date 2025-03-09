@@ -60,7 +60,6 @@ typedef struct Renderer_Backend_Vulkan_Context {
 
     VkInstance _instance;
 
-    VkSurfaceKHR             _surface;
     VkSurfaceCapabilitiesKHR _surface_capabilities;
 
     VkPhysicalDevice _gpu;
@@ -74,22 +73,13 @@ typedef struct Renderer_Backend_Vulkan_Context {
 
     QueueFamilies _queue_families;
 
-    VkSwapchainKHR     _curr_swapchain;
-    VkSwapchainKHR     _prev_swapchain;
-    VkExtent2D         _swapchain_extent;
-    VkSurfaceFormatKHR _swapchain_surface_format;
-    VkPresentModeKHR   _swapchain_present_mode;
-    UInt32             _swapchain_image_count;
-    VkImage           *_swapchain_images;
-    VkImageView       *_swapchain_image_views;
+    RendererTexture _default_texture;
 
     VkRenderPass _render_pass;
 
     VkImage        _depth_image;
     VkImageView    _depth_image_view;
     VkDeviceMemory _depth_image_memory;
-
-    VkFramebuffer *_framebuffers;
 
     VkCommandPool        _compute_cmd_pool;
     VkCommandBuffer      _compute_cmd_buffer;
@@ -110,8 +100,4 @@ typedef struct Renderer_Backend_Vulkan_Context {
     VkFence            *_graphics_in_flight_fences;
     VkSemaphore        *_graphics_image_available_semaphores;
     VkSemaphore        *_graphics_render_complete_semaphores;
-
-    GraphicsPipelineType _active_pipeline;
-    RendererTexture      _default_texture;
-    UInt32               _frame_index;
 } RendererBackendVulkanContext;
