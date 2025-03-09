@@ -10,23 +10,8 @@
 #include "vytal/defines/renderer/backends/backend_vulkan.h"
 
 struct Window_Handle {
-    GLFWwindow *_handle;
-
-    VkSurfaceKHR _surface;
-
-    VkSwapchainKHR     _curr_swapchain;
-    VkSwapchainKHR     _prev_swapchain;
-    VkSurfaceFormatKHR _swapchain_surface_format;
-    VkPresentModeKHR   _swapchain_present_mode;
-    UInt32             _swapchain_image_count;
-    VkImage           *_swapchain_images;
-    VkImageView       *_swapchain_image_views;
-    VkExtent2D         _swapchain_extent;
-
-    VkFramebuffer *_frame_buffers;
-
-    GraphicsPipelineType _active_pipeline;
-    UInt32               _frame_index;
+    GLFWwindow                  *_handle;
+    RendererBackendWindowContext _render_context;
 
     ByteSize _memory_size;
 };

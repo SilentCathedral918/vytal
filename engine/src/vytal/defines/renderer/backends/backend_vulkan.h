@@ -71,21 +71,38 @@ typedef struct Renderer_Backend_Vulkan_Context {
         size_t _z;
     } _workgroup_sizes;
 
-    QueueFamilies _queue_families;
+    VkCommandPool        _compute_cmd_pool;
+    VkCommandBuffer      _compute_cmd_buffer;
+    VkDescriptorPool     _compute_desc_pool;
+    DescriptorSetLayout *_compute_desc_set_layouts;
+    UInt32               _compute_desc_set_layout_count;
 
+    QueueFamilies   _queue_families;
     RendererTexture _default_texture;
+} RendererBackendVulkanContext;
+
+typedef struct Renderer_Backend_Window_Context {
+    VkSurfaceKHR _surface;
+
+    VkSwapchainKHR     _curr_swapchain;
+    VkSwapchainKHR     _prev_swapchain;
+    VkSurfaceFormatKHR _swapchain_surface_format;
+    VkPresentModeKHR   _swapchain_present_mode;
+    UInt32             _swapchain_image_count;
+    VkImage           *_swapchain_images;
+    VkImageView       *_swapchain_image_views;
+    VkExtent2D         _swapchain_extent;
+
+    VkFramebuffer *_frame_buffers;
+
+    GraphicsPipelineType _active_pipeline;
+    UInt32               _frame_index;
 
     VkRenderPass _render_pass;
 
     VkImage        _depth_image;
     VkImageView    _depth_image_view;
     VkDeviceMemory _depth_image_memory;
-
-    VkCommandPool        _compute_cmd_pool;
-    VkCommandBuffer      _compute_cmd_buffer;
-    VkDescriptorPool     _compute_desc_pool;
-    DescriptorSetLayout *_compute_desc_set_layouts;
-    UInt32               _compute_desc_set_layout_count;
 
     VkCommandPool       _graphics_cmd_pool;
     VkCommandBuffer    *_graphics_cmd_buffers;
@@ -100,4 +117,4 @@ typedef struct Renderer_Backend_Vulkan_Context {
     VkFence            *_graphics_in_flight_fences;
     VkSemaphore        *_graphics_image_available_semaphores;
     VkSemaphore        *_graphics_render_complete_semaphores;
-} RendererBackendVulkanContext;
+} RendererBackendWindowContext;

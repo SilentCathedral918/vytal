@@ -8,23 +8,8 @@
 #include <GLFW/glfw3.h>
 
 struct Window_Handle {
-    GLFWwindow *_handle;
-
-    VkSurfaceKHR _surface;
-
-    VkSwapchainKHR     _curr_swapchain;
-    VkSwapchainKHR     _prev_swapchain;
-    VkSurfaceFormatKHR _swapchain_surface_format;
-    VkPresentModeKHR   _swapchain_present_mode;
-    UInt32             _swapchain_image_count;
-    VkImage           *_swapchain_images;
-    VkImageView       *_swapchain_image_views;
-    VkExtent2D         _swapchain_extent;
-
-    VkFramebuffer *_frame_buffers;
-
-    GraphicsPipelineType _active_pipeline;
-    UInt32               _frame_index;
+    GLFWwindow                  *_handle;
+    RendererBackendWindowContext _render_context;
 
     ByteSize _memory_size;
 };
@@ -46,7 +31,7 @@ static RendererBackendResult _renderer_backend_vulkan_device_search_queue_famili
 
     for (ByteSize i = 0; i < queue_family_count_; ++i) {
         VkBool32 present_supported_ = VK_FALSE;
-        vkGetPhysicalDeviceSurfaceSupportKHR(context_->_gpu, i, context_->_first_window->_surface, &present_supported_);
+        vkGetPhysicalDeviceSurfaceSupportKHR(context_->_gpu, i, context_->_first_window->_render_context._surface, &present_supported_);
 
         if ((queue_families_[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) && (families_._graphics_index == -1))
             families_._graphics_index = i;
@@ -139,7 +124,7 @@ RendererBackendResult renderer_backend_vulkan_device_select_gpu(VoidPtr *out_con
                     graphics_queue_supported_ = true;
 
                 VkBool32 present_supported_ = VK_FALSE;
-                vkGetPhysicalDeviceSurfaceSupportKHR(candidate_, j, context_->_first_window->_surface, &present_supported_);
+                vkGetPhysicalDeviceSurfaceSupportKHR(candidate_, j, context_->_first_window->_render_context._surface, &present_supported_);
                 if (present_supported_ == VK_TRUE)
                     present_queue_supported_ = true;
             }

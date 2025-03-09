@@ -7,25 +7,11 @@
 
 #include "vytal/core/memory/zone/memory_zone.h"
 #include "vytal/core/misc/assertion/assertion.h"
+#include "vytal/renderer/backends/vulkan/helpers/vulkan_helpers.h"
 
 struct Window_Handle {
-    GLFWwindow *_handle;
-
-    VkSurfaceKHR _surface;
-
-    VkSwapchainKHR     _curr_swapchain;
-    VkSwapchainKHR     _prev_swapchain;
-    VkSurfaceFormatKHR _swapchain_surface_format;
-    VkPresentModeKHR   _swapchain_present_mode;
-    UInt32             _swapchain_image_count;
-    VkImage           *_swapchain_images;
-    VkImageView       *_swapchain_image_views;
-    VkExtent2D         _swapchain_extent;
-
-    VkFramebuffer *_frame_buffers;
-
-    GraphicsPipelineType _active_pipeline;
-    UInt32               _frame_index;
+    GLFWwindow                  *_handle;
+    RendererBackendWindowContext _render_context;
 
     ByteSize _memory_size;
 };
@@ -125,8 +111,8 @@ RendererBackendResult renderer_backend_vulkan_swapchain_construct(const VoidPtr 
 
     VkCompositeAlphaFlagBitsKHR composite_alpha_ = _renderer_backend_vulkan_swapchain_select_composite_alpha(&context_->_surface_capabilities);
     VkExtent2D                  swap_extent_     = _renderer_backend_vulkan_swapchain_select_swap_extent(context_->_first_window->_handle, &context_->_surface_capabilities);
-    VkPresentModeKHR            present_mode_    = _renderer_backend_vulkan_swapchain_select_present_mode(context_->_gpu, context_->_first_window->_surface);
-    VkSurfaceFormatKHR          surface_format_  = _renderer_backend_vulkan_swapchain_select_surface_format(context_->_gpu, context_->_first_window->_surface);
+    VkPresentModeKHR            present_mode_    = _renderer_backend_vulkan_swapchain_select_present_mode(context_->_gpu, context_->_first_window->_render_context._surface);
+    VkSurfaceFormatKHR          surface_format_  = _renderer_backend_vulkan_swapchain_select_surface_format(context_->_gpu, context_->_first_window->_render_context._surface);
 
     UInt32 image_count_ = context_->_surface_capabilities.minImageCount + 1;
     if ((context_->_surface_capabilities.maxImageCount > 0) && (image_count_ > context_->_surface_capabilities.maxImageCount))
@@ -137,7 +123,7 @@ RendererBackendResult renderer_backend_vulkan_swapchain_construct(const VoidPtr 
     VkSwapchainCreateInfoKHR swapchain_info_ = {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 
-        .surface = context_->_first_window->_surface,
+        .surface = context_->_first_window->_render_context._surface,
 
         .minImageCount    = image_count_,
         .imageExtent      = swap_extent_,
@@ -155,28 +141,28 @@ RendererBackendResult renderer_backend_vulkan_swapchain_construct(const VoidPtr 
         .clipped        = VK_TRUE,
         .presentMode    = present_mode_,
 
-        .oldSwapchain = window_->_prev_swapchain,
+        .oldSwapchain = window_->_render_context._prev_swapchain,
     };
 
-    if (vkCreateSwapchainKHR(context_->_device, &swapchain_info_, NULL, &window_->_curr_swapchain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(context_->_device, &swapchain_info_, NULL, &window_->_render_context._curr_swapchain) != VK_SUCCESS)
         return RENDERER_BACKEND_ERROR_VULKAN_SWAPCHAIN_CONSTRUCT_FAILED;
 
-    window_->_swapchain_present_mode   = present_mode_;
-    window_->_swapchain_surface_format = surface_format_;
-    window_->_swapchain_extent         = swap_extent_;
+    window_->_render_context._swapchain_present_mode   = present_mode_;
+    window_->_render_context._swapchain_surface_format = surface_format_;
+    window_->_render_context._swapchain_extent         = swap_extent_;
 
     // acquire swapchain images
     {
         UInt32 swapchain_image_count_ = 0;
-        if (vkGetSwapchainImagesKHR(context_->_device, window_->_curr_swapchain, &swapchain_image_count_, NULL) != VK_SUCCESS)
+        if (vkGetSwapchainImagesKHR(context_->_device, window_->_render_context._curr_swapchain, &swapchain_image_count_, NULL) != VK_SUCCESS)
             return RENDERER_BACKEND_ERROR_VULKAN_SWAPCHAIN_CONSTRUCT_FAILED;
 
-        window_->_swapchain_image_count = swapchain_image_count_;
+        window_->_render_context._swapchain_image_count = swapchain_image_count_;
 
-        if (memory_zone_allocate("renderer", sizeof(VkImage) * swapchain_image_count_, (VoidPtr *)&window_->_swapchain_images, NULL) != MEMORY_ZONE_SUCCESS)
+        if (memory_zone_allocate("renderer", sizeof(VkImage) * swapchain_image_count_, (VoidPtr *)&window_->_render_context._swapchain_images, NULL) != MEMORY_ZONE_SUCCESS)
             return RENDERER_BACKEND_ERROR_VULKAN_SWAPCHAIN_CONSTRUCT_FAILED;
 
-        if (vkGetSwapchainImagesKHR(context_->_device, window_->_curr_swapchain, &swapchain_image_count_, window_->_swapchain_images) != VK_SUCCESS)
+        if (vkGetSwapchainImagesKHR(context_->_device, window_->_render_context._curr_swapchain, &swapchain_image_count_, window_->_render_context._swapchain_images) != VK_SUCCESS)
             return RENDERER_BACKEND_ERROR_VULKAN_SWAPCHAIN_CONSTRUCT_FAILED;
     }
 
@@ -196,7 +182,7 @@ RendererBackendResult renderer_backend_vulkan_swapchain_reconstruct(const VoidPt
     vkDeviceWaitIdle(context_->_device);
 
     // store the current swapchain as old swapchain
-    window_->_prev_swapchain = window_->_curr_swapchain;
+    window_->_render_context._prev_swapchain = window_->_render_context._curr_swapchain;
 
     // cleanup and re-construct
     {
@@ -217,15 +203,15 @@ RendererBackendResult renderer_backend_vulkan_swapchain_cleanup(const VoidPtr co
     RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
     Window                        window_  = (Window)(*out_window);
 
-    if (window_->_curr_swapchain != VK_NULL_HANDLE)
-        vkDestroySwapchainKHR(context_->_device, window_->_curr_swapchain, NULL);
+    if (window_->_render_context._curr_swapchain != VK_NULL_HANDLE)
+        vkDestroySwapchainKHR(context_->_device, window_->_render_context._curr_swapchain, NULL);
 
-    if (window_->_swapchain_image_views != NULL) {
-        for (ByteSize i = 0; i < window_->_swapchain_image_count; ++i)
-            vkDestroyImageView(context_->_device, window_->_swapchain_image_views[i], NULL);
+    if (window_->_render_context._swapchain_image_views != NULL) {
+        for (ByteSize i = 0; i < window_->_render_context._swapchain_image_count; ++i)
+            vkDestroyImageView(context_->_device, window_->_render_context._swapchain_image_views[i], NULL);
     }
 
-    if (memory_zone_deallocate("renderer", window_->_swapchain_images, sizeof(VkImage) * window_->_swapchain_image_count) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_deallocate("renderer", window_->_render_context._swapchain_images, sizeof(VkImage) * window_->_render_context._swapchain_image_count) != MEMORY_ZONE_SUCCESS)
         return RENDERER_BACKEND_ERROR_VULKAN_SWAPCHAIN_CONSTRUCT_FAILED;
 
     return RENDERER_BACKEND_SUCCESS;
@@ -236,14 +222,55 @@ RendererBackendResult renderer_backend_vulkan_swapchain_destruct(const VoidPtr c
     RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
     Window                        window_  = (Window)(*out_window);
 
-    if (window_->_curr_swapchain != VK_NULL_HANDLE)
-        vkDestroySwapchainKHR(context_->_device, window_->_curr_swapchain, NULL);
+    if (window_->_render_context._curr_swapchain != VK_NULL_HANDLE)
+        vkDestroySwapchainKHR(context_->_device, window_->_render_context._curr_swapchain, NULL);
 
-    if (window_->_prev_swapchain != VK_NULL_HANDLE)
-        vkDestroySwapchainKHR(context_->_device, window_->_prev_swapchain, NULL);
+    if (window_->_render_context._prev_swapchain != VK_NULL_HANDLE)
+        vkDestroySwapchainKHR(context_->_device, window_->_render_context._prev_swapchain, NULL);
 
-    if (memory_zone_deallocate("renderer", window_->_swapchain_images, sizeof(VkImage) * window_->_swapchain_image_count) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_deallocate("renderer", window_->_render_context._swapchain_images, sizeof(VkImage) * window_->_render_context._swapchain_image_count) != MEMORY_ZONE_SUCCESS)
+        return RENDERER_BACKEND_ERROR_VULKAN_SWAPCHAIN_IMAGE_VIEWS_CONSTRUCT_FAILED;
+
+    return RENDERER_BACKEND_SUCCESS;
+}
+
+RendererBackendResult renderer_backend_vulkan_swapchain_construct_image_views(const VoidPtr context, VoidPtr *out_window) {
+    if (!context || !out_window) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
+    RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
+    Window                        window_  = (Window)(*out_window);
+
+    if (memory_zone_allocate("renderer", sizeof(VkImageView) * window_->_render_context._swapchain_image_count, (VoidPtr *)&window_->_render_context._swapchain_image_views, NULL) != MEMORY_ZONE_SUCCESS)
         return RENDERER_BACKEND_ERROR_VULKAN_SWAPCHAIN_CONSTRUCT_FAILED;
+
+    for (ByteSize i = 0; i < window_->_render_context._swapchain_image_count; ++i) {
+        RendererBackendResult construct_image_view_ = renderer_backend_vulkan_helpers_construct_image_view(
+            context_,
+            window_->_render_context._swapchain_images[i],
+            window_->_render_context._swapchain_surface_format.format,
+            VK_IMAGE_ASPECT_COLOR_BIT,
+            1,
+            &window_->_render_context._swapchain_image_views[i]);
+
+        if (construct_image_view_ != RENDERER_BACKEND_SUCCESS)
+            return construct_image_view_;
+    }
+
+    return RENDERER_BACKEND_SUCCESS;
+}
+
+RendererBackendResult renderer_backend_vulkan_swapchain_destruct_image_views(const VoidPtr context, VoidPtr *out_window) {
+    if (!context || !out_window) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
+    RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
+    Window                        window_  = (Window)(*out_window);
+
+    for (ByteSize i = 0; i < window_->_render_context._swapchain_image_count; ++i) {
+        RendererBackendResult destruct_image_view_ = renderer_backend_vulkan_helpers_destruct_image_view(context_, window_->_render_context._swapchain_image_views[i]);
+        if (destruct_image_view_ != RENDERER_BACKEND_SUCCESS)
+            return destruct_image_view_;
+    }
+
+    if (memory_zone_deallocate("renderer", window_->_render_context._swapchain_image_views, sizeof(VkImageView) * window_->_render_context._swapchain_image_count) != MEMORY_ZONE_SUCCESS)
+        return RENDERER_BACKEND_ERROR_VULKAN_SWAPCHAIN_DESTRUCT_FAILED;
 
     return RENDERER_BACKEND_SUCCESS;
 }

@@ -9,3 +9,5 @@ VYTAL_API RendererBackendResult renderer_backend_vulkan_swapchain_construct(cons
 VYTAL_API RendererBackendResult renderer_backend_vulkan_swapchain_reconstruct(const VoidPtr context, VoidPtr *out_window);
 VYTAL_API RendererBackendResult renderer_backend_vulkan_swapchain_cleanup(const VoidPtr context, VoidPtr *out_window);
 VYTAL_API RendererBackendResult renderer_backend_vulkan_swapchain_destruct(const VoidPtr context, VoidPtr *out_window);
+VYTAL_API RendererBackendResult renderer_backend_vulkan_swapchain_construct_image_views(const VoidPtr context, VoidPtr *out_window);
+VYTAL_API RendererBackendResult renderer_backend_vulkan_swapchain_destruct_image_views(const VoidPtr context, VoidPtr *out_window);

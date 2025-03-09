@@ -13,23 +13,8 @@
 #include "vytal/renderer/backends/vulkan/window/vulkan_window.h"
 
 struct Window_Handle {
-    GLFWwindow *_handle;
-
-    VkSurfaceKHR _surface;
-
-    VkSwapchainKHR     _curr_swapchain;
-    VkSwapchainKHR     _prev_swapchain;
-    VkSurfaceFormatKHR _swapchain_surface_format;
-    VkPresentModeKHR   _swapchain_present_mode;
-    UInt32             _swapchain_image_count;
-    VkImage           *_swapchain_images;
-    VkImageView       *_swapchain_image_views;
-    VkExtent2D         _swapchain_extent;
-
-    VkFramebuffer *_frame_buffers;
-
-    GraphicsPipelineType _active_pipeline;
-    UInt32               _frame_index;
+    GLFWwindow                  *_handle;
+    RendererBackendWindowContext _render_context;
 
     ByteSize _memory_size;
 };
@@ -87,7 +72,7 @@ RendererBackendResult renderer_backend_vulkan_startup(Window *out_first_window, 
     // this window is the heart of the application that utilizes the engine
     {
         context_->_first_window = (*out_first_window);
-        if (glfwCreateWindowSurface(context_->_instance, context_->_first_window->_handle, NULL, &context_->_first_window->_surface) != VK_SUCCESS)
+        if (glfwCreateWindowSurface(context_->_instance, context_->_first_window->_handle, NULL, &context_->_first_window->_render_context._surface) != VK_SUCCESS)
             return RENDERER_BACKEND_ERROR_VULKAN_SURFACE_CONSTRUCT_FAILED;
     }
 
@@ -104,7 +89,7 @@ RendererBackendResult renderer_backend_vulkan_startup(Window *out_first_window, 
     // surface capabilities
     {
         VkSurfaceCapabilitiesKHR capabilities_;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(context_->_gpu, context_->_first_window->_surface, &capabilities_);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(context_->_gpu, context_->_first_window->_render_context._surface, &capabilities_);
         context_->_surface_capabilities = capabilities_;
     }
 
@@ -113,10 +98,18 @@ RendererBackendResult renderer_backend_vulkan_startup(Window *out_first_window, 
     if (construct_cmd_pools_ != RENDERER_BACKEND_SUCCESS)
         return construct_cmd_pools_;
 
-    // swapchain, for the first window
-    RendererBackendResult construct_swapchain_ = renderer_backend_vulkan_swapchain_construct(context_, (VoidPtr *)&context_->_first_window);
-    if (construct_swapchain_ != RENDERER_BACKEND_SUCCESS)
-        return construct_swapchain_;
+    // for the first window
+    {
+        // swapchain
+        RendererBackendResult construct_swapchain_ = renderer_backend_vulkan_swapchain_construct(context_, (VoidPtr *)&context_->_first_window);
+        if (construct_swapchain_ != RENDERER_BACKEND_SUCCESS)
+            return construct_swapchain_;
+
+        // swapchain image views
+        RendererBackendResult construct_swapchain_image_views_ = renderer_backend_vulkan_swapchain_construct_image_views(context_, (VoidPtr *)&context_->_first_window);
+        if (construct_swapchain_image_views_ != RENDERER_BACKEND_SUCCESS)
+            return construct_swapchain_image_views_;
+    }
 
     (*out_backend)->_memory_size = alloc_size_;
     return RENDERER_BACKEND_SUCCESS;
