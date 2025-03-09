@@ -1,5 +1,7 @@
 #include "vulkan_window.h"
 
+#include <string.h>
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -43,6 +45,88 @@ RendererBackendResult renderer_backend_vulkan_window_construct(VoidPtr context, 
     if (construct_swapchain_image_views_ != RENDERER_BACKEND_SUCCESS)
         return construct_swapchain_image_views_;
 
+    // graphics descriptor pool
+    {
+        VkDescriptorPoolSize pool_sizes_[] = {
+            {
+                .type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .descriptorCount = context_->_first_window->_render_context._swapchain_image_count,
+            },
+            {
+                .type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount = context_->_first_window->_render_context._swapchain_image_count,
+            },
+        };
+
+        VkDescriptorPoolCreateInfo pool_info_ = {
+            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+
+            .poolSizeCount = VYTAL_ARRAY_SIZE(pool_sizes_),
+            .pPoolSizes    = pool_sizes_,
+
+            .maxSets = context_->_first_window->_render_context._swapchain_image_count,
+            .flags   = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+        };
+
+        if (vkCreateDescriptorPool(context_->_device, &pool_info_, NULL, &window_->_render_context._graphics_desc_pool) != VK_SUCCESS)
+            return RENDERER_BACKEND_ERROR_VULKAN_DESCRIPTOR_POOLS_CONSTRUCT_FAILED;
+    }
+
+    // graphics descriptor set layout
+    {
+        VkDescriptorSetLayoutBinding bindings_[] = {
+            {
+                // matrices
+                .binding         = 0,
+                .descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .descriptorCount = 1,
+                .stageFlags      = VK_SHADER_STAGE_VERTEX_BIT,
+            },
+            {
+                // albedo texture
+                .binding         = 1,
+                .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount = 1,
+                .stageFlags      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            },
+            {
+                // normal map
+                .binding         = 2,
+                .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount = 1,
+                .stageFlags      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            },
+            {
+                // roughness map
+                .binding         = 3,
+                .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount = 1,
+                .stageFlags      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            },
+            {
+                // ambient occlusion map
+                .binding         = 4,
+                .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount = 1,
+                .stageFlags      = VK_SHADER_STAGE_FRAGMENT_BIT,
+            },
+        };
+
+        static UInt32 id_                                             = 1;
+        window_->_render_context._graphics_desc_set_layout._id        = id_++;
+        window_->_render_context._graphics_desc_set_layout._ref_count = 1;
+
+        VkDescriptorSetLayoutCreateInfo desc_set_layout_info_ = {
+            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+
+            .bindingCount = VYTAL_ARRAY_SIZE(bindings_),
+            .pBindings    = bindings_,
+        };
+
+        if (vkCreateDescriptorSetLayout(context_->_device, &desc_set_layout_info_, NULL, &window_->_render_context._graphics_desc_set_layout._handle) != VK_SUCCESS)
+            return RENDERER_BACKEND_ERROR_VULKAN_DESCRIPTOR_SET_LAYOUTS_CONSTRUCT_FAILED;
+    }
+
     return RENDERER_BACKEND_SUCCESS;
 }
 
@@ -50,6 +134,16 @@ RendererBackendResult renderer_backend_vulkan_window_destruct(VoidPtr context, V
     if (!context) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
     RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
     Window                        window_  = (Window)*out_window;
+
+    // graphics descriptor set layout
+    if (window_->_render_context._graphics_desc_set_layout._handle != VK_NULL_HANDLE) {
+        vkDestroyDescriptorSetLayout(context_->_device, window_->_render_context._graphics_desc_set_layout._handle, NULL);
+        memset(&window_->_render_context._graphics_desc_set_layout, 0, sizeof(DescriptorSetLayout));
+    }
+
+    // graphics descriptor pool
+    if (window_->_render_context._graphics_desc_pool)
+        vkDestroyDescriptorPool(context_->_device, window_->_render_context._graphics_desc_pool, NULL);
 
     // swapchain image views
     RendererBackendResult destruct_swapchain_image_views_ = renderer_backend_vulkan_swapchain_destruct_image_views(context_, out_window);

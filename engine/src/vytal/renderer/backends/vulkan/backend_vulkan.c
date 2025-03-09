@@ -7,6 +7,8 @@
 
 #include "vytal/core/memory/zone/memory_zone.h"
 #include "vytal/renderer/backends/vulkan/command_pools/vulkan_command_pools.h"
+#include "vytal/renderer/backends/vulkan/descriptor_pools/vulkan_descriptor_pools.h"
+#include "vytal/renderer/backends/vulkan/descriptor_set_layouts/vulkan_descriptor_set_layouts.h"
 #include "vytal/renderer/backends/vulkan/device/vulkan_device.h"
 #include "vytal/renderer/backends/vulkan/instance/vulkan_instance.h"
 #include "vytal/renderer/backends/vulkan/swapchain/vulkan_swapchain.h"
@@ -111,6 +113,16 @@ RendererBackendResult renderer_backend_vulkan_startup(Window *out_first_window, 
             return construct_swapchain_image_views_;
     }
 
+    // descriptor pools
+    RendererBackendResult construct_desc_pools_ = renderer_backend_vulkan_descriptor_pools_construct((VoidPtr *)&context_);
+    if (construct_desc_pools_ != RENDERER_BACKEND_SUCCESS)
+        return construct_desc_pools_;
+
+    // descriptor set layouts
+    RendererBackendResult construct_desc_set_layouts_ = renderer_backend_vulkan_descriptor_set_layouts_construct((VoidPtr *)&context_);
+    if (construct_desc_set_layouts_ != RENDERER_BACKEND_SUCCESS)
+        return construct_desc_set_layouts_;
+
     (*out_backend)->_memory_size = alloc_size_;
     return RENDERER_BACKEND_SUCCESS;
 }
@@ -122,6 +134,16 @@ RendererBackendResult renderer_backend_vulkan_shutdown(RendererBackend backend) 
 
     // destruction for first window and its properties is already handled by the application that utilizes this engine
     // so no need to do it here
+
+    // descriptor set layouts
+    RendererBackendResult destruct_desc_set_layouts_ = renderer_backend_vulkan_descriptor_set_layouts_destruct((VoidPtr *)&context_);
+    if (destruct_desc_set_layouts_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_desc_set_layouts_;
+
+    // descriptor pools
+    RendererBackendResult destruct_desc_pools_ = renderer_backend_vulkan_descriptor_pools_destruct((VoidPtr *)&context_);
+    if (destruct_desc_pools_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_desc_pools_;
 
     // command pools
     RendererBackendResult destruct_cmd_pools_ = renderer_backend_vulkan_command_pools_destruct((VoidPtr *)&context_);

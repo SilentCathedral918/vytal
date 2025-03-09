@@ -26,7 +26,14 @@
               "MAX_EXCEPTION_DEPTH = 10",
               "MEMORY_ALIGNMENT_SIZE = 16",
               "CONTAINER_DEFAULT_CAPACITY = 10",
-              "CONTAINER_RESIZE_FACTOR = 2"
+              "CONTAINER_RESIZE_FACTOR = 2",
+
+              "MAX_COMPUTE_DESCRIPTOR_SETS = 64",
+              "MAX_COMPUTE_PIPELINES = 16",
+
+              "DEFAULT_TEXTURE_WIDTH = 512",
+              "DEFAULT_TEXTURE_HEIGHT = 512",
+              "DEFAULT_TEXTURE_SQUARE_SIZE = 64"
           ],
           "compilerArgs": [
               "-mavx2",
