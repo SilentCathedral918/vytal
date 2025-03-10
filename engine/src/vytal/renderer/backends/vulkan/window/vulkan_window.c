@@ -5,6 +5,9 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include "vytal/renderer/backends/vulkan/depth_resources/vulkan_depth_resources.h"
+#include "vytal/renderer/backends/vulkan/framebuffers/vulkan_framebuffers.h"
+#include "vytal/renderer/backends/vulkan/render_pass/vulkan_render_pass.h"
 #include "vytal/renderer/backends/vulkan/swapchain/vulkan_swapchain.h"
 
 struct Window_Handle {
@@ -127,6 +130,21 @@ RendererBackendResult renderer_backend_vulkan_window_construct(VoidPtr context, 
             return RENDERER_BACKEND_ERROR_VULKAN_DESCRIPTOR_SET_LAYOUTS_CONSTRUCT_FAILED;
     }
 
+    // render pass
+    RendererBackendResult construct_render_pass_ = renderer_backend_render_pass_construct(context_, out_window);
+    if (construct_render_pass_ != RENDERER_BACKEND_SUCCESS)
+        return construct_render_pass_;
+
+    // depth resources
+    RendererBackendResult construct_depth_resources_ = renderer_backend_vulkan_depth_resources_construct(context_, out_window);
+    if (construct_depth_resources_ != RENDERER_BACKEND_SUCCESS)
+        return construct_depth_resources_;
+
+    // framebuffers
+    RendererBackendResult construct_framebuffers_ = renderer_backend_vulkan_framebuffers_construct(context_, out_window);
+    if (construct_framebuffers_ != RENDERER_BACKEND_SUCCESS)
+        return construct_framebuffers_;
+
     return RENDERER_BACKEND_SUCCESS;
 }
 
@@ -134,6 +152,21 @@ RendererBackendResult renderer_backend_vulkan_window_destruct(VoidPtr context, V
     if (!context) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
     RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
     Window                        window_  = (Window)*out_window;
+
+    // framebuffers
+    RendererBackendResult destruct_framebuffers_ = renderer_backend_vulkan_framebuffers_destruct(context_, out_window);
+    if (destruct_framebuffers_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_framebuffers_;
+
+    // depth resources
+    RendererBackendResult destruct_depth_resources_ = renderer_backend_vulkan_depth_resources_destruct(context_, out_window);
+    if (destruct_depth_resources_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_depth_resources_;
+
+    // render pass
+    RendererBackendResult destruct_render_pass_ = renderer_backend_render_pass_destruct(context_, out_window);
+    if (destruct_render_pass_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_render_pass_;
 
     // graphics descriptor set layout
     if (window_->_render_context._graphics_desc_set_layout._handle != VK_NULL_HANDLE) {

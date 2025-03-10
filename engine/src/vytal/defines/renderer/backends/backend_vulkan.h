@@ -93,7 +93,7 @@ typedef struct Renderer_Backend_Window_Context {
     VkImageView       *_swapchain_image_views;
     VkExtent2D         _swapchain_extent;
 
-    VkFramebuffer *_frame_buffers;
+    VkFramebuffer *_framebuffers;
 
     GraphicsPipelineType _active_pipeline;
     UInt32               _frame_index;

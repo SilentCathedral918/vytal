@@ -7,10 +7,13 @@
 
 #include "vytal/core/memory/zone/memory_zone.h"
 #include "vytal/renderer/backends/vulkan/command_pools/vulkan_command_pools.h"
+#include "vytal/renderer/backends/vulkan/depth_resources/vulkan_depth_resources.h"
 #include "vytal/renderer/backends/vulkan/descriptor_pools/vulkan_descriptor_pools.h"
 #include "vytal/renderer/backends/vulkan/descriptor_set_layouts/vulkan_descriptor_set_layouts.h"
 #include "vytal/renderer/backends/vulkan/device/vulkan_device.h"
+#include "vytal/renderer/backends/vulkan/framebuffers/vulkan_framebuffers.h"
 #include "vytal/renderer/backends/vulkan/instance/vulkan_instance.h"
+#include "vytal/renderer/backends/vulkan/render_pass/vulkan_render_pass.h"
 #include "vytal/renderer/backends/vulkan/swapchain/vulkan_swapchain.h"
 #include "vytal/renderer/backends/vulkan/window/vulkan_window.h"
 
@@ -111,6 +114,21 @@ RendererBackendResult renderer_backend_vulkan_startup(Window *out_first_window, 
         RendererBackendResult construct_swapchain_image_views_ = renderer_backend_vulkan_swapchain_construct_image_views(context_, (VoidPtr *)&context_->_first_window);
         if (construct_swapchain_image_views_ != RENDERER_BACKEND_SUCCESS)
             return construct_swapchain_image_views_;
+
+        // render pass
+        RendererBackendResult construct_render_pass_ = renderer_backend_render_pass_construct(context_, (VoidPtr *)&context_->_first_window);
+        if (construct_render_pass_ != RENDERER_BACKEND_SUCCESS)
+            return construct_render_pass_;
+
+        // depth resources
+        RendererBackendResult construct_depth_resources_ = renderer_backend_vulkan_depth_resources_construct(context_, (VoidPtr *)&context_->_first_window);
+        if (construct_depth_resources_ != RENDERER_BACKEND_SUCCESS)
+            return construct_depth_resources_;
+
+        // framebuffers
+        RendererBackendResult construct_framebuffers_ = renderer_backend_vulkan_framebuffers_construct(context_, (VoidPtr *)&context_->_first_window);
+        if (construct_framebuffers_ != RENDERER_BACKEND_SUCCESS)
+            return construct_framebuffers_;
     }
 
     // descriptor pools
