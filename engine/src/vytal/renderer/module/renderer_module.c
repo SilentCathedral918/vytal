@@ -1,8 +1,7 @@
-#include "renderer_module.h"
-
 #include <stdlib.h>
 #include <string.h>
 
+#include "renderer_module.h"
 #include "vytal/core/containers/array/array.h"
 #include "vytal/core/helpers/parse/parse.h"
 #include "vytal/core/memory/zone/memory_zone.h"
@@ -11,6 +10,7 @@
 
 typedef struct Renderer_Module_State {
     RendererBackend _backend;
+    Char            _shaders_filepath[LINE_BUFFER_MAX_SIZE];
 
     Bool     _initialized;
     ByteSize _memory_size;
@@ -55,10 +55,13 @@ RendererModuleResult renderer_module_startup(File *file, Window *out_first_windo
             else
                 continue;
         }
+
+        else if (!strcmp(key_, "shaders_path"))
+            memcpy(state->_shaders_filepath, value_, LINE_BUFFER_MAX_SIZE);
     }
     free(line_);
 
-    if (renderer_backend_startup(backend_type_, out_first_window, &state->_backend) != RENDERER_BACKEND_SUCCESS) {
+    if (renderer_backend_startup(backend_type_, out_first_window, state->_shaders_filepath, &state->_backend) != RENDERER_BACKEND_SUCCESS) {
         if (memory_zone_deallocate("modules", state, alloc_size_) != MEMORY_ZONE_SUCCESS)
             return RENDERER_MODULE_ERROR_DEALLOCATION_FAILED;
 

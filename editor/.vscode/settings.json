@@ -1,15 +1,13 @@
 {
-    "C_Cpp.default.includePath": [
-      "${workspaceFolder}/**"
-    ],
-    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, AlignConsecutiveDeclarations: true, AlignConsecutiveAssignments: true, IndentWidth: 4, ColumnLimit: 0, IndentPPDirectives: AfterHash}",
-  
-    "editor.cursorStyle": "block",
-    "editor.tabSize": 4,
-    "editor.indentSize": "tabSize",
-    "editor.formatOnSave": true,
-    "files.associations": {
-      "*.h": "c",
-      "system_error": "c"
-    }
+  "clang-format.assumeFilename": "${file}",
+  "clang-format.style": "{ BasedOnStyle: Google, AlignConsecutiveDeclarations: true, AlignConsecutiveAssignments: true, IndentWidth: 4, ColumnLimit: 0, IndentPPDirectives: AfterHash}",
+
+  "editor.cursorStyle": "block",
+  "editor.tabSize": 4,
+  "editor.indentSize": "tabSize",
+  "editor.formatOnSave": true,
+  "files.associations": {
+    "*.h": "c",
+    "system_error": "c"
+  }
 }

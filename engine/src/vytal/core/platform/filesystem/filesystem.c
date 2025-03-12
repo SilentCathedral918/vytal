@@ -1,5 +1,6 @@
 #include "filesystem.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 VYTAL_INLINE ConstStr _platform_filesystem_lookup_file_mode(const FileIOMode io_mode,
@@ -129,6 +130,7 @@ FileResult platform_filesystem_read_all(File *file, ByteSize *out_read_size, Str
     if (!file_size_) return FILE_ERROR_READ_FAILED;
 
     ByteSize read_size_ = fread(out_read_data, 1, file_size_, file->_stream);
+    if (!read_size_) return FILE_ERROR_READ_FAILED;
 
     if (out_read_size)
         *out_read_size = read_size_;
@@ -137,6 +139,30 @@ FileResult platform_filesystem_read_all(File *file, ByteSize *out_read_size, Str
         out_read_data[read_size_] = '\0';
 
     return (read_size_ > 0) ? FILE_SUCCESS : FILE_ERROR_READ_FAILED;
+}
+
+FileResult platform_filesystem_read_binary_uint32(File *file, ByteSize *out_word_count, UInt32 **out_read_data) {
+    if (!file || !out_word_count || !out_read_data) return FILE_ERROR_INVALID_PARAM;
+    if (!file->_active || !file->_stream) return FILE_ERROR_NOT_OPEN;
+
+    ByteSize file_size_ = platform_filesystem_file_size(file);
+    if (!file_size_ || file_size_ % sizeof(uint32_t) != 0)
+        return FILE_ERROR_READ_FAILED;
+
+    *out_word_count = file_size_ / sizeof(UInt32);
+
+    *out_read_data = malloc(file_size_);
+    if (!*out_read_data) return FILE_ERROR_BUFFER_ALLOCATION_FAILED;
+
+    ByteSize read_size = fread(*out_read_data, sizeof(UInt32), *out_word_count, file->_stream);
+    if (read_size != *out_word_count) {
+        free(*out_read_data);
+        *out_read_data = NULL;
+
+        return FILE_ERROR_READ_FAILED;
+    }
+
+    return FILE_SUCCESS;
 }
 
 FileResult platform_filesystem_write_line(File *file, ConstStr content) {

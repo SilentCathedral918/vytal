@@ -44,6 +44,7 @@ typedef struct Renderer_Texture {
 
 typedef struct Renderer_Backend_Vulkan_Context {
     Window _first_window;
+    Char   _shaders_filepath[LINE_BUFFER_MAX_SIZE];
 
     UInt32            _layer_count;
     VkLayerProperties _layers[16];
@@ -95,8 +96,8 @@ typedef struct Renderer_Backend_Window_Context {
 
     VkFramebuffer *_framebuffers;
 
-    GraphicsPipelineType _active_pipeline;
-    UInt32               _frame_index;
+    RendererGraphicsPipelineType _active_pipeline;
+    UInt32                       _frame_index;
 
     VkRenderPass _render_pass;
 

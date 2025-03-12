@@ -1,10 +1,12 @@
-#include "vulkan_helpers.h"
+#include <stdlib.h>
 
-#include "vytal/core/memory/zone/memory_zone.h"
+#include "vulkan_helpers.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include "vytal/core/memory/zone/memory_zone.h"
+#include "vytal/core/platform/filesystem/filesystem.h"
 #include "vytal/renderer/backends/vulkan/helpers/vulkan_helpers.h"
 
 struct Window_Handle {
@@ -139,6 +141,366 @@ RendererBackendResult renderer_backend_vulkan_helpers_destruct_image_view(
 
     if (image_view != VK_NULL_HANDLE)
         vkDestroyImageView(context_->_device, image_view, NULL);
+
+    return RENDERER_BACKEND_SUCCESS;
+}
+
+RendererBackendResult renderer_backend_vulkan_helpers_construct_shader_module(
+    const VoidPtr   context,
+    ConstStr        shader_filepath,
+    VkShaderModule *out_shader_module) {
+    if (!context || !shader_filepath || !out_shader_module) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
+    RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
+
+    ByteSize shader_code_size_ = 0;
+    UInt32  *shader_code_      = NULL;
+
+    RendererBackendResult read_shader_file_ = renderer_backend_vulkan_helpers_read_shader_file(shader_filepath, &shader_code_size_, &shader_code_);
+    if (read_shader_file_ != RENDERER_BACKEND_SUCCESS)
+        return read_shader_file_;
+
+    VkShaderModuleCreateInfo module_info_ = {
+        .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+
+        .codeSize = shader_code_size_,
+        .pCode    = shader_code_,
+    };
+
+    if (vkCreateShaderModule(context_->_device, &module_info_, NULL, out_shader_module) != VK_SUCCESS)
+        return RENDERER_BACKEND_ERROR_VULKAN_SHADER_MODULE_CONSTRUCT_FAILED;
+
+    free(shader_code_);
+    return RENDERER_BACKEND_SUCCESS;
+}
+
+RendererBackendResult renderer_backend_vulkan_helpers_destruct_shader_module(
+    const VoidPtr  context,
+    VkShaderModule shader_module) {
+    if (!context) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
+    RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
+
+    if (shader_module != VK_NULL_HANDLE)
+        vkDestroyShaderModule(context_->_device, shader_module, NULL);
+
+    return RENDERER_BACKEND_SUCCESS;
+}
+
+RendererBackendResult renderer_backend_vulkan_helpers_construct_graphics_pipeline(
+    ConstStr                                 vertex_shader_filepath,
+    ConstStr                                 fragment_shader_filepath,
+    const VoidPtr                            context,
+    const VoidPtr                            window,
+    const RendererGraphicsPipelineType       type,
+    const UInt32                             binding_count,
+    const VkVertexInputBindingDescription   *bindings,
+    const UInt32                             attribute_count,
+    const VkVertexInputAttributeDescription *attributes,
+    VkPipeline                              *out_pipeline,
+    VkPipelineLayout                        *out_pipeline_layout) {
+    if (!vertex_shader_filepath ||
+        !fragment_shader_filepath ||
+        !context ||
+        !binding_count ||
+        !bindings ||
+        !attribute_count ||
+        !attributes ||
+        !out_pipeline ||
+        !out_pipeline_layout) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
+    RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
+    Window                        window_  = (Window)window;
+    VkShaderModule                vert_shader_, frag_shader_;
+
+    RendererBackendResult construct_vert_shader_module_ = renderer_backend_vulkan_helpers_construct_shader_module(context_, vertex_shader_filepath, &vert_shader_);
+    if (construct_vert_shader_module_ != RENDERER_BACKEND_SUCCESS)
+        return construct_vert_shader_module_;
+
+    RendererBackendResult construct_frag_shader_module_ = renderer_backend_vulkan_helpers_construct_shader_module(context_, fragment_shader_filepath, &frag_shader_);
+    if (construct_frag_shader_module_ != RENDERER_BACKEND_SUCCESS)
+        return construct_frag_shader_module_;
+
+    VkPolygonMode   raster_polygon_mode_;
+    VkCullModeFlags raster_cull_mode_;
+    VkBool32        color_blend_enabled_;
+    VkBlendFactor   src_color_blend_factor_;
+    VkBlendFactor   dst_color_blend_factor_;
+    VkBool32        depth_write_enabled_;
+
+    switch (type) {
+        case RENDERER_GRAPHICS_PIPELINE_TYPE_SOLID_COLOR:
+            raster_polygon_mode_ = VK_POLYGON_MODE_FILL;
+            raster_cull_mode_    = VK_CULL_MODE_BACK_BIT;
+
+            color_blend_enabled_    = VK_FALSE;
+            src_color_blend_factor_ = VK_BLEND_FACTOR_SRC_ALPHA;
+            dst_color_blend_factor_ = VK_BLEND_FACTOR_SRC_ALPHA;
+
+            depth_write_enabled_ = VK_TRUE;
+
+            break;
+
+        case RENDERER_GRAPHICS_PIPELINE_TYPE_TEXTURED:
+            raster_polygon_mode_ = VK_POLYGON_MODE_FILL;
+            raster_cull_mode_    = VK_CULL_MODE_BACK_BIT;
+
+            color_blend_enabled_    = VK_FALSE;
+            src_color_blend_factor_ = VK_BLEND_FACTOR_ONE;
+            dst_color_blend_factor_ = VK_BLEND_FACTOR_ZERO;
+
+            depth_write_enabled_ = VK_TRUE;
+
+            break;
+
+        case RENDERER_GRAPHICS_PIPELINE_TYPE_TRANSPARENT:
+            raster_polygon_mode_ = VK_POLYGON_MODE_FILL;
+            raster_cull_mode_    = VK_CULL_MODE_NONE;
+
+            color_blend_enabled_    = VK_TRUE;
+            src_color_blend_factor_ = VK_BLEND_FACTOR_ONE;
+            dst_color_blend_factor_ = VK_BLEND_FACTOR_ZERO;
+
+            depth_write_enabled_ = VK_FALSE;
+
+            break;
+
+        case RENDERER_GRAPHICS_PIPELINE_TYPE_WIREFRAME:
+            raster_polygon_mode_ = VK_POLYGON_MODE_LINE;
+            raster_cull_mode_    = VK_CULL_MODE_NONE;
+
+            color_blend_enabled_    = VK_FALSE;
+            src_color_blend_factor_ = VK_BLEND_FACTOR_ONE;
+            dst_color_blend_factor_ = VK_BLEND_FACTOR_ZERO;
+
+            depth_write_enabled_ = VK_TRUE;
+
+            break;
+
+        default:
+            return RENDERER_BACKEND_ERROR_VULKAN_INVALID_GRAPHICS_PIPELINE_TYPE;
+    }
+
+    VkPipelineShaderStageCreateInfo vert_shader_stage_info_ = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+
+        .stage  = VK_SHADER_STAGE_VERTEX_BIT,
+        .module = vert_shader_,
+        .pName  = "main",
+    };
+
+    VkPipelineShaderStageCreateInfo frag_shader_stage_info_ = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+
+        .stage  = VK_SHADER_STAGE_FRAGMENT_BIT,
+        .module = frag_shader_,
+        .pName  = "main",
+    };
+
+    VkPipelineShaderStageCreateInfo shader_stage_infos_[] = {
+        vert_shader_stage_info_,
+        frag_shader_stage_info_,
+    };
+
+    VkPipelineVertexInputStateCreateInfo vertex_input_state_info_ = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+
+        .vertexBindingDescriptionCount = binding_count,
+        .pVertexBindingDescriptions    = bindings,
+
+        .vertexAttributeDescriptionCount = attribute_count,
+        .pVertexAttributeDescriptions    = attributes,
+    };
+
+    VkPipelineInputAssemblyStateCreateInfo input_assembly_state_info_ = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+
+        .topology               = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+        .primitiveRestartEnable = VK_FALSE,
+    };
+
+    VkViewport viewport_ = {
+        .x = 0.f,
+        .y = 0.f,
+
+        .width  = (Flt32)window_->_render_context._swapchain_extent.width,
+        .height = (Flt32)window_->_render_context._swapchain_extent.height,
+
+        .minDepth = 0.f,
+        .maxDepth = 1.f,
+    };
+
+    VkRect2D scissor_ = {
+        .offset = {0.f, 0.f},
+        .extent = window_->_render_context._swapchain_extent,
+    };
+
+    VkDynamicState dynamic_states_[] = {
+        VK_DYNAMIC_STATE_VIEWPORT,
+        VK_DYNAMIC_STATE_SCISSOR,
+    };
+
+    VkPipelineDynamicStateCreateInfo dynamic_state_info_ = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+
+        .dynamicStateCount = VYTAL_ARRAY_SIZE(dynamic_states_),
+        .pDynamicStates    = dynamic_states_,
+    };
+
+    VkPipelineViewportStateCreateInfo viewport_state_info_ = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+
+        .viewportCount = 1,
+        .pViewports    = &viewport_,
+
+        .scissorCount = 1,
+        .pScissors    = &scissor_,
+    };
+
+    VkPipelineRasterizationStateCreateInfo rasterization_state_info_ = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+
+        .rasterizerDiscardEnable = VK_FALSE,
+        .lineWidth               = 1.f,
+        .polygonMode             = raster_polygon_mode_,
+        .cullMode                = raster_cull_mode_,
+        .frontFace               = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+
+        .depthClampEnable        = VK_FALSE,
+        .depthBiasEnable         = VK_FALSE,
+        .depthBiasConstantFactor = 0.f,
+        .depthBiasClamp          = 0.f,
+        .depthBiasSlopeFactor    = 0.f,
+    };
+
+    VkPipelineMultisampleStateCreateInfo multisample_state_info_ = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+
+        .sampleShadingEnable  = VK_FALSE,
+        .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
+        .minSampleShading     = 1.f,
+        .pSampleMask          = NULL,
+
+        .alphaToCoverageEnable = VK_FALSE,
+        .alphaToOneEnable      = VK_FALSE,
+    };
+
+    VkPipelineColorBlendAttachmentState color_blend_attachment_state_ = {
+        .blendEnable    = color_blend_enabled_,
+        .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+
+        .srcColorBlendFactor = src_color_blend_factor_,
+        .dstColorBlendFactor = dst_color_blend_factor_,
+        .colorBlendOp        = VK_BLEND_OP_ADD,
+
+        .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+        .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+        .alphaBlendOp        = VK_BLEND_OP_ADD,
+    };
+
+    VkPipelineColorBlendStateCreateInfo color_blend_state_info_ = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+
+        .logicOpEnable = VK_FALSE,
+        .logicOp       = VK_LOGIC_OP_COPY,
+
+        .attachmentCount = 1,
+        .pAttachments    = &color_blend_attachment_state_,
+
+        .blendConstants =
+            {(type == RENDERER_GRAPHICS_PIPELINE_TYPE_TRANSPARENT) ? 1.0f : 0.0f,
+             (type == RENDERER_GRAPHICS_PIPELINE_TYPE_TRANSPARENT) ? 1.0f : 0.0f,
+             (type == RENDERER_GRAPHICS_PIPELINE_TYPE_TRANSPARENT) ? 1.0f : 0.0f,
+             (type == RENDERER_GRAPHICS_PIPELINE_TYPE_TRANSPARENT) ? 1.0f : 0.0f},
+
+    };
+
+    VkStencilOpState stencil_op_state_ = {
+        .failOp      = VK_STENCIL_OP_KEEP,
+        .passOp      = VK_STENCIL_OP_REPLACE,
+        .depthFailOp = VK_STENCIL_OP_KEEP,
+        .compareOp   = VK_COMPARE_OP_ALWAYS,
+
+        .compareMask = 0xff,
+        .writeMask   = 0xff,
+
+        .reference = 1,
+    };
+
+    VkPipelineDepthStencilStateCreateInfo depth_stencil_state_info_ = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+
+        .depthTestEnable  = VK_TRUE,
+        .depthWriteEnable = depth_write_enabled_,
+
+        .depthCompareOp = VK_COMPARE_OP_LESS,
+
+        .depthBoundsTestEnable = VK_FALSE,
+        .minDepthBounds        = 0.0f,
+        .maxDepthBounds        = 1.0f,
+
+        .stencilTestEnable = VK_TRUE,
+        .front             = stencil_op_state_,
+        .back              = stencil_op_state_,
+    };
+
+    VkPipelineLayoutCreateInfo pipeline_layout_info_ = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+
+        .setLayoutCount = 1,
+        .pSetLayouts    = &window_->_render_context._graphics_desc_set_layout._handle,
+
+        .pushConstantRangeCount = 0,
+        .pPushConstantRanges    = NULL,
+    };
+
+    if (vkCreatePipelineLayout(context_->_device, &pipeline_layout_info_, NULL, out_pipeline_layout) != VK_SUCCESS)
+        return RENDERER_BACKEND_ERROR_VULKAN_GRAPHICS_PIPELINE_CONSTRUCT_FAILED;
+
+    VkGraphicsPipelineCreateInfo pipeline_info_ = {
+        .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+
+        .stageCount = VYTAL_ARRAY_SIZE(shader_stage_infos_),
+        .pStages    = shader_stage_infos_,
+
+        .pVertexInputState   = &vertex_input_state_info_,
+        .pInputAssemblyState = &input_assembly_state_info_,
+        .pViewportState      = &viewport_state_info_,
+        .pRasterizationState = &rasterization_state_info_,
+        .pMultisampleState   = &multisample_state_info_,
+        .pDepthStencilState  = &depth_stencil_state_info_,
+        .pColorBlendState    = &color_blend_state_info_,
+        .pDynamicState       = &dynamic_state_info_,
+
+        .layout = *out_pipeline_layout,
+
+        .renderPass = window_->_render_context._render_pass,
+        .subpass    = 0,
+    };
+
+    if (vkCreateGraphicsPipelines(context_->_device, VK_NULL_HANDLE, 1, &pipeline_info_, NULL, out_pipeline) != VK_SUCCESS)
+        return RENDERER_BACKEND_ERROR_VULKAN_GRAPHICS_PIPELINE_CONSTRUCT_FAILED;
+
+    RendererBackendResult destruct_vert_shader_module_ = renderer_backend_vulkan_helpers_destruct_shader_module(context_, vert_shader_);
+    if (destruct_vert_shader_module_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_vert_shader_module_;
+
+    RendererBackendResult destruct_frag_shader_module_ = renderer_backend_vulkan_helpers_destruct_shader_module(context_, frag_shader_);
+    if (destruct_frag_shader_module_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_frag_shader_module_;
+
+    return RENDERER_BACKEND_SUCCESS;
+}
+
+RendererBackendResult renderer_backend_vulkan_helpers_destruct_graphics_pipeline(
+    const VoidPtr    context,
+    VkPipeline       pipeline,
+    VkPipelineLayout pipeline_layout) {
+    if (!context) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
+    RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
+
+    if (pipeline != VK_NULL_HANDLE)
+        vkDestroyPipeline(context_->_device, pipeline, NULL);
+
+    if (pipeline_layout != VK_NULL_HANDLE)
+        vkDestroyPipelineLayout(context_->_device, pipeline_layout, NULL);
 
     return RENDERER_BACKEND_SUCCESS;
 }
@@ -381,6 +743,26 @@ RendererBackendResult renderer_backend_vulkan_helpers_end_single_time_commands(
     vkFreeCommandBuffers(context_->_device, *pool, cmd_buffer_count, buffers);
     if (memory_zone_deallocate("renderer", buffers, sizeof(VkCommandBuffer) * cmd_buffer_count) != MEMORY_ZONE_SUCCESS)
         return RENDERER_BACKEND_ERROR_DEALLOCATION_FAILED;
+
+    return RENDERER_BACKEND_SUCCESS;
+}
+
+RendererBackendResult renderer_backend_vulkan_helpers_read_shader_file(
+    ConstStr  filepath,
+    ByteSize *out_shader_size,
+    UInt32  **out_shader_code) {
+    if (!filepath || !out_shader_size || !out_shader_code) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
+
+    File file_ = {0};
+    if (platform_filesystem_open_file(&file_, filepath, FILE_IO_MODE_READ, FILE_MODE_BINARY) != FILE_SUCCESS)
+        return RENDERER_BACKEND_ERROR_VULKAN_HELPERS_SHADER_FILE_OPEN_FAILED;
+
+    if (platform_filesystem_read_binary_uint32(&file_, out_shader_size, out_shader_code) != FILE_SUCCESS)
+        return RENDERER_BACKEND_ERROR_VULKAN_HELPERS_SHADER_FILE_READ_FAILED;
+    *out_shader_size *= sizeof(UInt32);
+
+    if (platform_filesystem_close_file(&file_) != FILE_SUCCESS)
+        return RENDERER_BACKEND_ERROR_VULKAN_HELPERS_SHADER_FILE_CLOSE_FAILED;
 
     return RENDERER_BACKEND_SUCCESS;
 }

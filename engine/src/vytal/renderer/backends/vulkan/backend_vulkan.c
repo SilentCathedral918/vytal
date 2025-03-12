@@ -1,6 +1,6 @@
-#include "backend_vulkan.h"
-
 #include <string.h>
+
+#include "backend_vulkan.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -12,6 +12,7 @@
 #include "vytal/renderer/backends/vulkan/descriptor_set_layouts/vulkan_descriptor_set_layouts.h"
 #include "vytal/renderer/backends/vulkan/device/vulkan_device.h"
 #include "vytal/renderer/backends/vulkan/framebuffers/vulkan_framebuffers.h"
+#include "vytal/renderer/backends/vulkan/graphics_pipelines/vulkan_graphics_pipelines.h"
 #include "vytal/renderer/backends/vulkan/instance/vulkan_instance.h"
 #include "vytal/renderer/backends/vulkan/render_pass/vulkan_render_pass.h"
 #include "vytal/renderer/backends/vulkan/swapchain/vulkan_swapchain.h"
@@ -38,7 +39,7 @@ RendererBackendResult _renderer_backend_vulkan_load_debug_functions(RendererBack
     return RENDERER_BACKEND_SUCCESS;
 }
 
-RendererBackendResult renderer_backend_vulkan_startup(Window *out_first_window, RendererBackend *out_backend) {
+RendererBackendResult renderer_backend_vulkan_startup(Window *out_first_window, ConstStr shaders_filepath, RendererBackend *out_backend) {
     if (out_backend && *out_backend) return RENDERER_BACKEND_ERROR_ALREADY_INITIALIZED;
 
     // allocate renderer backend
@@ -56,6 +57,10 @@ RendererBackendResult renderer_backend_vulkan_startup(Window *out_first_window, 
 #else
     context_->_validation_layer_enabled = false;
 #endif
+
+    // configure shaders filepath
+    if (*shaders_filepath)
+        memcpy(context_->_shaders_filepath, shaders_filepath, LINE_BUFFER_MAX_SIZE);
 
     // instance
     RendererBackendResult construct_instance_ = renderer_backend_vulkan_instance_construct((VoidPtr *)&context_);
@@ -140,6 +145,14 @@ RendererBackendResult renderer_backend_vulkan_startup(Window *out_first_window, 
     RendererBackendResult construct_desc_set_layouts_ = renderer_backend_vulkan_descriptor_set_layouts_construct((VoidPtr *)&context_);
     if (construct_desc_set_layouts_ != RENDERER_BACKEND_SUCCESS)
         return construct_desc_set_layouts_;
+
+    // for the first window
+    {
+        // graphics pipelines
+        RendererBackendResult construct_graphics_pipelines_ = renderer_backend_vulkan_graphics_pipelines_construct(context_, (VoidPtr *)&context_->_first_window);
+        if (construct_graphics_pipelines_ != RENDERER_BACKEND_SUCCESS)
+            return construct_graphics_pipelines_;
+    }
 
     (*out_backend)->_memory_size = alloc_size_;
     return RENDERER_BACKEND_SUCCESS;

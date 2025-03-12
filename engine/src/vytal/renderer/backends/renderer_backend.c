@@ -1,14 +1,13 @@
 #include "renderer_backend.h"
-
 #include "vytal/renderer/backends/vulkan/backend_vulkan.h"
 
-RendererBackendResult renderer_backend_startup(const RendererBackendType backend_type, Window *out_first_window, RendererBackend *out_backend) {
+RendererBackendResult renderer_backend_startup(const RendererBackendType backend_type, Window *out_first_window, ConstStr shaders_filepath, RendererBackend *out_backend) {
     if ((backend_type < 0) || (backend_type > RENDERER_BACKEND_VULKAN)) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
     if (out_backend && *out_backend) return RENDERER_BACKEND_ERROR_ALREADY_INITIALIZED;
 
     switch (backend_type) {
         case RENDERER_BACKEND_VULKAN:
-            return renderer_backend_vulkan_startup(out_first_window, out_backend);
+            return renderer_backend_vulkan_startup(out_first_window, shaders_filepath, out_backend);
 
         default:
             return RENDERER_BACKEND_ERROR_INVALID_BACKEND;

@@ -57,6 +57,12 @@ if "%VYTAL_EDITOR_PATH%"=="" (
     exit /b 1
 )
 
+rem make sure that VYTAL_ENGINE_PATH is set
+if "%VYTAL_ENGINE_PATH%"=="" (
+    echo Error: VYTAL_ENGINE_PATH is not set.
+    exit /b 1
+)
+
 rem ----------------------------------------------------------------------------------------------
 
 rem construct new Vytal project
@@ -229,6 +235,7 @@ echo #   "opengl": OpenGL backend (unsupported) >> "%PROJECT_PATH%\%PROJECT_NAME
 echo #   "directx": DirectX backend (unsupported) >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 echo [renderer] >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 echo backend = "vulkan" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
+echo shaders_path = "%VYTAL_ENGINE_PATH%\shaders" >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 echo. >> "%PROJECT_PATH%\%PROJECT_NAME%\configs\engine.cfg"
 
 

@@ -1,12 +1,13 @@
-#include "vulkan_window.h"
-
 #include <string.h>
+
+#include "vulkan_window.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #include "vytal/renderer/backends/vulkan/depth_resources/vulkan_depth_resources.h"
 #include "vytal/renderer/backends/vulkan/framebuffers/vulkan_framebuffers.h"
+#include "vytal/renderer/backends/vulkan/graphics_pipelines/vulkan_graphics_pipelines.h"
 #include "vytal/renderer/backends/vulkan/render_pass/vulkan_render_pass.h"
 #include "vytal/renderer/backends/vulkan/swapchain/vulkan_swapchain.h"
 
@@ -145,6 +146,11 @@ RendererBackendResult renderer_backend_vulkan_window_construct(VoidPtr context, 
     if (construct_framebuffers_ != RENDERER_BACKEND_SUCCESS)
         return construct_framebuffers_;
 
+    // graphics pipelines
+    RendererBackendResult construct_graphics_pipelines_ = renderer_backend_vulkan_graphics_pipelines_construct(context_, out_window);
+    if (construct_graphics_pipelines_ != RENDERER_BACKEND_SUCCESS)
+        return construct_graphics_pipelines_;
+
     return RENDERER_BACKEND_SUCCESS;
 }
 
@@ -152,6 +158,11 @@ RendererBackendResult renderer_backend_vulkan_window_destruct(VoidPtr context, V
     if (!context) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
     RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
     Window                        window_  = (Window)*out_window;
+
+    // graphics pipelines
+    RendererBackendResult destruct_graphics_pipelines_ = renderer_backend_vulkan_graphics_pipelines_destruct(context_, out_window);
+    if (destruct_graphics_pipelines_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_graphics_pipelines_;
 
     // framebuffers
     RendererBackendResult destruct_framebuffers_ = renderer_backend_vulkan_framebuffers_destruct(context_, out_window);

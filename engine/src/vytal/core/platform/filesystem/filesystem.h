@@ -25,6 +25,10 @@ VYTAL_API FileResult platform_filesystem_read_all(
     File     *file,
     ByteSize *out_read_size,
     Str       out_read_data);
+VYTAL_API FileResult platform_filesystem_read_binary_uint32(
+    File     *file,
+    ByteSize *out_word_count,
+    UInt32  **out_read_data);
 
 VYTAL_API FileResult platform_filesystem_write_line(File *file, ConstStr content);
 VYTAL_API FileResult platform_filesystem_write_data(File *file, VoidPtr data, const ByteSize data_size);

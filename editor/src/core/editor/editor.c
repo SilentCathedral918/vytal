@@ -1,10 +1,9 @@
-#include "editor.h"
-
 #include <stdlib.h>
 #include <string.h>
 
 #include "core/input/input.h"
 #include "core/logger/logger.h"
+#include "editor.h"
 
 typedef struct Editor_State {
     Char   _base_path[LINE_BUFFER_MAX_SIZE];

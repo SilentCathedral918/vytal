@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vytal/defines/core/math.h"
 #include "vytal/defines/core/types.h"
 
 // return codes --------------------------------------------------------- //
@@ -60,7 +61,11 @@ typedef enum Renderer_Backend_Result {
     RENDERER_BACKEND_ERROR_VULKAN_HELPERS_TRANSITION_IMAGE_LAYOUT_FAILED    = -143,
     RENDERER_BACKEND_ERROR_VULKAN_FRAMEBUFFERS_CONSTRUCT_FAILED             = -144,
     RENDERER_BACKEND_ERROR_VULKAN_FRAMEBUFFERS_DESTRUCT_FAILED              = -145,
-
+    RENDERER_BACKEND_ERROR_VULKAN_HELPERS_SHADER_FILE_OPEN_FAILED           = -146,
+    RENDERER_BACKEND_ERROR_VULKAN_HELPERS_SHADER_FILE_CLOSE_FAILED          = -147,
+    RENDERER_BACKEND_ERROR_VULKAN_HELPERS_SHADER_FILE_READ_FAILED           = -148,
+    RENDERER_BACKEND_ERROR_VULKAN_SHADER_MODULE_CONSTRUCT_FAILED            = -149,
+    RENDERER_BACKEND_ERROR_VULKAN_INVALID_GRAPHICS_PIPELINE_TYPE            = -150,
 } RendererBackendResult;
 
 typedef enum Renderer_Module_Result {
@@ -110,11 +115,19 @@ typedef struct Renderer_Buffer {
 
 // graphics pipeline ---------------------------------------------------- //
 
-typedef enum GraphicsPipelineType {
-    GRAPHICS_PIPELINE_TYPE_TEXTURED,
-    GRAPHICS_PIPELINE_TYPE_SOLID_COLOUR,
-    GRAPHICS_PIPELINE_TYPE_TRANSPARENT,
-    GRAPHICS_PIPELINE_TYPE_WIREFRAME,
+typedef enum Renderer_Graphics_Pipeline_Type {
+    RENDERER_GRAPHICS_PIPELINE_TYPE_TEXTURED,
+    RENDERER_GRAPHICS_PIPELINE_TYPE_SOLID_COLOR,
+    RENDERER_GRAPHICS_PIPELINE_TYPE_TRANSPARENT,
+    RENDERER_GRAPHICS_PIPELINE_TYPE_WIREFRAME,
 
-    NUM_GRAPHICS_PIPELINE
-} GraphicsPipelineType;
+    NUM_GRAPHICS_PIPELINES
+} RendererGraphicsPipelineType;
+
+// primitives ----------------------------------------------------------- //
+
+typedef struct Renderer_Primitive_Vertex {
+    Vec3 _position;
+    Vec3 _normal;
+    Vec2 _texture_uv;
+} Vertex;

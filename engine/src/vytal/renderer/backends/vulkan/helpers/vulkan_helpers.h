@@ -33,6 +33,24 @@ VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_destruct_image_v
     const VoidPtr context,
     VkImageView   image_view);
 
+VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_construct_graphics_pipeline(
+    ConstStr                                 vertex_shader_filepath,
+    ConstStr                                 fragment_shader_filepath,
+    const VoidPtr                            context,
+    const VoidPtr                            window,
+    const RendererGraphicsPipelineType       type,
+    const UInt32                             binding_count,
+    const VkVertexInputBindingDescription   *bindings,
+    const UInt32                             attribute_count,
+    const VkVertexInputAttributeDescription *attributes,
+    VkPipeline                              *out_pipeline,
+    VkPipelineLayout                        *out_pipeline_layout);
+
+VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_destruct_graphics_pipeline(
+    const VoidPtr    context,
+    VkPipeline       pipeline,
+    VkPipelineLayout pipeline_layout);
+
 VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_transition_image_layout(
     const VoidPtr            context,
     const VoidPtr            window,
@@ -74,3 +92,8 @@ VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_end_single_time_
     const VkQueue        queue,
     const UInt32         cmd_buffer_count,
     VkCommandBuffer     *buffers);
+
+VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_read_shader_file(
+    ConstStr  filepath,
+    ByteSize *out_shader_size,
+    UInt32  **out_shader_code);
