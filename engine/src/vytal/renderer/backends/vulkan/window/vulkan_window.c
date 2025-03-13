@@ -5,11 +5,13 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include "vytal/renderer/backends/vulkan/buffers/vulkan_graphics_ubos.h"
 #include "vytal/renderer/backends/vulkan/depth_resources/vulkan_depth_resources.h"
 #include "vytal/renderer/backends/vulkan/framebuffers/vulkan_framebuffers.h"
 #include "vytal/renderer/backends/vulkan/graphics_pipelines/vulkan_graphics_pipelines.h"
 #include "vytal/renderer/backends/vulkan/render_pass/vulkan_render_pass.h"
 #include "vytal/renderer/backends/vulkan/swapchain/vulkan_swapchain.h"
+#include "vytal/renderer/backends/vulkan/sync_resources/vulkan_sync_resources.h"
 
 struct Window_Handle {
     GLFWwindow                  *_handle;
@@ -151,6 +153,16 @@ RendererBackendResult renderer_backend_vulkan_window_construct(VoidPtr context, 
     if (construct_graphics_pipelines_ != RENDERER_BACKEND_SUCCESS)
         return construct_graphics_pipelines_;
 
+    // graphics UBOs
+    RendererBackendResult construct_graphics_ubos_ = renderer_backend_vulkan_graphics_ubos_construct(context_, out_window);
+    if (construct_graphics_ubos_ != RENDERER_BACKEND_SUCCESS)
+        return construct_graphics_ubos_;
+
+    // graphics sync resources
+    RendererBackendResult construct_graphics_sync_resources_ = renderer_backend_vulkan_graphics_sync_resources_construct(context_, out_window);
+    if (construct_graphics_sync_resources_ != RENDERER_BACKEND_SUCCESS)
+        return construct_graphics_sync_resources_;
+
     return RENDERER_BACKEND_SUCCESS;
 }
 
@@ -158,6 +170,16 @@ RendererBackendResult renderer_backend_vulkan_window_destruct(VoidPtr context, V
     if (!context) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
     RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
     Window                        window_  = (Window)*out_window;
+
+    // graphics sync resources
+    RendererBackendResult destruct_graphics_sync_resources_ = renderer_backend_vulkan_graphics_sync_resources_destruct(context_, out_window);
+    if (destruct_graphics_sync_resources_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_graphics_sync_resources_;
+
+    // graphics UBOs
+    RendererBackendResult destruct_graphics_ubos_ = renderer_backend_vulkan_graphics_ubos_destruct(context_, out_window);
+    if (destruct_graphics_ubos_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_graphics_ubos_;
 
     // graphics pipelines
     RendererBackendResult destruct_graphics_pipelines_ = renderer_backend_vulkan_graphics_pipelines_destruct(context_, out_window);

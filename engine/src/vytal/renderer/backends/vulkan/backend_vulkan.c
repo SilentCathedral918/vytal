@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include "vytal/core/memory/zone/memory_zone.h"
+#include "vytal/renderer/backends/vulkan/buffers/vulkan_graphics_ubos.h"
 #include "vytal/renderer/backends/vulkan/command_pools/vulkan_command_pools.h"
 #include "vytal/renderer/backends/vulkan/depth_resources/vulkan_depth_resources.h"
 #include "vytal/renderer/backends/vulkan/descriptor_pools/vulkan_descriptor_pools.h"
@@ -13,9 +14,11 @@
 #include "vytal/renderer/backends/vulkan/device/vulkan_device.h"
 #include "vytal/renderer/backends/vulkan/framebuffers/vulkan_framebuffers.h"
 #include "vytal/renderer/backends/vulkan/graphics_pipelines/vulkan_graphics_pipelines.h"
+#include "vytal/renderer/backends/vulkan/helpers/vulkan_helpers.h"
 #include "vytal/renderer/backends/vulkan/instance/vulkan_instance.h"
 #include "vytal/renderer/backends/vulkan/render_pass/vulkan_render_pass.h"
 #include "vytal/renderer/backends/vulkan/swapchain/vulkan_swapchain.h"
+#include "vytal/renderer/backends/vulkan/sync_resources/vulkan_sync_resources.h"
 #include "vytal/renderer/backends/vulkan/window/vulkan_window.h"
 
 struct Window_Handle {
@@ -129,12 +132,16 @@ RendererBackendResult renderer_backend_vulkan_startup(Window *out_first_window, 
         RendererBackendResult construct_depth_resources_ = renderer_backend_vulkan_depth_resources_construct(context_, (VoidPtr *)&context_->_first_window);
         if (construct_depth_resources_ != RENDERER_BACKEND_SUCCESS)
             return construct_depth_resources_;
-
-        // framebuffers
-        RendererBackendResult construct_framebuffers_ = renderer_backend_vulkan_framebuffers_construct(context_, (VoidPtr *)&context_->_first_window);
-        if (construct_framebuffers_ != RENDERER_BACKEND_SUCCESS)
-            return construct_framebuffers_;
     }
+
+    // default texture
+    RendererBackendResult construct_default_texture_ = renderer_backend_vulkan_helpers_construct_texture(
+        context_,
+        context_->_first_window,
+        NULL,
+        &context_->_default_texture);
+    if (construct_default_texture_ != RENDERER_BACKEND_SUCCESS)
+        return construct_default_texture_;
 
     // descriptor pools
     RendererBackendResult construct_desc_pools_ = renderer_backend_vulkan_descriptor_pools_construct((VoidPtr *)&context_);
@@ -146,12 +153,32 @@ RendererBackendResult renderer_backend_vulkan_startup(Window *out_first_window, 
     if (construct_desc_set_layouts_ != RENDERER_BACKEND_SUCCESS)
         return construct_desc_set_layouts_;
 
+    // compute sync resources
+    RendererBackendResult construct_compute_sync_resources_ = renderer_backend_vulkan_compute_sync_resources_construct((VoidPtr *)&context_);
+    if (construct_compute_sync_resources_ != RENDERER_BACKEND_SUCCESS)
+        return construct_compute_sync_resources_;
+
     // for the first window
     {
+        // framebuffers
+        RendererBackendResult construct_framebuffers_ = renderer_backend_vulkan_framebuffers_construct(context_, (VoidPtr *)&context_->_first_window);
+        if (construct_framebuffers_ != RENDERER_BACKEND_SUCCESS)
+            return construct_framebuffers_;
+
         // graphics pipelines
         RendererBackendResult construct_graphics_pipelines_ = renderer_backend_vulkan_graphics_pipelines_construct(context_, (VoidPtr *)&context_->_first_window);
         if (construct_graphics_pipelines_ != RENDERER_BACKEND_SUCCESS)
             return construct_graphics_pipelines_;
+
+        // graphics UBOs
+        RendererBackendResult construct_graphics_ubos_ = renderer_backend_vulkan_graphics_ubos_construct(context_, (VoidPtr *)&context_->_first_window);
+        if (construct_graphics_ubos_ != RENDERER_BACKEND_SUCCESS)
+            return construct_graphics_ubos_;
+
+        // graphics sync resources
+        RendererBackendResult construct_graphics_sync_resources_ = renderer_backend_vulkan_graphics_sync_resources_construct(context_, (VoidPtr *)&context_->_first_window);
+        if (construct_graphics_sync_resources_ != RENDERER_BACKEND_SUCCESS)
+            return construct_graphics_sync_resources_;
     }
 
     (*out_backend)->_memory_size = alloc_size_;
@@ -165,6 +192,18 @@ RendererBackendResult renderer_backend_vulkan_shutdown(RendererBackend backend) 
 
     // destruction for first window and its properties is already handled by the application that utilizes this engine
     // so no need to do it here
+
+    // default texture
+    RendererBackendResult destruct_default_texture_ = renderer_backend_vulkan_helpers_destruct_texture(
+        context_,
+        &context_->_default_texture);
+    if (destruct_default_texture_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_default_texture_;
+
+    // compute sync resources
+    RendererBackendResult destruct_compute_sync_resources_ = renderer_backend_vulkan_compute_sync_resources_destruct((VoidPtr *)&context_);
+    if (destruct_compute_sync_resources_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_compute_sync_resources_;
 
     // descriptor set layouts
     RendererBackendResult destruct_desc_set_layouts_ = renderer_backend_vulkan_descriptor_set_layouts_destruct((VoidPtr *)&context_);

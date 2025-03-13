@@ -66,6 +66,12 @@ typedef enum Renderer_Backend_Result {
     RENDERER_BACKEND_ERROR_VULKAN_HELPERS_SHADER_FILE_READ_FAILED           = -148,
     RENDERER_BACKEND_ERROR_VULKAN_SHADER_MODULE_CONSTRUCT_FAILED            = -149,
     RENDERER_BACKEND_ERROR_VULKAN_INVALID_GRAPHICS_PIPELINE_TYPE            = -150,
+    RENDERER_BACKEND_ERROR_VULKAN_HELPERS_CONSTRUCT_BUFFER_FAILED           = -151,
+    RENDERER_BACKEND_ERROR_VULKAN_HELPERS_DESTRUCT_BUFFER_FAILED            = -152,
+    RENDERER_BACKEND_ERROR_VULKAN_HELPERS_CONSTRUCT_DEFAULT_TEXTURE_FAILED  = -153,
+    RENDERER_BACKEND_ERROR_VULKAN_HELPERS_CONSTRUCT_TEXTURE_FAILED          = -154,
+    RENDERER_BACKEND_ERROR_VULKAN_HELPERS_DESTRUCT_TEXTURE_FAILED           = -155,
+    RENDERER_BACKEND_ERROR_VULKAN_HELPERS_GENERATE_MIPMAP_FAILED            = -156,
 } RendererBackendResult;
 
 typedef enum Renderer_Module_Result {
@@ -107,11 +113,12 @@ typedef enum Renderer_Buffer_Type {
 
 typedef struct Renderer_Buffer {
     VoidPtr            _handle;
+    VoidPtr            _memory;
     ByteSize           _size_bytes;
     RendererBufferType _type;
 
     ByteSize _memory_size;
-} *RendererBuffer;
+} RendererBuffer;
 
 // graphics pipeline ---------------------------------------------------- //
 
@@ -123,6 +130,14 @@ typedef enum Renderer_Graphics_Pipeline_Type {
 
     NUM_GRAPHICS_PIPELINES
 } RendererGraphicsPipelineType;
+
+// ubo ------------------------------------------------------------------ //
+
+typedef struct Uniform_Buffer_Object {
+    Mat4 _model;
+    Mat4 _view;
+    Mat4 _projection;
+} UniformBufferObject;
 
 // primitives ----------------------------------------------------------- //
 

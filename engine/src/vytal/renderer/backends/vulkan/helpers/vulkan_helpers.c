@@ -5,6 +5,9 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include "vytal/core/memory/zone/memory_zone.h"
 #include "vytal/core/platform/filesystem/filesystem.h"
 #include "vytal/renderer/backends/vulkan/helpers/vulkan_helpers.h"
@@ -505,6 +508,314 @@ RendererBackendResult renderer_backend_vulkan_helpers_destruct_graphics_pipeline
     return RENDERER_BACKEND_SUCCESS;
 }
 
+RendererBackendResult renderer_backend_vulkan_helpers_construct_buffer(
+    const VoidPtr               context,
+    const VkDeviceSize          size,
+    const VkBufferUsageFlags    usage_flags,
+    const VkMemoryPropertyFlags properties,
+    RendererBuffer             *out_new_buffer) {
+    if (!context || !size || !out_new_buffer) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
+    RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
+
+    out_new_buffer->_size_bytes = size;
+
+    // construct handle
+    {
+        VkBufferCreateInfo buffer_info_ = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+
+            .size        = size,
+            .usage       = usage_flags,
+            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        };
+
+        if (vkCreateBuffer(context_->_device, &buffer_info_, NULL, (VkBuffer *)&out_new_buffer->_handle) != VK_SUCCESS)
+            return RENDERER_BACKEND_ERROR_VULKAN_HELPERS_CONSTRUCT_BUFFER_FAILED;
+    }
+
+    // allocate its device memory
+    {
+        VkMemoryRequirements mem_requirements_;
+        vkGetBufferMemoryRequirements(context_->_device, out_new_buffer->_handle, &mem_requirements_);
+
+        ByteSize              memory_type_        = 0;
+        RendererBackendResult search_memory_type_ = renderer_backend_vulkan_helpers_search_memory_type(context_->_gpu, mem_requirements_.memoryTypeBits, properties, &memory_type_);
+        if (search_memory_type_ != RENDERER_BACKEND_SUCCESS)
+            return search_memory_type_;
+
+        VkMemoryAllocateInfo alloc_info_ = {
+            .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+
+            .allocationSize  = mem_requirements_.size,
+            .memoryTypeIndex = memory_type_,
+        };
+
+        if (vkAllocateMemory(context_->_device, &alloc_info_, NULL, (VkDeviceMemory *)&out_new_buffer->_memory) != VK_SUCCESS)
+            return RENDERER_BACKEND_ERROR_VULKAN_HELPERS_CONSTRUCT_BUFFER_FAILED;
+    }
+
+    // bind the handle to its device memory
+    if (vkBindBufferMemory(context_->_device, (VkBuffer)out_new_buffer->_handle, (VkDeviceMemory)out_new_buffer->_memory, 0) != VK_SUCCESS)
+        return RENDERER_BACKEND_ERROR_VULKAN_HELPERS_CONSTRUCT_BUFFER_FAILED;
+
+    return RENDERER_BACKEND_SUCCESS;
+}
+
+RendererBackendResult renderer_backend_vulkan_helpers_destruct_buffer(
+    const VoidPtr   context,
+    RendererBuffer *buffer) {
+    if (!context || !buffer) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
+    RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
+
+    vkDeviceWaitIdle(context_->_device);
+
+    if ((VkDeviceMemory)buffer->_memory != VK_NULL_HANDLE)
+        vkFreeMemory(context_->_device, buffer->_memory, NULL);
+
+    if ((VkBuffer)buffer->_handle != VK_NULL_HANDLE)
+        vkDestroyBuffer(context_->_device, buffer->_handle, NULL);
+
+    buffer = NULL;
+    return RENDERER_BACKEND_SUCCESS;
+}
+
+RendererBackendResult renderer_backend_vulkan_helpers_construct_texture(
+    const VoidPtr    context,
+    const Window     window,
+    ConstStr         texture_filepath,
+    RendererTexture *out_new_texture) {
+    if (!context) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
+    RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
+    Window                        window_  = (Window)window;
+
+    memset(out_new_texture, 0, sizeof(RendererTexture));
+
+    Int32    tex_width_, tex_height_, tex_channels_;
+    stbi_uc *pixels_;
+
+    if (texture_filepath) {
+        pixels_ = stbi_load(texture_filepath, &tex_width_, &tex_height_, &tex_channels_, STBI_rgb_alpha);
+        if (!pixels_)
+            return RENDERER_BACKEND_ERROR_VULKAN_HELPERS_CONSTRUCT_TEXTURE_FAILED;
+
+    } else {
+        tex_width_    = DEFAULT_TEXTURE_WIDTH;
+        tex_height_   = DEFAULT_TEXTURE_HEIGHT;
+        tex_channels_ = 4;
+
+        RendererBackendResult construct_default_texture_ = renderer_backend_vulkan_helpers_construct_default_texture((UInt32 **)&pixels_);
+        if (construct_default_texture_ != RENDERER_BACKEND_SUCCESS)
+            return construct_default_texture_;
+    }
+
+    VkDeviceSize image_size_ = tex_width_ * tex_height_ * tex_channels_;
+    out_new_texture->_size   = image_size_;
+
+    // determine mipmap levels
+    UInt32             mip_levels_ = (UInt32)floorf(log2f(VYTAL_MATH_MAX((Flt32)tex_width_, (Flt32)tex_height_))) + 1;
+    VkFormatProperties format_props_;
+    vkGetPhysicalDeviceFormatProperties(context_->_gpu, VK_FORMAT_R8G8B8A8_SRGB, &format_props_);
+    if (!(format_props_.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+        mip_levels_ = 1;
+    out_new_texture->_mip_levels = mip_levels_;
+
+    RendererBuffer        staging_buffer_;
+    RendererBackendResult construct_staging_buffer_ = renderer_backend_vulkan_helpers_construct_buffer(
+        context_,
+        image_size_,
+        VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        &staging_buffer_);
+    if (construct_staging_buffer_ != RENDERER_BACKEND_SUCCESS)
+        return construct_staging_buffer_;
+
+    // copy from image pixels to staging buffer
+    {
+        VoidPtr mapped_data_;
+        vkMapMemory(context_->_device, (VkDeviceMemory)staging_buffer_._memory, 0, image_size_, 0, &mapped_data_);
+        memcpy(mapped_data_, pixels_, (ByteSize)image_size_);
+        vkUnmapMemory(context_->_device, (VkDeviceMemory)staging_buffer_._memory);
+
+        if (texture_filepath)
+            stbi_image_free(pixels_);
+        else {
+            if (memory_zone_deallocate("renderer", pixels_, image_size_) != MEMORY_ZONE_SUCCESS)
+                return RENDERER_BACKEND_ERROR_DEALLOCATION_FAILED;
+        }
+    }
+
+    RendererBackendResult construct_texture_image_ = renderer_backend_vulkan_helpers_construct_image(
+        context_,
+        tex_width_, tex_height_,
+        mip_levels_,
+        VK_FORMAT_R8G8B8A8_SRGB,
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        &out_new_texture->_image,
+        &out_new_texture->_memory);
+    if (construct_texture_image_ != RENDERER_BACKEND_SUCCESS)
+        return construct_texture_image_;
+
+    RendererBackendResult construct_texture_image_view_ = renderer_backend_vulkan_helpers_construct_image_view(
+        context_,
+        out_new_texture->_image,
+        VK_FORMAT_R8G8B8A8_SRGB,
+        VK_IMAGE_ASPECT_COLOR_BIT,
+        mip_levels_,
+        &out_new_texture->_image_view);
+    if (construct_texture_image_view_ != RENDERER_BACKEND_SUCCESS)
+        return construct_texture_image_view_;
+
+    RendererBackendResult transition_texture_layout_ = renderer_backend_vulkan_helpers_transition_image_layout(
+        context_,
+        window_,
+        out_new_texture->_image,
+        VK_FORMAT_R8G8B8A8_SRGB,
+        VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        VK_IMAGE_ASPECT_COLOR_BIT,
+        mip_levels_);
+    if (transition_texture_layout_ != RENDERER_BACKEND_SUCCESS)
+        return transition_texture_layout_;
+
+    // copy from staging buffer to image
+    {
+        VkCommandBuffer      *cmd_buffers_;
+        RendererBackendResult begin_cmds_ = renderer_backend_vulkan_helpers_begin_single_time_commands(
+            context_,
+            &window_->_render_context._graphics_cmd_pool,
+            1,
+            VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+            &cmd_buffers_);
+        if (begin_cmds_ != RENDERER_BACKEND_SUCCESS)
+            return begin_cmds_;
+
+        VkBufferImageCopy region_ = {
+            .bufferOffset      = 0,
+            .bufferRowLength   = 0,
+            .bufferImageHeight = 0,
+
+            .imageSubresource = {
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .mipLevel   = 0,
+
+                .baseArrayLayer = 0,
+                .layerCount     = 1,
+            },
+
+            .imageOffset = {0, 0, 0},
+
+            .imageExtent = {
+                .width  = tex_width_,
+                .height = tex_height_,
+                .depth  = 1,
+            },
+        };
+
+        vkCmdCopyBufferToImage(
+            cmd_buffers_[0],
+            staging_buffer_._handle,
+            out_new_texture->_image,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1,
+            &region_);
+
+        RendererBackendResult generate_mipmap_ = renderer_backend_vulkan_helpers_generate_mipmap(
+            context_,
+            tex_width_,
+            tex_height_,
+            mip_levels_,
+            VK_FORMAT_R8G8B8A8_SRGB,
+            out_new_texture->_image,
+            cmd_buffers_[0]);
+        if (generate_mipmap_ != RENDERER_BACKEND_SUCCESS)
+            return generate_mipmap_;
+
+        RendererBackendResult end_cmds_ = renderer_backend_vulkan_helpers_end_single_time_commands(
+            context_,
+            &window_->_render_context._graphics_cmd_pool,
+            context_->_queue_families._graphics,
+            1,
+            cmd_buffers_);
+        if (end_cmds_ != RENDERER_BACKEND_SUCCESS)
+            return end_cmds_;
+    }
+
+    RendererBackendResult destruct_staging_buf_ = renderer_backend_vulkan_helpers_destruct_buffer(context_, &staging_buffer_);
+    if (destruct_staging_buf_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_staging_buf_;
+
+    // texture sampler
+    {
+        VkPhysicalDeviceProperties gpu_props_;
+        vkGetPhysicalDeviceProperties(context_->_gpu, &gpu_props_);
+
+        VkSamplerCreateInfo sampler_info_ = {
+            .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+
+            .magFilter = VK_FILTER_NEAREST,
+            .minFilter = VK_FILTER_NEAREST,
+
+            .addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+            .addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+            .addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+
+            .anisotropyEnable = VK_TRUE,
+            .maxAnisotropy    = gpu_props_.limits.maxSamplerAnisotropy,
+
+            .borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
+
+            .unnormalizedCoordinates = VK_FALSE,
+
+            .compareEnable = VK_FALSE,
+            .compareOp     = VK_COMPARE_OP_ALWAYS,
+
+            .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+            .minLod     = 0.0f,
+            .maxLod     = (Flt32)mip_levels_,
+            .mipLodBias = 0.0f,
+        };
+
+        if (vkCreateSampler(context_->_device, &sampler_info_, NULL, &out_new_texture->_sampler) != VK_SUCCESS)
+            return RENDERER_BACKEND_ERROR_VULKAN_HELPERS_CONSTRUCT_TEXTURE_FAILED;
+    }
+
+    return RENDERER_BACKEND_SUCCESS;
+}
+
+RendererBackendResult renderer_backend_vulkan_helpers_destruct_texture(
+    const VoidPtr    context,
+    RendererTexture *texture) {
+    if (!context) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
+    RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
+
+    vkDeviceWaitIdle(context_->_device);
+
+    if (texture->_sampler != VK_NULL_HANDLE) {
+        vkDestroySampler(context_->_device, texture->_sampler, NULL);
+        texture->_sampler = VK_NULL_HANDLE;
+    }
+
+    if (texture->_memory != VK_NULL_HANDLE) {
+        vkFreeMemory(context_->_device, texture->_memory, NULL);
+        texture->_memory = VK_NULL_HANDLE;
+    }
+
+    if (texture->_image_view != VK_NULL_HANDLE) {
+        vkDestroyImageView(context_->_device, texture->_image_view, NULL);
+        texture->_image_view = VK_NULL_HANDLE;
+    }
+
+    if (texture->_image != VK_NULL_HANDLE) {
+        vkDestroyImage(context_->_device, texture->_image, NULL);
+        texture->_image = VK_NULL_HANDLE;
+    }
+
+    memset(texture, 0, sizeof(RendererTexture));
+    return RENDERER_BACKEND_SUCCESS;
+}
+
 RendererBackendResult renderer_backend_vulkan_helpers_transition_image_layout(
     const VoidPtr            context,
     const VoidPtr            window,
@@ -674,8 +985,7 @@ RendererBackendResult renderer_backend_vulkan_helpers_begin_single_time_commands
     if (!context || !pool || !cmd_buffer_count || !out_buffers) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
     RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
 
-    VkCommandBuffer *cmd_buffers_ = NULL;
-    if (memory_zone_allocate("renderer", sizeof(VkCommandBuffer) * cmd_buffer_count, (VoidPtr *)&cmd_buffers_, NULL) != MEMORY_ZONE_SUCCESS)
+    if (memory_zone_allocate("renderer", sizeof(VkCommandBuffer) * cmd_buffer_count, (VoidPtr *)out_buffers, NULL) != MEMORY_ZONE_SUCCESS)
         return RENDERER_BACKEND_ERROR_VULKAN_HELPERS_BEGIN_SINGLE_TIME_COMMANDS_FAILED;
 
     VkCommandBufferAllocateInfo alloc_info_ = {
@@ -687,8 +997,8 @@ RendererBackendResult renderer_backend_vulkan_helpers_begin_single_time_commands
         .level = level,
     };
 
-    if (vkAllocateCommandBuffers(context_->_device, &alloc_info_, cmd_buffers_) != VK_SUCCESS) {
-        if (memory_zone_deallocate("renderer", cmd_buffers_, sizeof(VkCommandBuffer) * cmd_buffer_count) != MEMORY_ZONE_SUCCESS)
+    if (vkAllocateCommandBuffers(context_->_device, &alloc_info_, (*out_buffers)) != VK_SUCCESS) {
+        if (memory_zone_deallocate("renderer", (*out_buffers), sizeof(VkCommandBuffer) * cmd_buffer_count) != MEMORY_ZONE_SUCCESS)
             return RENDERER_BACKEND_ERROR_DEALLOCATION_FAILED;
 
         return RENDERER_BACKEND_ERROR_VULKAN_HELPERS_BEGIN_SINGLE_TIME_COMMANDS_FAILED;
@@ -700,9 +1010,8 @@ RendererBackendResult renderer_backend_vulkan_helpers_begin_single_time_commands
     };
 
     for (size_t i = 0; i < cmd_buffer_count; ++i)
-        vkBeginCommandBuffer(cmd_buffers_[i], &begin_info_);
+        vkBeginCommandBuffer((*out_buffers)[i], &begin_info_);
 
-    *out_buffers = cmd_buffers_;
     return RENDERER_BACKEND_SUCCESS;
 }
 
@@ -763,6 +1072,165 @@ RendererBackendResult renderer_backend_vulkan_helpers_read_shader_file(
 
     if (platform_filesystem_close_file(&file_) != FILE_SUCCESS)
         return RENDERER_BACKEND_ERROR_VULKAN_HELPERS_SHADER_FILE_CLOSE_FAILED;
+
+    return RENDERER_BACKEND_SUCCESS;
+}
+
+RendererBackendResult renderer_backend_vulkan_helpers_construct_default_texture(UInt32 **out_default_texture) {
+    if (!out_default_texture) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
+    ByteSize image_size_ = DEFAULT_TEXTURE_WIDTH * DEFAULT_TEXTURE_HEIGHT * 4;
+
+    if (memory_zone_allocate("renderer", image_size_, (VoidPtr *)out_default_texture, NULL) != MEMORY_ZONE_SUCCESS)
+        return RENDERER_BACKEND_ERROR_VULKAN_HELPERS_CONSTRUCT_DEFAULT_TEXTURE_FAILED;
+
+    UInt32 *texture_ = (UInt32 *)(*out_default_texture);
+
+    for (Int32 y = 0; y < DEFAULT_TEXTURE_HEIGHT; ++y) {
+        for (Int32 x = 0; x < DEFAULT_TEXTURE_WIDTH; ++x) {
+            Int32 square_x_             = x / DEFAULT_TEXTURE_SQUARE_SIZE;
+            Int32 square_y_             = y / DEFAULT_TEXTURE_SQUARE_SIZE;
+            Int32 checkerboard_pattern_ = (square_x_ + square_y_) % 2;
+
+            UInt8 r_ = checkerboard_pattern_ ? 0x00 : 0xff;
+            UInt8 g_ = 0x00;
+            UInt8 b_ = checkerboard_pattern_ ? 0x00 : 0xff;
+            UInt8 a_ = 0xff;
+
+            Int32 pixel_index_         = (y * DEFAULT_TEXTURE_WIDTH + x) * 4;
+            texture_[pixel_index_ + 0] = r_;
+            texture_[pixel_index_ + 1] = g_;
+            texture_[pixel_index_ + 2] = b_;
+            texture_[pixel_index_ + 3] = a_;
+        }
+    }
+
+    return RENDERER_BACKEND_SUCCESS;
+}
+
+RendererBackendResult renderer_backend_vulkan_helpers_generate_mipmap(
+    const VoidPtr   context,
+    const Int32     image_width,
+    const Int32     image_height,
+    const UInt32    mip_levels,
+    const VkFormat  format,
+    const VkImage   image,
+    VkCommandBuffer cmd_buffer) {
+    if (!context || !image_width || !image_height || !mip_levels) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
+    RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
+
+    VkFormatProperties format_props_;
+    vkGetPhysicalDeviceFormatProperties(context_->_gpu, format, &format_props_);
+
+    if (!(format_props_.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+        return RENDERER_BACKEND_ERROR_VULKAN_HELPERS_GENERATE_MIPMAP_FAILED;
+
+    Int32 mip_width_  = image_width;
+    Int32 mip_height_ = image_height;
+
+    VkImageMemoryBarrier barrier_ = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+
+        .image = image,
+
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+
+        .subresourceRange = {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+
+            .baseArrayLayer = 0,
+            .layerCount     = 1,
+
+            .levelCount = 1,
+        },
+    };
+
+    for (ByteSize i = 1; i < mip_levels; ++i) {
+        barrier_.subresourceRange.baseMipLevel = i - 1;
+        barrier_.oldLayout                     = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier_.newLayout                     = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        barrier_.srcAccessMask                 = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier_.dstAccessMask                 = VK_ACCESS_TRANSFER_READ_BIT;
+
+        vkCmdPipelineBarrier(cmd_buffer,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             0,
+                             /* memory           */ 0, NULL,
+                             /* buffer memory    */ 0, NULL,
+                             /* image memory     */ 1, &barrier_);
+
+        VkImageBlit blit_ = {
+            .srcOffsets[0] = {
+                .x = 0,
+                .y = 0,
+                .z = 0,
+            },
+            .srcOffsets[1] = {
+                .x = mip_width_,
+                .y = mip_height_,
+                .z = 1,
+            },
+
+            .srcSubresource = {
+                .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                .mipLevel       = i - 1,
+                .baseArrayLayer = 0,
+                .layerCount     = 1,
+            },
+
+            .dstOffsets[0] = {
+                .x = 0,
+                .y = 0,
+                .z = 0,
+            },
+            .dstOffsets[1] = {
+                .x = mip_width_ > 1 ? mip_width_ / 2 : 1,
+                .y = mip_height_ > 1 ? mip_height_ / 2 : 1,
+                .z = 1,
+            },
+
+            .dstSubresource = {
+                .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                .mipLevel       = i,
+                .baseArrayLayer = 0,
+                .layerCount     = 1,
+            },
+        };
+
+        vkCmdBlitImage(cmd_buffer,
+                       image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                       image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                       1, &blit_,
+                       VK_FILTER_LINEAR);
+
+        barrier_.oldLayout     = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        barrier_.newLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier_.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        barrier_.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        vkCmdPipelineBarrier(cmd_buffer,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                             0,
+                             /* memory           */ 0, NULL,
+                             /* buffer memory    */ 0, NULL,
+                             /* image memory     */ 1, &barrier_);
+
+        if (mip_width_ > 1) mip_width_ /= 2;
+        if (mip_height_ > 1) mip_height_ /= 2;
+    }
+
+    barrier_.subresourceRange.baseMipLevel = mip_levels - 1;
+    barrier_.oldLayout                     = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    barrier_.newLayout                     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    barrier_.srcAccessMask                 = VK_ACCESS_TRANSFER_WRITE_BIT;
+    barrier_.dstAccessMask                 = VK_ACCESS_SHADER_READ_BIT;
+
+    vkCmdPipelineBarrier(cmd_buffer,
+                         VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                         0,
+                         /* memory           */ 0, NULL,
+                         /* buffer memory    */ 0, NULL,
+                         /* image memory     */ 1, &barrier_);
 
     return RENDERER_BACKEND_SUCCESS;
 }

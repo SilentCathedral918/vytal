@@ -51,6 +51,27 @@ VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_destruct_graphic
     VkPipeline       pipeline,
     VkPipelineLayout pipeline_layout);
 
+VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_construct_buffer(
+    const VoidPtr               context,
+    const VkDeviceSize          size,
+    const VkBufferUsageFlags    usage_flags,
+    const VkMemoryPropertyFlags properties,
+    RendererBuffer             *out_new_buffer);
+
+VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_destruct_buffer(
+    const VoidPtr   context,
+    RendererBuffer *buffer);
+
+VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_construct_texture(
+    const VoidPtr    context,
+    const Window     window,
+    ConstStr         texture_filepath,
+    RendererTexture *out_new_texture);
+
+VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_destruct_texture(
+    const VoidPtr    context,
+    RendererTexture *texture);
+
 VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_transition_image_layout(
     const VoidPtr            context,
     const VoidPtr            window,
@@ -97,3 +118,14 @@ VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_read_shader_file
     ConstStr  filepath,
     ByteSize *out_shader_size,
     UInt32  **out_shader_code);
+
+VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_construct_default_texture(UInt32 **out_default_texture);
+
+VYTAL_API RendererBackendResult renderer_backend_vulkan_helpers_generate_mipmap(
+    const VoidPtr   context,
+    const Int32     image_width,
+    const Int32     image_height,
+    const UInt32    mip_levels,
+    const VkFormat  format,
+    const VkImage   image,
+    VkCommandBuffer cmd_buffer);
