@@ -7,10 +7,12 @@
 
 #include "vytal/core/memory/zone/memory_zone.h"
 #include "vytal/renderer/backends/vulkan/buffers/vulkan_graphics_ubos.h"
+#include "vytal/renderer/backends/vulkan/command_buffers/vulkan_command_buffers.h"
 #include "vytal/renderer/backends/vulkan/command_pools/vulkan_command_pools.h"
 #include "vytal/renderer/backends/vulkan/depth_resources/vulkan_depth_resources.h"
 #include "vytal/renderer/backends/vulkan/descriptor_pools/vulkan_descriptor_pools.h"
 #include "vytal/renderer/backends/vulkan/descriptor_set_layouts/vulkan_descriptor_set_layouts.h"
+#include "vytal/renderer/backends/vulkan/descriptor_sets/vulkan_descriptor_sets.h"
 #include "vytal/renderer/backends/vulkan/device/vulkan_device.h"
 #include "vytal/renderer/backends/vulkan/framebuffers/vulkan_framebuffers.h"
 #include "vytal/renderer/backends/vulkan/graphics_pipelines/vulkan_graphics_pipelines.h"
@@ -179,6 +181,16 @@ RendererBackendResult renderer_backend_vulkan_startup(Window *out_first_window, 
         RendererBackendResult construct_graphics_sync_resources_ = renderer_backend_vulkan_graphics_sync_resources_construct(context_, (VoidPtr *)&context_->_first_window);
         if (construct_graphics_sync_resources_ != RENDERER_BACKEND_SUCCESS)
             return construct_graphics_sync_resources_;
+
+        // descriptor sets
+        RendererBackendResult construct_descriptor_sets_ = renderer_backend_vulkan_descriptor_sets_construct(context_, (VoidPtr *)&context_->_first_window);
+        if (construct_descriptor_sets_ != RENDERER_BACKEND_SUCCESS)
+            return construct_descriptor_sets_;
+
+        // command buffers
+        RendererBackendResult construct_cmd_buffers_ = renderer_backend_vulkan_graphics_command_buffers_construct(context_, (VoidPtr *)&context_->_first_window);
+        if (construct_cmd_buffers_ != RENDERER_BACKEND_SUCCESS)
+            return construct_cmd_buffers_;
     }
 
     (*out_backend)->_memory_size = alloc_size_;

@@ -6,7 +6,9 @@
 #include <GLFW/glfw3.h>
 
 #include "vytal/renderer/backends/vulkan/buffers/vulkan_graphics_ubos.h"
+#include "vytal/renderer/backends/vulkan/command_buffers/vulkan_command_buffers.h"
 #include "vytal/renderer/backends/vulkan/depth_resources/vulkan_depth_resources.h"
+#include "vytal/renderer/backends/vulkan/descriptor_sets/vulkan_descriptor_sets.h"
 #include "vytal/renderer/backends/vulkan/framebuffers/vulkan_framebuffers.h"
 #include "vytal/renderer/backends/vulkan/graphics_pipelines/vulkan_graphics_pipelines.h"
 #include "vytal/renderer/backends/vulkan/render_pass/vulkan_render_pass.h"
@@ -163,6 +165,16 @@ RendererBackendResult renderer_backend_vulkan_window_construct(VoidPtr context, 
     if (construct_graphics_sync_resources_ != RENDERER_BACKEND_SUCCESS)
         return construct_graphics_sync_resources_;
 
+    // descriptor sets
+    RendererBackendResult construct_descriptor_sets_ = renderer_backend_vulkan_descriptor_sets_construct(context_, out_window);
+    if (construct_descriptor_sets_ != RENDERER_BACKEND_SUCCESS)
+        return construct_descriptor_sets_;
+
+    // command buffers
+    RendererBackendResult construct_cmd_buffers_ = renderer_backend_vulkan_graphics_command_buffers_construct(context_, out_window);
+    if (construct_cmd_buffers_ != RENDERER_BACKEND_SUCCESS)
+        return construct_cmd_buffers_;
+
     return RENDERER_BACKEND_SUCCESS;
 }
 
@@ -170,6 +182,16 @@ RendererBackendResult renderer_backend_vulkan_window_destruct(VoidPtr context, V
     if (!context) return RENDERER_BACKEND_ERROR_INVALID_PARAM;
     RendererBackendVulkanContext *context_ = (RendererBackendVulkanContext *)context;
     Window                        window_  = (Window)*out_window;
+
+    // command buffers
+    RendererBackendResult destruct_cmd_buffers_ = renderer_backend_vulkan_graphics_command_buffers_destruct(context_, out_window);
+    if (destruct_cmd_buffers_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_cmd_buffers_;
+
+    // descriptor sets
+    RendererBackendResult destruct_descriptor_sets_ = renderer_backend_vulkan_descriptor_sets_destruct(context_, out_window);
+    if (destruct_descriptor_sets_ != RENDERER_BACKEND_SUCCESS)
+        return destruct_descriptor_sets_;
 
     // graphics sync resources
     RendererBackendResult destruct_graphics_sync_resources_ = renderer_backend_vulkan_graphics_sync_resources_destruct(context_, out_window);
